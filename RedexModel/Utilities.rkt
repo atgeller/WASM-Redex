@@ -29,25 +29,25 @@
     [ge . ,>=]))
 
 (define-metafunction WASMrt
-  eval-binop : binop c c t -> v
+  eval-binop : binop c c t -> e
+  [(eval-binop div c 0 t)
+   (trap)]
+  [(eval-binop rem c 0 t)
+   (trap)]
   [(eval-binop binop c_1 c_2 t)
-   (t const ,((dict-ref wasm_binop->racket (term binop)) (term c_1) (term c_2)))])
+   (t const ,((dict-ref wasm_binop->racket (term binop)) (term c_1) (term c_2)))
+   (side-condition (not (and (eq? (term c_2) 0)
+                             (or (eq? (term binop) 'rem) (eq? (term binop) 'div)))))])
 
 (define-metafunction WASMrt
-  eval-testop : testop c t -> v
+  eval-testop : testop c t -> e
   [(eval-testop testop c t)
    (t const ,((dict-ref wasm_testop->racket (term testop)) (term c)))])
 
 (define-metafunction WASMrt
-  eval-relop : relop c c -> v
+  eval-relop : relop c c -> e
   [(eval-relop relop c_1 c_2 t)
    (t const ,(if ((dict-ref wasm_relop->racket (term binop)) (term c_1) (term c_2)) 1 0))])
-
-(define-metafunction WASMrt
-  seq->stack : v ... stack -> stack
-  [(seq->stack stack) stack]
-  [(seq->stack v stack) (v stack)]
-  [(seq->stack v_1 v_2 ... stack) (v_1 (seq->stack v_2 ... stack))])
 
 ;; decompose local contexts
 ;; Function to calculate local context depth

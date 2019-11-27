@@ -24,13 +24,13 @@
      
      ;; Due to validation we can be sure we are returning the proper number of values
      ;; Todo: Add store.
-     (--> ((v ...) (in-hole L (v_1 ... (t const c_1) (t const c_2) (binop t) e ...)))
+     (--> ((v ...) (in-hole L (v_1 ... (t const c_1) (t const c_2) (t binop) e ...)))
           ((v ...) (in-hole L (v_1 ... (eval-binop binop c_1 c_2 t) e ...))))
      
-     (--> ((v ...) (in-hole L (v_1 ... (t const c) (testop t) e ...)))
+     (--> ((v ...) (in-hole L (v_1 ... (t const c) (t testop) e ...)))
           ((v ...) (in-hole L (v_1 ... (eval-testop testop c t) e ...))))
      
-     (--> ((v ...) (in-hole L (v_1 ... (t const c_1) (t const c_2) (relop t) e ...)))
+     (--> ((v ...) (in-hole L (v_1 ... (t const c_1) (t const c_2) (t relop) e ...)))
           ((v ...) (in-hole L (v_1 ... (eval-relop relop c_1 c_2 t) e ...))))
           
      (--> ((v ...) (in-hole L (v_1 ... (nop) e ...)))

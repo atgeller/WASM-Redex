@@ -13,9 +13,9 @@
      (tee-local i) (get-global i) (set-global i)
      (load t a o) (store t a o)
      (current-memory) (grow-memory) (t const c)
-     (unop t)
-     (binop t) (testop t)
-     (relop t) (cvtop t t))
+     (t unop)
+     (t binop) (t testop)
+     (t relop) (t cvtop t))
   
   (t ::= i32 i64 f32 f64) ; No floats for now
   (tp? ::= tp None)
