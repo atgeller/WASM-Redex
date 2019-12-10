@@ -10,11 +10,11 @@
               (term (i32 const 11)))
 
   ;; Function-lookup test
-  (test-equal (term (function-lookup ((() ())
+  (test-equal (term (function-lookup ((() () (tab) (mem))
                                       (((0 (func ((i32) -> ()) (local () ((get-local 0) (return)))))
                                         (1 (func ((i32 i32) -> ()) (local () ((get-local 1) (return)))))
-                                        (2 (func ((i32 i32 i32) -> ()) (local () ((get-local 2) (return)))))) ())
-                                      (() ()))
+                                        (2 (func ((i32 i32 i32) -> ()) (local () ((get-local 2) (return)))))) () (tab) (mem))
+                                      (() () (tab) (mem)))
                                      1 1))
               (term (1 (func ((i32 i32) -> ()) (local () ((get-local 1) (return)))))))
 
@@ -24,4 +24,27 @@
                                 ((nop) (nop))))
               (term ((i32 const 1) (local (0 ((i32 const 2) (i32 const 3) (i32 const 0)))
                                      ((block (() -> (i32)) ((return))))) (nop) (nop))))
+
+  ;; handle-call-indirect
+  (test-equal (term (handle-call-indirect (((() () (tab 1) (mem)))
+                                           (((0 (func ((i32) -> ()) (local () ((get-local 0) (return)))))
+                                             (1 (func ((i32 i32) -> ()) (local () ((get-local 1) (return)))))
+                                             (2 (func ((i32 i32 i32) -> ()) (local () ((get-local 2) (return))))))
+                                            ((3 (func ((i32) -> ()) (local () ((get-local 0) (return)))))
+                                             (4 (func ((i32 i32) -> ()) (local () ((get-local 1) (return)))))
+                                             (5 (func ((i32 i32 i32) -> ()) (local () ((get-local 2) (return)))))))
+                                           ())
+                                          0 1 ((i32 i32) -> ())))
+              (term (call (4 (func ((i32 i32) -> ()) (local () ((get-local 1) (return))))))))
+
+  (test-equal (term (handle-call-indirect (((() () (tab 1) (mem)))
+                                           (((0 (func ((i32) -> ()) (local () ((get-local 0) (return)))))
+                                             (1 (func ((i32 i32) -> ()) (local () ((get-local 1) (return)))))
+                                             (2 (func ((i32 i32 i32) -> ()) (local () ((get-local 2) (return))))))
+                                            ((3 (func ((i32) -> ()) (local () ((get-local 0) (return)))))
+                                             (4 (func ((i32 i32) -> ()) (local () ((get-local 1) (return)))))
+                                             (5 (func ((i32 i32 i32) -> ()) (local () ((get-local 2) (return)))))))
+                                           ())
+                                          0 1 ((i64) -> ())))
+              (term (trap)))
   )

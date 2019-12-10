@@ -63,8 +63,12 @@
      (--> (s j (v ...) (in-hole L (v_1 ... (block tf (e_1 ...)) e_2 ...)))
           (s j (v ...) (in-hole L (v_1 ... (label () (e_1 ...)) e_2 ...))))
 
-     (--> (s j (v ...) (in-hole L (v_1 ... (label () (v_2 ... (trap) e ...) e_2 ...))))
+     (--> (s j (v ...) (in-hole L (v_1 ... (label () (v_2 ... (trap) e ...)) e_2 ...)))
           (s j (v ...) (in-hole L ((trap)))))
+
+     (--> (s j (v ...) (in-hole L (v_1 ... (trap) e_2 ...)))
+          (s j (v ...) (in-hole L ((trap))))
+          (side-condition (= 0 (term (context-depth L)))))
 
      ; Knowing about contexts is necessary for this (so can't shortcut the rest :/)!
      (--> (s j (v ...) (in-hole L (v_1 ... (br j_1) e ...)))
@@ -99,15 +103,15 @@
           (s j (v ...) (in-hole L (v_1 ... v_2 v_2 (set-local j) e ...))))
 
      ;; Store stuff!
-     (--> ((inst ...) j (v ...) (in-hole L (v_1 ... (get-global j_1) e ...)))
-          ((inst ...) j (v ...) (in-hole L (v_1 ... (do-global-get (inst ...) j j_1) e ...))))
+     (--> (((inst ...) (tabinst ...) (meminst ...)) j (v ...) (in-hole L (v_1 ... (get-global j_1) e ...)))
+          (((inst ...) (tabinst ...) (meminst ...)) j (v ...) (in-hole L (v_1 ... (do-global-get (inst ...) j j_1) e ...))))
 
-     (--> ((inst ...) j (v ...) (in-hole L (v_1 ... v_2 (set-global j_1) e ...)))
-          ((do-global-set (inst ...) j j_1 v_2) j (v ...) (in-hole L (v_1 ... e ...))))
+     (--> (((inst ...) (tabinst ...) (meminst ...)) j (v ...) (in-hole L (v_1 ... v_2 (set-global j_1) e ...)))
+          (((do-global-set (inst ...) j j_1 v_2) (tabinst ...) (meminst ...)) j (v ...) (in-hole L (v_1 ... e ...))))
 
      ; Function calls
-     (--> ((inst ...) j (v ...) (in-hole L (v_1 ... (call j_1) e ...)))
-          ((inst ...) j (v ...) (in-hole L (v_1 ... (call (function-lookup (inst ...) j j_1)) e ...))))
+     (--> (((inst ...) (tabinst ...) (meminst ...)) j (v ...) (in-hole L (v_1 ... (call j_1) e ...)))
+          (((inst ...) (tabinst ...) (meminst ...)) j (v ...) (in-hole L (v_1 ... (call (function-lookup (inst ...) j j_1)) e ...))))
 
      (--> (s j (v ...) (in-hole L (v_1 ... (call cl) e ...)))
           (s j (v ...) (in-hole L (setup-call (v_1 ...) cl (e ...)))))
@@ -131,5 +135,5 @@
                  ,(apply-reduction-relation -> (term (s j_1 (v_2 ...) (e ...))))))
 
      (--> (s j (v ...) (in-hole L (v_1 ... (i32 const j_1) (call-indirect tf) e ...)))
-          (s j (v ...) (in-hole L (v_1 ... (handle-call-indirect s j j_1 tf)))))
+          (s j (v ...) (in-hole L (v_1 ... (handle-call-indirect s j j_1 tf) e ...))))
      ))

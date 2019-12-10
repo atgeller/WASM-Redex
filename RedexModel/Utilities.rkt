@@ -113,7 +113,7 @@
   [(function-lookup (inst_1 inst_2 ...) j j_1)
    (function-lookup (inst_2 ...) ,(sub1 (term j)) j_1)
    (side-condition (> (term j) 0))]
-  [(function-lookup (((cl ...) (v ...)) inst_2 ...) 0 j_1)
+  [(function-lookup (((cl ...) (v ...) _ _) inst_2 ...) 0 j_1)
    (do-get (cl ...) j_1)])
 
 (define-metafunction WASMrt
@@ -132,4 +132,21 @@
    ])
 
 (define-metafunction WASMrt
-  handle-call-indirect : s j j_1 tf -> cl)
+  inst-tab : inst -> j
+  [(inst-tab (_ _ (tab j) _)) j])
+
+(define-metafunction WASMrt
+  check-tf : tf cl -> e
+  [(check-tf tf (j (func tf (local (t ...) (e ...)))))
+   (call (j (func tf (local (t ...) (e ...)))))]
+  [(check-tf tf_!_ (_ (func tf_!_ _)))
+   (trap)])
+
+(define-metafunction WASMrt
+  handle-call-indirect : s j j_1 tf -> e
+  [(handle-call-indirect ((inst ...) (tabinst ...) _) j j_1 tf)
+   (check-tf tf
+             (do-get
+              (do-get (tabinst ...)
+                      (inst-tab (do-get (inst ...) j)))
+              j_1))])

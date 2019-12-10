@@ -57,17 +57,16 @@
      (local (j (v ...)) (e ...)))
   (L ::= hole (v ... (label (e ...) L) e ...))
 
-  (s ::= (inst ...))
+  (s ::= ((inst ...) (tabinst ...) (meminst ...)))
   (cl ::= (j f))
-  (inst ::= ((cl ...) (v ...)))
-
-        ;((cl ...) (v ...) (mem? j)) ;; Omitted for now
-        ;((cl ...) (v ...) (tab? j))
-        ;((cl ...) (v ...) (tab? j) (mem? j)))
+  (inst ::= ((cl ...) (v ...) (tab j) (mem j))
+        ((cl ...) (v ...) (tab j) (mem))
+        ((cl ...) (v ...) (tab) (mem j))
+        ((cl ...) (v ...) (tab) (mem)))
 
   ;; TODO: The rest of the store/modules
-  #;(tabinst ::= (cl ...))
-  #;(meminst ::= (v ...))
+  (tabinst ::= (cl ...))
+  (meminst ::= (v ...))
 
   #;(s ::= ((inst ...) (tabinst ...) (meminst ...)))
   )
