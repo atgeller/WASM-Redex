@@ -8,7 +8,7 @@
   (e ::= (unreachable) (nop) (drop) (select)
      (block tf (e ...)) (loop tf (e ...))
      (if tf (e ...) else (e ...)) (br j) (br-if j)
-     (br-table (j ...)) (return) (call i)
+     (br-table (j ...)) (return) (call j)
      (call-indirect tf) (get-local j) (set-local j)
      (tee-local i) (get-global i) (set-global i)
      (load t a o) (store t a o)
@@ -33,24 +33,43 @@
   (j ::= natural)
   (c ::= natural) ; No floats for now
 
+  (f ::= (func tf (local (t ...) (e ...))))
+
   ;; TODO: PARENTHESIZE
-  (f ::= (ex ... func tf local t ... e ...)
-  (ex ... func tf im))
-  (glob ::= (ex ... global tg e ...) (ex ... global tg im))
-  (tab ::= (ex ... table n i ...) (ex ... table n im))
-  (im ::= (import string string))
-  (ex ::= (export string))
-  (tab? ::= tab None)
-  (mem? ::= mem None)
-  (m ::= (module f ... glob ... tab? mem?))
+  ;; TODO: The rest of the store/modules
+  #;(f ::= (ex ... func tf local t ... e ...)
+     (ex ... func tf im))
+  ;(glob ::= (ex ... global tg e ...) (ex ... global tg im))
+  ;(tab ::= (ex ... table n i ...) (ex ... table n im))
+  ;(im ::= (import string string))
+  ;(ex ::= (export string))
+  #;(m ::= (module f ... glob ... tab mem)
+     (module f ... glob ... mem)
+     (module f ... glob ... tab)
+     (module f ... glob ...))
   )
 
 (define-extended-language WASMrt WASM
   (v ::= (t const c))
   (stack ::= [] (v stack))
 
-  (e ::= .... (trap) (call cl) (label (e ...) (e ...)) (local (i (v ...)) (e ...)))
+  (e ::= .... (trap) (call cl) (label (e ...) (e ...))
+     (local (j (v ...)) (e ...)))
   (L ::= hole (v ... (label (e ...) L) e ...))
+
+  (s ::= (inst ...))
+  (cl ::= (j f))
+  (inst ::= ((cl ...) (v ...)))
+
+        ;((cl ...) (v ...) (mem? j)) ;; Omitted for now
+        ;((cl ...) (v ...) (tab? j))
+        ;((cl ...) (v ...) (tab? j) (mem? j)))
+
+  ;; TODO: The rest of the store/modules
+  #;(tabinst ::= (cl ...))
+  #;(meminst ::= (v ...))
+
+  #;(s ::= ((inst ...) (tabinst ...) (meminst ...)))
   )
 
 #| TODO: Deprecated
