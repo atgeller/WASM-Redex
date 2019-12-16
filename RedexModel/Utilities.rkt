@@ -1,6 +1,6 @@
 #lang racket
 
-(require redex/reduction-semantics "Syntax.rkt")
+(require redex/reduction-semantics "Syntax.rkt" "Bits.rkt")
 
 (provide (except-out (all-defined-out) wasm_binop->racket wasm_testop->racket wasm_relop->racket))
 
@@ -77,13 +77,11 @@
 
 ;; NOTE: Useful for the very popular myriad index-based lookups
 (define-metafunction WASMrt
-  do-set : (v ...) j v_2 -> (v ...)
-  [(do-set () j v_2)
-   (error "Not enough locals!")]
-  [(do-set (v ...) j v_2)
-   ,(append (take (term (v ...)) (term j))
-            (term (v_2))
-            (drop (term (v ...)) (add1 (term j))))])
+  do-set : (any ...) j any -> (any ...)
+  [(do-set (any_1 ...) j any_2)
+   ,(append (take (term (any_1 ...)) (term j))
+            (term (any_2))
+            (drop (term (any_1 ...)) (add1 (term j))))])
 
 (define-metafunction WASMrt
   do-global-get : (inst ...) j j_1 -> v
@@ -95,9 +93,9 @@
    (do-get (v ...) j_1)])
 
 (define-metafunction WASMrt
-  inst-set : inst j v -> (inst)
-  [(inst-set ((cl ...) (v ...)) j v_2)
-   (((cl ...) (do-set (v ...) j v_2)))])
+  inst-global-set : inst j v -> (inst)
+  [(inst-global-set ((cl ...) (v ...) (name tab any) (name mem any)) j v_2)
+   (((cl ...) (do-set (v ...) j v_2) tab mem))])
 
 (define-metafunction WASMrt
   do-global-set : (inst ...) j j_1 v -> (inst ...)
@@ -106,7 +104,7 @@
            [tail (drop (term (inst ...)) (term j))]
            [to-change (car tail)]
            [rest (cdr tail)])
-      (append head (term (inst-set to-change j_1 v)) rest))])
+      (append head (term (inst-global-set to-change j_1 v)) rest))])
 
 (define-metafunction WASMrt
   function-lookup : (inst ...) j j_1 -> cl
@@ -136,6 +134,10 @@
   [(inst-tab (_ _ (tab j) _)) j])
 
 (define-metafunction WASMrt
+  inst-mem : inst -> j
+  [(inst-mem (_ _ _ (mem j))) j])
+
+(define-metafunction WASMrt
   check-tf : tf cl -> e
   [(check-tf tf (j (func tf (local (t ...) (e ...)))))
    (call (j (func tf (local (t ...) (e ...)))))]
@@ -150,3 +152,40 @@
               (do-get (tabinst ...)
                       (inst-tab (do-get (inst ...) j)))
               j_1))])
+
+(define (get-mem insts meminsts index)
+  (match-let* ([memindex (term (inst-mem (do-get ,insts ,index)))]
+               [`(bits ,mem) (term (do-get ,meminsts ,memindex))])
+    (cons mem memindex)))
+
+; Memory operations
+;; TODO: cleanup on aisle 5
+(define-metafunction WASMrt
+  ; c - align, c_1 - offset + index
+  do-load : s j t c c_1 any -> e
+  [(do-load ((inst ...) (tabinst ...) (meminst ...)) j t c c_1 (name tp-sx? any))
+   ,(wrapped-load (car (get-mem (term (inst ...)) (term (meminst ...)) (term j)))
+                  (term t)
+                  (term c)   ; align
+                  (term c_1) ; offset + index
+                  (term tp-sx?))])
+
+(define-metafunction WASMrt
+  ; c - align, c_1 - offset + index, c_2 - value
+  do-store : s j t c c_1 c_2 any -> (s (e ...))
+  [(do-store ((inst ...) (tabinst ...) (meminst ...)) j t c c_1 c_2 (name tp? any))
+   ,(let* ([meminfo (get-mem (term (inst ...)) (term (meminst ...)) (term j))]
+           [mem (car meminfo)]
+           [memindex (cdr meminfo)]
+           [result (wrapped-store mem
+                                  (term t)
+                                  (term c)   ; align
+                                  (term c_1) ; offset + index
+                                  (term c_2) ; value
+                                  (term tp?))])
+      (if (redex-match? WASMrt (trap) result)
+          (term (((inst ...) (tabinst ...) (meminst ...)) ((trap))))
+          (term (((inst ...)
+                  (tabinst ...)
+                  (do-set (meminst ...) ,memindex ,result))
+                 ()))))])

@@ -11,16 +11,16 @@
      (br-table (j ...)) (return) (call j)
      (call-indirect tf) (get-local j) (set-local j)
      (tee-local i) (get-global i) (set-global i)
-     (load t a o) (store t a o)
-     (current-memory) (grow-memory) (t const c)
-     (t unop)
-     (t binop) (t testop)
-     (t relop) (t cvtop t))
+     (t load c c) (t load (tp sx) c c) (t store c c)
+     (t store tp c c) (current-memory) (grow-memory)
+     (t unop) (t binop) (t testop)
+     (t relop) (t cvtop t) (t const c))
   
   (t ::= i32 i64 f32 f64) ; No floats for now
-  (tp? ::= tp None)
+  (tp ::= i8 i16 i32)
   (tf ::= ((t ...) -> (t ...)))
   (tg ::= (mut t) t)
+  (sx ::= signed unsigned)
 
   ;(unop ::= clz ctz popcnt) Omitted, need bit magic
   (binop ::= add sub mul div rem
@@ -66,7 +66,7 @@
 
   ;; TODO: The rest of the store/modules
   (tabinst ::= (cl ...))
-  (meminst ::= (v ...))
+  (meminst ::= (bits any))
 
   #;(s ::= ((inst ...) (tabinst ...) (meminst ...)))
   )

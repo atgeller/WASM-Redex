@@ -3,6 +3,7 @@
 (module+ test
   (require redex/reduction-semantics
            "../Semantics.rkt"
+           "../Bits.rkt"
            rackunit)
 
   ;; Tests of simple binops
@@ -128,23 +129,23 @@
 
   (test-->>E -> ;; call_indirect
              (term ((((() () (tab 1) (mem)))
-                    (((0 (func ((i32) -> ()) (local () ((get-local 0) (return)))))
-                      (1 (func ((i32 i32) -> ()) (local () ((get-local 1) (return)))))
-                      (2 (func ((i32 i32 i32) -> ()) (local () ((get-local 2) (return))))))
-                     ((3 (func ((i32) -> ()) (local () ((get-local 0) (return)))))
-                      (4 (func ((i32 i32) -> ()) (local () ((get-local 1) (return)))))
-                      (5 (func ((i32 i32 i32) -> ()) (local () ((get-local 2) (return)))))))
+                    (((0 (func ((i32) -> (i32)) (local () ((get-local 0) (return)))))
+                      (1 (func ((i32 i32) -> (i32)) (local () ((get-local 1) (return)))))
+                      (2 (func ((i32 i32 i32) -> (i32)) (local () ((get-local 2) (return))))))
+                     ((3 (func ((i32) -> (i32)) (local () ((get-local 0) (return)))))
+                      (4 (func ((i32 i32) -> (i32)) (local () ((get-local 1) (return)))))
+                      (5 (func ((i32 i32 i32) -> (i32)) (local () ((get-local 2) (return)))))))
                     ())
                     0
                     ()
-                    ((i32 const 2) (i32 const 3) (i32 const 1) (call-indirect ((i32 i32) -> ())))))
+                    ((i32 const 2) (i32 const 3) (i32 const 1) (call-indirect ((i32 i32) -> (i32))))))
              (term ((((() () (tab 1) (mem)))
-                    (((0 (func ((i32) -> ()) (local () ((get-local 0) (return)))))
-                      (1 (func ((i32 i32) -> ()) (local () ((get-local 1) (return)))))
-                      (2 (func ((i32 i32 i32) -> ()) (local () ((get-local 2) (return))))))
-                     ((3 (func ((i32) -> ()) (local () ((get-local 0) (return)))))
-                      (4 (func ((i32 i32) -> ()) (local () ((get-local 1) (return)))))
-                      (5 (func ((i32 i32 i32) -> ()) (local () ((get-local 2) (return)))))))
+                    (((0 (func ((i32) -> (i32)) (local () ((get-local 0) (return)))))
+                      (1 (func ((i32 i32) -> (i32)) (local () ((get-local 1) (return)))))
+                      (2 (func ((i32 i32 i32) -> (i32)) (local () ((get-local 2) (return))))))
+                     ((3 (func ((i32) -> (i32)) (local () ((get-local 0) (return)))))
+                      (4 (func ((i32 i32) -> (i32)) (local () ((get-local 1) (return)))))
+                      (5 (func ((i32 i32 i32) -> (i32)) (local () ((get-local 2) (return)))))))
                     ())
                     0
                     ()
@@ -152,25 +153,67 @@
 
   (test-->>E -> ;; call_indirect wrong type
              (term ((((() () (tab 1) (mem)))
-                    (((0 (func ((i32) -> ()) (local () ((get-local 0) (return)))))
-                      (1 (func ((i32 i32) -> ()) (local () ((get-local 1) (return)))))
-                      (2 (func ((i32 i32 i32) -> ()) (local () ((get-local 2) (return))))))
-                     ((3 (func ((i32) -> ()) (local () ((get-local 0) (return)))))
-                      (4 (func ((i32 i32) -> ()) (local () ((get-local 1) (return)))))
-                      (5 (func ((i32 i32 i32) -> ()) (local () ((get-local 2) (return)))))))
+                    (((0 (func ((i32) -> (i32)) (local () ((get-local 0) (return)))))
+                      (1 (func ((i32 i32) -> (i32)) (local () ((get-local 1) (return)))))
+                      (2 (func ((i32 i32 i32) -> (i32)) (local () ((get-local 2) (return))))))
+                     ((3 (func ((i32) -> (i32)) (local () ((get-local 0) (return)))))
+                      (4 (func ((i32 i32) -> (i32)) (local () ((get-local 1) (return)))))
+                      (5 (func ((i32 i32 i32) -> (i32)) (local () ((get-local 2) (return)))))))
                     ())
                     0
                     ()
                     ((i32 const 2) (i32 const 3) (i32 const 1) (call-indirect ((i64) -> (i64))))))
              (term ((((() () (tab 1) (mem)))
-                    (((0 (func ((i32) -> ()) (local () ((get-local 0) (return)))))
-                      (1 (func ((i32 i32) -> ()) (local () ((get-local 1) (return)))))
-                      (2 (func ((i32 i32 i32) -> ()) (local () ((get-local 2) (return))))))
-                     ((3 (func ((i32) -> ()) (local () ((get-local 0) (return)))))
-                      (4 (func ((i32 i32) -> ()) (local () ((get-local 1) (return)))))
-                      (5 (func ((i32 i32 i32) -> ()) (local () ((get-local 2) (return)))))))
+                    (((0 (func ((i32) -> (i32)) (local () ((get-local 0) (return)))))
+                      (1 (func ((i32 i32) -> (i32)) (local () ((get-local 1) (return)))))
+                      (2 (func ((i32 i32 i32) -> (i32)) (local () ((get-local 2) (return))))))
+                     ((3 (func ((i32) -> (i32)) (local () ((get-local 0) (return)))))
+                      (4 (func ((i32 i32) -> (i32)) (local () ((get-local 1) (return)))))
+                      (5 (func ((i32 i32 i32) -> (i32)) (local () ((get-local 2) (return)))))))
                     ())
                     0
                     ()
-                    ((i32 const 2) (i32 const 3) (trap)))))
+                    ((trap)))))
+
+  (test-->>E -> ;; store than load
+             (term ((((() () (tab) (mem 0)))
+                     ()
+                     ((bits ,(make-memory 128))))
+                    0
+                    ()
+                    ((i32 const 0) (i32 const 0) (i64 const 65) (i64 store 0 8) (i64 load 0 8))))
+             (term ((((() () (tab) (mem 0)))
+                     ()
+                     ((bits ,(store (make-memory 128) 8 64 65))))
+                    0
+                    ()
+                    ((i64 const 65)))))
+
+  (test-->>E -> ;; store out-of-bounds than load
+             (term ((((() () (tab) (mem 0)))
+                     ()
+                     ((bits ,(make-memory 128))))
+                    0
+                    ()
+                    ((i32 const 0) (i32 const 0) (i64 const 65) (i64 store 0 200) (i64 load 0 8))))
+             (term ((((() () (tab) (mem 0)))
+                     ()
+                     ((bits ,(make-memory 128))))
+                    0
+                    ()
+                    ((trap)))))
+
+  (test-->>E -> ;; store than load out-of-bounds
+             (term ((((() () (tab) (mem 0)))
+                     ()
+                     ((bits ,(make-memory 128))))
+                    0
+                    ()
+                    ((i32 const 0) (i32 const 0) (i64 const 65) (i64 store 0 8) (i64 load 0 200))))
+             (term ((((() () (tab) (mem 0)))
+                     ()
+                     ((bits ,(store (make-memory 128) 8 64 65))))
+                    0
+                    ()
+                    ((trap)))))
   )
