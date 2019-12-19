@@ -184,7 +184,7 @@
                     ((i32 const 0) (i32 const 0) (i64 const 65) (i64 store 0 8) (i64 load 0 8))))
              (term ((((() () (tab) (mem 0)))
                      ()
-                     ((bits ,(store (make-memory 128) 8 64 65))))
+                     ((bits ,(store (make-memory 128) 64 64 65))))
                     0
                     ()
                     ((i64 const 65)))))
@@ -212,8 +212,22 @@
                     ((i32 const 0) (i32 const 0) (i64 const 65) (i64 store 0 8) (i64 load 0 200))))
              (term ((((() () (tab) (mem 0)))
                      ()
-                     ((bits ,(store (make-memory 128) 8 64 65))))
+                     ((bits ,(store (make-memory 128) 64 64 65))))
                     0
                     ()
                     ((trap)))))
+
+  (test-->>E -> ;; current-memory
+             (term ((((() () (tab) (mem 0)))
+                     ()
+                     ((bits ,(make-memory 128))))
+                    0
+                    ()
+                    ((current-memory))))
+             (term ((((() () (tab) (mem 0)))
+                     ()
+                     ((bits ,(make-memory 128))))
+                    0
+                    ()
+                    ((i32 const 128)))))
   )

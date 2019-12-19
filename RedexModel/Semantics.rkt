@@ -145,18 +145,18 @@
           (s j (v ...) (in-hole L (v_1 ... (do-load s j t c_1 ,(+ (term c_2) (term c)) (tp sx)) e ...))))
 
      (--> (s j (v ...) (in-hole L (v_1 ... (i32 const c) (t const c_1) (t store c_2 c_3) e ...)))
-          ,(let ([result (term (do-store s j t c_2 ,(+ (term c_3) (term c)) c_1 #f))])
-             (match result
-               [`(,s* ((trap)))
-                (term (s j (v ...) (in-hole L (v_1 ... (trap) e ...))))]
-               [`(,s* ())
-                (term (,s* j (v ...) (in-hole L (v_1 ... e ...))))])))
+          (s_new j (v ...) (in-hole L (v_1 ... e_new ... e ...)))
+          (where (s_new (e_new ...)) (do-store s j t c_2 ,(+ (term c_3) (term c)) c_1 #f)))
 
      (--> (s j (v ...) (in-hole L (v_1 ... (i32 const c) (t const c_1) (t store (tp) c_2 c_3) e ...)))
-          ,(let ([result (term (do-store s j t c_2 ,(+ (term c_3) (term c)) c_1 tp))])
-             (match result
-               [`(,s* ((trap)))
-                (term (s j (v ...) (in-hole L (v_1 ... (trap) e ...))))]
-               [`(,s* ())
-                (term (,s* j (v ...) (in-hole L (v_1 ... e ...))))])))
+          (s_new j (v ...) (in-hole L (v_1 ... e_new ... e ...)))
+          (where (s_new (e_new ...)) (do-store s j t c_2 ,(+ (term c_3) (term c)) c_1 tp)))
+
+     (--> (s j (v ...) (in-hole L (v_1 ... (current-memory) e ...)))
+          (s j (v ...) (in-hole L (v_1 ... (mem-size s j) e ...))))
+
+     (--> (s j (v ...) (in-hole L (v_1 ... (i32 const c) (grow-memory) e ...)))
+          (s_new j (v ...) (in-hole L (v_1 ... e_new ... e ...)))
+          (where (s_new (e_new ...)) (grow-mem s j c)))
+
      ))

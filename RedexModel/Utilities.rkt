@@ -189,3 +189,15 @@
                   (tabinst ...)
                   (do-set (meminst ...) ,memindex ,result))
                  ()))))])
+
+(define-metafunction WASMrt
+  mem-size : s j -> v
+  [(mem-size ((inst ...) _ (meminst ...)) j)
+   (i32 const ,(memory-size (car (get-mem (term (inst ...)) (term (meminst ...)) (term j)))))])
+
+(define-metafunction WASMrt
+  grow-mem : s j c -> (s (e ...))
+  [(grow-mem ((inst ...) _ (meminst ...)) j c)
+   ,(match-let* ([(cons mem memindex) (get-mem (term (inst ...)) (term (meminst ...)) (term j))]
+                 [(cons newmem res) (grow-memory (car mem) (term c))])
+      (term (((inst ...) _ (do-set (meminst ...) ,memindex ,res)) (i32 const ,res))))])
