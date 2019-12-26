@@ -16,7 +16,7 @@
      (t unop) (t binop) (t testop)
      (t relop) (t cvtop t) (t const c))
   
-  (t ::= i32 i64 f32 f64) ; No floats for now
+  (t ::= i32 i64) ; f32 f64 No floats for now
   (tp ::= i8 i16 i32)
   (tf ::= ((t ...) -> (t ...)))
   (tg ::= (mut t) t)
@@ -29,7 +29,6 @@
   (relop ::= eq ne lt gt le ge)
   (cvtop ::= convert reinterpret) ; Ignored for now because no floats
 
-  (i ::= variable-not-otherwise-mentioned)
   (j ::= natural)
   (c ::= natural) ; No floats for now
 

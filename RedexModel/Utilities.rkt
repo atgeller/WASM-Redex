@@ -201,3 +201,9 @@
    ,(match-let* ([(cons mem memindex) (get-mem (term (inst ...)) (term (meminst ...)) (term j))]
                  [(cons newmem res) (grow-memory (car mem) (term c))])
       (term (((inst ...) _ (do-set (meminst ...) ,memindex ,res)) (i32 const ,res))))])
+
+;; For use in type system
+(define-metafunction WASMrt
+  global-type : tg -> t
+  [(global-type t) t]
+  [(global-type (mut t)) t])
