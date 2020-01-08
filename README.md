@@ -7,9 +7,12 @@ The syntactic representation used in the model is `s-expression` based.
 It contains a few more parentheses than are present in the original grammer (to speed up parsing).
 Other small differences include:
 * The removal of the `.` character between types and a number of terminal expressions (e.g., `(i32.add)` becomes `(i32 add)`).
-* Optional types are enumerated or faked using lists (there's a hidden low-priority TODO to clean this up).
+* Optional terms are handled via enumeration or faked using lists (there's a hidden low-priority TODO to clean this up).
 
-The complete syntax is presented below.
+The WASM Redex language is defined in `Syntax.rkt`. A typeset version can be viewed below and uses similar terminology to the 
+
+![The WebAssembly language syntax](Syntax.pdf)
+
 
 
 ## Semantics
@@ -22,3 +25,4 @@ There are four parameters: `(s j v* e*) -> (s j v* e*)` with roughly equivalent 
 * `v*`: the list of local variables (referred to by an index).
 * `e*`: the list of instructions. Since values are expressions it is more helpful to think of this as `v* e*` where `v*` is the stack values and `e*` is the instruction list.
 
+## Validation (In Progress)
