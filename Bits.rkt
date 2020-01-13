@@ -20,7 +20,7 @@
             (+ (memory-size mem) newsize))
       (cons mem -1)))
 
-(define (type-width type tp)
+(define (type-width type (tp #f))
   ;; One of these is true by well-formedness
   (cond 
     [(redex-match? WASMrt i8 tp) 8]
