@@ -1,6 +1,6 @@
 # WASM Redex Model
 This is a model of the WebAssembly language syntax, semantics, and (in progress) validation rules.
-The model is based off of the 2017 POPL paper by Haas et al (TODO: Link).
+The model is based off of the [2017 PLDI paper by Haas et al](https://dl.acm.org/doi/10.1145/3062341.3062363).
 
 ## Syntax
 The syntactic representation used in the model is `s-expression` based.
