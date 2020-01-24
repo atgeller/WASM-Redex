@@ -2,10 +2,11 @@
 
 (module+ test
   (require redex/reduction-semantics
-           "../Validation.rkt"
+           "../InstructionTyping.rkt"
            rackunit)
 
-  (define empty-context (term ((func) (global) (table) (memory) (local) (label ()) (return))))
+  (define empty-context (term ((func ()) (global ()) (table) (memory) (local ()) (label ()) (return))))
+
   (test-judgment-holds ⊢
                        (derivation `(⊢ ,empty-context ((i32 const 0) (i32 const 1) (i32 add)) (() -> (i32)))
                                    #f

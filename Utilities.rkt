@@ -94,8 +94,8 @@
 
 (define-metafunction WASMrt
   inst-global-set : inst j v -> (inst)
-  [(inst-global-set ((cl ...) (v ...) (name tab any) (name mem any)) j v_2)
-   (((cl ...) (do-set (v ...) j v_2) tab mem))])
+  [(inst-global-set ((cl ...) (v ...) (name table any) (name memory any)) j v_2)
+   (((cl ...) (do-set (v ...) j v_2) table memory))])
 
 (define-metafunction WASMrt
   do-global-set : (inst ...) j j_1 v -> (inst ...)
@@ -116,7 +116,7 @@
 
 (define-metafunction WASMrt
   setup-call : (v ...) cl (e ...) -> (e ...)
-  [(setup-call (v ...) (j (func ((t ...) -> (t_2 ...)) (local (t_3 ...) (e ...)))) (e_2 ...))
+  [(setup-call (v ...) (j (() (func ((t ...) -> (t_2 ...)) (local (t_3 ...) (e ...))))) (e_2 ...))
    ; 1. strip arguments from stack
    ,(let-values ([(stack args) (split-at (term (v ...)) (- (length (term (v ...)))
                                                            (length (term (t ...)))))])
@@ -130,18 +130,18 @@
    ])
 
 (define-metafunction WASMrt
-  inst-tab : inst -> j
-  [(inst-tab (_ _ (tab j) _)) j])
+  inst-table : inst -> j
+  [(inst-table (_ _ (table j) _)) j])
 
 (define-metafunction WASMrt
-  inst-mem : inst -> j
-  [(inst-mem (_ _ _ (mem j))) j])
+  inst-memory : inst -> j
+  [(inst-memory (_ _ _ (memory j))) j])
 
 (define-metafunction WASMrt
   check-tf : tf cl -> e
-  [(check-tf tf (j (func tf (local (t ...) (e ...)))))
-   (call (j (func tf (local (t ...) (e ...)))))]
-  [(check-tf tf_!_ (_ (func tf_!_ _)))
+  [(check-tf tf (j (_ (func tf (local (t ...) (e ...))))))
+   (call (j (() (func tf (local (t ...) (e ...))))))]
+  [(check-tf tf_!_ (_ (_ (func tf_!_ _))))
    (trap)])
 
 (define-metafunction WASMrt
@@ -150,11 +150,11 @@
    (check-tf tf
              (do-get
               (do-get (tabinst ...)
-                      (inst-tab (do-get (inst ...) j)))
+                      (inst-table (do-get (inst ...) j)))
               j_1))])
 
 (define (get-mem insts meminsts index)
-  (match-let* ([memindex (term (inst-mem (do-get ,insts ,index)))]
+  (match-let* ([memindex (term (inst-memory (do-get ,insts ,index)))]
                [`(bits ,mem) (term (do-get ,meminsts ,memindex))])
     (cons mem memindex)))
 
@@ -201,9 +201,3 @@
    ,(match-let* ([(cons mem memindex) (get-mem (term (inst ...)) (term (meminst ...)) (term j))]
                  [(cons newmem res) (grow-memory (car mem) (term c))])
       (term (((inst ...) _ (do-set (meminst ...) ,memindex ,res)) (i32 const ,res))))])
-
-;; For use in type system
-(define-metafunction WASMrt
-  global-type : tg -> t
-  [(global-type t) t]
-  [(global-type (mut t)) t])

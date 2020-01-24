@@ -29,28 +29,25 @@
   (relop ::= eq ne lt gt le ge)
   (cvtop ::= convert reinterpret) ; Ignored for now because no floats
 
-  (j ::= natural)
+  (i j ::= natural)
   (c ::= natural) ; No floats for now
 
-  (f ::= (func tf (local (t ...) (e ...))))
-
-  ;; TODO: PARENTHESIZE
-  ;; TODO: The rest of the store/modules
-  #;(f ::= (ex ... func tf local t ... e ...)
-     (ex ... func tf im))
-  ;(glob ::= (ex ... global tg e ...) (ex ... global tg im))
-  ;(tab ::= (ex ... table n i ...) (ex ... table n im))
+  ;; TODO: We don't handle imports
+  (f ::= ((ex ...) (func tf (local (t ...) (e ...))))
+     #;((ex ...) (func tf im)))
+  (glob ::= ((ex ...) (global tg (e ...)))
+        #;((ex ...) (global tg im)))
+  (tab ::= ((ex ...) (table j (i ...)))
+       #;((ex ...) (table j im)))
+  (mem ::= ((ex ...) (memory i))
+       #;((ex ...) (memory im)))
   ;(im ::= (import string string))
-  ;(ex ::= (export string))
-  #;(m ::= (module f ... glob ... tab mem)
-     (module f ... glob ... mem)
-     (module f ... glob ... tab)
-     (module f ... glob ...))
+  (ex ::= (export string))
+  (m ::= (module (f ...) (glob ...) (tab ...) (mem ...)))
   )
 
 (define-extended-language WASMrt WASM
   (v ::= (t const c))
-  (stack ::= [] (v stack))
 
   (e ::= .... (trap) (call cl) (label (e ...) (e ...))
      (local (j (v ...)) (e ...)))
@@ -58,16 +55,13 @@
 
   (s ::= ((inst ...) (tabinst ...) (meminst ...)))
   (cl ::= (j f))
-  (inst ::= ((cl ...) (v ...) (tab j) (mem j))
-        ((cl ...) (v ...) (tab j) (mem))
-        ((cl ...) (v ...) (tab) (mem j))
-        ((cl ...) (v ...) (tab) (mem)))
+  (inst ::= ((cl ...) (v ...) (table j) (memory j))
+        ((cl ...) (v ...) (table j) (memory))
+        ((cl ...) (v ...) (table) (memory j))
+        ((cl ...) (v ...) (table) (memory)))
 
-  ;; TODO: The rest of the store/modules
   (tabinst ::= (cl ...))
   (meminst ::= (bits any))
-
-  #;(s ::= ((inst ...) (tabinst ...) (meminst ...)))
   )
 
 #| TODO: Deprecated
