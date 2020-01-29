@@ -2,17 +2,10 @@
 
 (module+ test
   (require redex/reduction-semantics
+           "TestUtilities.rkt"
            "../ModuleTyping.rkt"
            "../InstructionTyping.rkt"
            rackunit)
-
-  (define empty-context (term ((func ()) (global ()) (table) (memory) (local ()) (label ()) (return))))
-  (define context1 (term ((func ((() -> (i32))))
-                          (global ())
-                          (table) (memory) (local ()) (label ()) (return))))
-  (define context2 (term ((func ((() -> (i32)) (() -> (i32))))
-                          (global ())
-                          (table) (memory) (local ()) (label ()) (return))))
 
   ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
   
@@ -112,4 +105,73 @@
                                     (derivation `(⊢-module-global-list () ())
                                                 #f
                                                 (list)))))
+
+  ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+  ;; Tests that a module with a single well-typed global is well-typed
+  (test-judgment-holds ⊢-module
+                       (derivation `(⊢-module (module () ((() (global i32 ((i32 const 0))))) () ()) ,context3)
+                                   #f
+                                   (list
+                                    (derivation `(⊢-module-func-list ,context3 () ())
+                                                #f
+                                                 (list))
+                                    (derivation `(⊢-module-global-list ((() (global i32 ((i32 const 0))))) ((() i32)))
+                                                #f
+                                                (list
+                                                 (derivation `(⊢-module-global ((func ()) (global ()) (table) (memory) (local ()) (label ()) (return))
+                                                                               (() (global i32 ((i32 const 0))))
+                                                                               (() i32))
+                                                             #f
+                                                             (list
+                                                              (derivation `(⊢ ((func ()) (global ()) (table) (memory) (local ()) (label ()) (return))
+                                                                              ((i32 const 0))
+                                                                              (() -> (i32)))
+                                                                          #f
+                                                                          (list))))
+                                                 (derivation `(⊢-module-global-list () ())
+                                                             #f
+                                                             (list)))))))
+  
+  ;; Tests that a module with a well-typed list of globals, where the second global refers to the first, is well-typed
+  (test-judgment-holds ⊢-module
+                       (derivation `(⊢-module (module () ((() (global i32 ((i32 const 0)))) (() (global i32 ((get-global 0))))) () ()) ,context4)
+                                   #f
+                                   (list
+                                    (derivation `(⊢-module-func-list ,context4 () ())
+                                                #f
+                                                 (list))
+                                    (derivation `(⊢-module-global-list ((() (global i32 ((i32 const 0)))) (() (global i32 ((get-global 0))))) ((() i32) (() i32)))
+                                                #f
+                                                (list
+                                                 (derivation `(⊢-module-global ((func ()) (global (i32)) (table) (memory) (local ()) (label ()) (return))
+                                                                               (() (global i32 ((get-global 0))))
+                                                                               (() i32))
+                                                             #f
+                                                             (list
+                                                              (derivation `(⊢ ((func ()) (global (i32)) (table) (memory) (local ()) (label ()) (return))
+                                                                              ((get-global 0))
+                                                                              (() -> (i32)))
+                                                                          #f
+                                                                          (list))))
+                                                 (derivation `(⊢-module-global-list ((() (global i32 ((i32 const 0))))) ((() i32)))
+                                                             #f
+                                                             (list
+                                                              (derivation `(⊢-module-global ((func ()) (global ()) (table) (memory) (local ()) (label ()) (return))
+                                                                                            (() (global i32 ((i32 const 0))))
+                                                                                            (() i32))
+                                                                          #f
+                                                                          (list
+                                                                           (derivation `(⊢ ((func ()) (global ()) (table) (memory) (local ()) (label ()) (return))
+                                                                                           ((i32 const 0))
+                                                                                           (() -> (i32)))
+                                                                                       #f
+                                                                                       (list))))
+                                                              (derivation `(⊢-module-global-list () ())
+                                                                          #f
+                                                                          (list)))))))))
+
+  ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+  
 )

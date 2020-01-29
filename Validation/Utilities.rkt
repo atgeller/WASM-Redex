@@ -22,10 +22,10 @@
 
 (define-metafunction WASMTyping
   in-label : C (t ...) -> C
-  [(in-label ((func (tf ...)) (global (tg ...)) (table (j_1 ...)) (memory (j_2 ...)) (local (t_1 ...)) (label ((t_2 ...) ...)) (return (t_3 ...))) (t ...))
-   ((func (tf ...)) (global (tg ...)) (table (j_1 ...)) (memory (j_2 ...)) (local (t_1 ...)) (label ((t_2 ...) ... (t ...))) (return (t_3 ...)))]
-  [(in-label ((func (tf ...)) (global (tg ...)) (table (j_1 ...)) (memory (j_2 ...)) (local (t_1 ...)) (label ((t_2 ...) ...)) (return)) (t ...))
-   ((func (tf ...)) (global (tg ...)) (table (j_1 ...)) (memory (j_2 ...)) (local (t_1 ...)) (label ((t_2 ...) ... (t ...))) (return))])
+  [(in-label ((func (tf ...)) (global (tg ...)) (table j_1 ...) (memory j_2 ...) (local (t_1 ...)) (label ((t_2 ...) ...)) (return (t_3 ...))) (t ...))
+   ((func (tf ...)) (global (tg ...)) (table j_1 ...) (memory j_2 ...) (local (t_1 ...)) (label ((t_2 ...) ... (t ...))) (return (t_3 ...)))]
+  [(in-label ((func (tf ...)) (global (tg ...)) (table j_1 ...) (memory j_2 ...) (local (t_1 ...)) (label ((t_2 ...) ...)) (return)) (t ...))
+   ((func (tf ...)) (global (tg ...)) (table j_1 ...) (memory j_2 ...) (local (t_1 ...)) (label ((t_2 ...) ... (t ...))) (return))])
 
 (define-judgment-form WASMTyping
   #:contract (label-types ((t ...) ...) (j ...) (t ...))

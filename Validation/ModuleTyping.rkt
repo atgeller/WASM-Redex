@@ -6,6 +6,7 @@
          "InstructionTyping.rkt")
 
 (provide ⊢-module-func ;; For store typing
+         ⊢-module-global
          ⊢-module-func-list
          ⊢-module-global-list
          ⊢-module)
@@ -49,6 +50,7 @@
                     ((ex ...) (global tg (e ...)))
                     ((ex ...) tg))]
 
+  ;; Can't have exports if global is mutable
   [(where (mut t) tg)
    (where () (ex ...))
    (⊢ C (e ...) (() -> (t)))
@@ -66,8 +68,8 @@
   [-----------------------------
    (⊢-module-global-list () ())]
 
-  [(⊢-module-global-list (glob ...) (((ex ...) tg) ...))
-   (⊢-module-global ((func ()) (global (tg ...)) (table) (memory) (local ()) (label ()) (return)) glob_1 ((ex_1 ...) tg_1))
+  [(⊢-module-global ((func ()) (global (tg ...)) (table) (memory) (local ()) (label ()) (return)) glob_1 ((ex_1 ...) tg_1))
+   (⊢-module-global-list (glob ...) (((ex ...) tg) ...))
    ------------------------------------------------------------------------------------------------------------------------
    (⊢-module-global-list (glob ... glob_1) (((ex ...) tg) ... ((ex_1 ...) tg_1)))]
   )
@@ -113,31 +115,27 @@
    (⊢-module-table C tab ((ex_3_ ...) i))
    (⊢-module-mem C mem ((ex_4_ ...) j))
    ------------------------------------
-   (⊢-module (module (f ...) (glob ...) (tab) (mem)) C)
-   ]
+   (⊢-module (module (f ...) (glob ...) (tab) (mem)) C)]
 
   [(where ((func (tf ...)) (global (tg ...)) (table i) (memory) (local ()) (label ()) (return)) C)
    (⊢-module-func-list C (f ...) (((ex_1_ ...) tf) ...))
    (⊢-module-global-list (glob ...) (((ex_2_ ...) tg) ...))
    (⊢-module-mem C tab ((ex_3_ ...) i))
    ------------------------------------
-   (⊢-module (module (f ...) (glob ...) (tab) ()) C)
-   ]
+   (⊢-module (module (f ...) (glob ...) (tab) ()) C)]
 
   [(where ((func (tf ...)) (global (tg ...)) (table) (memory j) (local ()) (label ()) (return)) C)
    (⊢-module-func-list C (f ...) (((ex_1_ ...) tf) ...))
    (⊢-module-global-list (glob ...) (((ex_2_ ...) tg) ...))
    (⊢-module-mem C mem ((ex_4_ ...) j))
    ------------------------------------
-   (⊢-module (module (f ...) (glob ...) () (mem)) C)
-   ]
+   (⊢-module (module (f ...) (glob ...) () (mem)) C)]
 
   [(⊢-module-func-list C (f ...) (((ex_1_ ...) tf) ...))
    (⊢-module-global-list (glob ...) (((ex_2_ ...) tg) ...))
-   #;(where C ((func (tf ...)) (global (tg ...)) (table) (memory) (local ()) (label ()) (return)))
+   (where C ((func (tf ...)) (global (tg ...)) (table) (memory) (local ()) (label ()) (return)))
    ---------------------------------------------------------------------------------------------
-   (⊢-module (module (f ...) (glob ...) () ()) C)
-   ]
+   (⊢-module (module (f ...) (glob ...) () ()) C)]
   )
 
 ;; Helper metafunction to extract a function type declaration from the function definition
