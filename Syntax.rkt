@@ -12,7 +12,7 @@
      (call-indirect tf) (get-local j) (set-local j)
      (tee-local i) (get-global i) (set-global i)
      (t load c c) (t load (tp sx) c c) (t store c c)
-     (t store tp c c) (current-memory) (grow-memory)
+     (t store (tp) c c) (current-memory) (grow-memory)
      (t unop) (t binop) (t testop)
      (t relop) (t cvtop t) (t const c))
   
