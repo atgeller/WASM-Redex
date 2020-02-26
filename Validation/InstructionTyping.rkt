@@ -2,9 +2,10 @@
 
 (require redex/reduction-semantics
          "../Utilities.rkt"
+         "../Bits.rkt"
          "Utilities.rkt")
 
-(provide (all-defined-out))
+(provide ⊢)
 
 (define-judgment-form WASMTyping
   #:contract (⊢ C (e ...) tf)
@@ -74,7 +75,7 @@
    (⊢ ((func (tf ...)) _ _ _ _ _ _) ((call j)) tf_2)]
 
   [(where ((t_1 ...) -> (t_2 ...)) tf)
-   (where (_ _ (table (j)) _ _ _ _) C)
+   (where (_ _ (table j) _ _ _ _) C)
    ---------------------------------
    (⊢ C ((call-indirect tf)) ((t_1 ... i32) -> (t_2 ...)))]
 
@@ -98,39 +99,39 @@
    -----------------------------------
    (⊢ ((_ (global (tg ...)) _ _ _ _)) ((set-global j)) ((t) -> ()))]
 
-  [(where (_ _ _ (memory (j)) _ _ _) C)
-   (side-condition (< (expt 2 (term j_1))
-                      (type-width t)))
-   -----------------------------------
-   (⊢ C (t load j_1 _ _) ((i32) -> (t)))]
+  [(where (_ _ _ (memory j) _ _ _) C)
+   (side-condition ,(< (expt 2 (term j_1))
+                       (type-width (term t))))
+   ------------------------------------------
+   (⊢ C ((t load j_1 _)) ((i32) -> (t)))]
 
   ;; TODO: no floats yet so not included in side-condition
-  [(where (_ _ _ (memory (j)) _ _ _) C)
-   (side-condition (< (expt 2 (term j_1))
-                      (type-width t tp)))
-   --------------------------------------
-   (⊢ C (t load (tp sz) j_1 _ _) ((i32) -> (t)))]
+  [(where (_ _ _ (memory j) _ _ _) C)
+   (side-condition ,(< (expt 2 (term j_1))
+                       (type-width (term t) (term tp))))
+   -----------------------------------------------------
+   (⊢ C ((t load (tp sz) j_1 _)) ((i32) -> (t)))]
 
-  [(where (_ _ _ (memory (j)) _ _ _) C)
-   (side-condition (< (expt 2 (term j_1))
-                      (type-width t)))
-   -----------------------------------
-   (⊢ C (t store j_1 _ _) ((i32 t) -> ()))]
+  [(where (_ _ _ (memory j) _ _ _) C)
+   (side-condition ,(< (expt 2 (term j_1))
+                       (type-width (term t))))
+   -------------------------------------------
+   (⊢ C ((t store j_1 _)) ((i32 t) -> ()))]
 
   ;; TODO: no floats yet so not included in side-condition
-  [(where (_ _ _ (memory (j)) _ _ _) C)
-   (side-condition (< (expt 2 (term j_1))
-                      (type-width t tp)))
-   --------------------------------------
-   (⊢ C (t store (tp) j_1 _ _) ((i32 t) -> ()))]
+  [(where (_ _ _ (memory j) _ _ _) C)
+   (side-condition ,(< (expt 2 (term j_1))
+                       (type-width (term t) (term tp))))
+   -----------------------------------------------------
+   (⊢ C ((t store (tp) j_1 _)) ((i32 t) -> ()))]
 
-  [(where (_ _ _ (memory (j)) _ _ _) C)
+  [(where (_ _ _ (memory j) _ _ _) C)
    ------------------------------------
-   (⊢ C (current-memory) (() -> (i32)))]
+   (⊢ C ((current-memory)) (() -> (i32)))]
 
-  [(where (_ _ _ (memory (j)) _ _ _) C)
+  [(where (_ _ _ (memory j) _ _ _) C)
    ----------------------------------
-   (⊢ C (grow-memory) ((i32) -> (i32)))]
+   (⊢ C ((grow-memory)) ((i32) -> (i32)))]
 
   [--------------------
    (⊢ C () (() -> ()))]

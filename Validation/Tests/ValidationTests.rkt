@@ -252,4 +252,17 @@
                                                                               (() -> (i32)))
                                                                           #f
                                                                           (list)))))))))
-  )
+
+  (test-judgment-holds ⊢
+                       (derivation `(⊢ ((func ()) (global ()) (table) (memory 4096) (local ()) (label ()) (return))
+                                       ((i32 load 0 0))
+                                       ((i32) -> (i32)))
+                                   #f
+                                   (list)))
+
+  (test-judgment-holds ⊢
+                       (derivation `(⊢ ((func ()) (global ()) (table) (memory 4096) (local ()) (label ()) (return))
+                                       ((i64 store 0 0))
+                                       ((i32 i64) -> ()))
+                                   #f
+                                   (list))))

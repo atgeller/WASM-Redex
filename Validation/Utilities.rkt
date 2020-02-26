@@ -7,11 +7,9 @@
 
 (define-extended-language WASMTyping WASM  
   (C ::= ((func (tf ...)) (global (tg ...)) (table j ...) (memory j ...) (local (t ...)) (label ((t ...) ...)) (return (t ...)))
-     ((func (tf ...)) (global (tg ...)) (table j ...) (memory j ...) (local (t ...)) (label ((t ...) ...)) (return))
-     )
+     ((func (tf ...)) (global (tg ...)) (table j ...) (memory j ...) (local (t ...)) (label ((t ...) ...)) (return)))
 
-  (S ::= ((C ...) (j ...) (j ...)))
-  )
+  (S ::= ((C ...) (j ...) (j ...))))
 
 (define-metafunction WASMTyping
   reverse-get : (any ...) j -> any
