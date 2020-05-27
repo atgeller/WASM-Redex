@@ -58,9 +58,16 @@
      (--> (s j (v ...) (in-hole L (v_1 ... (i32 const c) (if tf (e_1 ...) else (e_2 ...)) e ...)))
           (s j (v ...) (in-hole L (v_1 ... (block tf (e_1 ...)) e ...)))
           (side-condition (> (term c) 0)))
-     
-     (--> (s j (v ...) (in-hole L (v_1 ... (block tf (e_1 ...)) e_2 ...)))
-          (s j (v ...) (in-hole L (v_1 ... (label () (e_1 ...)) e_2 ...))))
+
+     (--> (s j (v ...) (in-hole L (v_1 ... (block ((t_1 ...) -> (t_2 ...)) (e_1 ...)) e_2 ...)))
+          (s j (v ...) (in-hole L (v_2 ... (label () (v_3 ... e_1 ...)) e_2 ...)))
+          (where (v_2 ...) ,(drop-right (term (v_1 ...)) (length (term (t_1 ...)))))
+          (where (v_3 ...) ,(take-right (term (v_1 ...)) (length (term (t_1 ...))))))
+
+     (--> (s j (v ...) (in-hole L (v_1 ... (loop ((t_1 ...) -> (t_2 ...)) (e_1 ...)) e_2 ...)))
+          (s j (v ...) (in-hole L (v_2 ... (label ((loop ((t_1 ...) -> (t_2 ...)) (e_1 ...))) (v_3 ... e_1 ...)) e_2 ...)))
+          (where (v_2 ...) ,(drop-right (term (v_1 ...)) (length (term (t_1 ...)))))
+          (where (v_3 ...) ,(take-right (term (v_1 ...)) (length (term (t_1 ...))))))
 
      (--> (s j (v ...) (in-hole L (v_1 ... (label () (v_2 ... (trap) e ...)) e_2 ...)))
           (s j (v ...) (in-hole L ((trap)))))
@@ -156,6 +163,4 @@
 
      (--> (s j (v ...) (in-hole L (v_1 ... (i32 const c) (grow-memory) e ...)))
           (s_new j (v ...) (in-hole L (v_1 ... e_new ... e ...)))
-          (where (s_new (e_new ...)) (grow-mem s j c)))
-
-     ))
+          (where (s_new (e_new ...)) (grow-mem s j c)))))
