@@ -6,13 +6,13 @@
 
 (provide (all-defined-out))
 
-(define endianess #t)
+(define endianess #f)
 (define max-memory-size 8192) ;; Arbitrary
 
 (define memory-size bit-string-byte-count)
 
 (define (make-memory size)
-  (bit-string (0 :: big-endian bytes size)))
+  (bit-string (0 :: little-endian bytes size)))
 
 (define (grow-memory mem newsize)
   (if (<= 0 newsize max-memory-size)
