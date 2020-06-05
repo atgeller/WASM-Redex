@@ -58,7 +58,7 @@
   decompose : L j (v ...) -> (e ...)
   [(decompose (v ... (label (e ...) L_1) e_2 ...) j (v_2 ...))
    (v ... v_2 ... e ... e_2 ...)
-   (side-condition (>= (term j) (term (context-depth L_1))))]
+   (side-condition (= (term j) (term (context-depth L_1))))]
   [(decompose (v ... (label (e ...) L_1) e_2 ...) j (v_2 ...))
    (v ... (label (e ...) (decompose L_1 j (v_2 ...))) e_2 ...)
    (side-condition (< (term j) (term (context-depth L_1))))])

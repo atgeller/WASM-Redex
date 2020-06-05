@@ -69,12 +69,11 @@
           (where (v_2 ...) ,(drop-right (term (v_1 ...)) (length (term (t_1 ...)))))
           (where (v_3 ...) ,(take-right (term (v_1 ...)) (length (term (t_1 ...))))))
 
-     (--> (s j (v ...) (in-hole L (v_1 ... (label () (v_2 ... (trap) e ...)) e_2 ...)))
-          (s j (v ...) (in-hole L ((trap)))))
+     (--> (s j (v ...) (in-hole L (v_1 ... (label (e ...) ((trap))) e_2 ...)))
+          (s j (v ...) (in-hole L (v_1 ... (trap) e_2 ...))))
 
      (--> (s j (v ...) (in-hole L (v_1 ... (trap) e_2 ...)))
-          (s j (v ...) (in-hole L ((trap))))
-          (side-condition (= 0 (term (context-depth L)))))
+          (s j (v ...) (in-hole L ((trap)))))
 
      ; Knowing about contexts is necessary for this (so can't shortcut the rest :/)!
      (--> (s j (v ...) (in-hole L (v_1 ... (br j_1) e ...)))
@@ -125,11 +124,11 @@
      ; Stuff inside functions calls
      ;; TODO: Can we assume v_3 ... is the right arity and types to return?
      ;; NOTE: This is fun decomposition...
-     (--> (s j (v ...) (in-hole L (v_1 ... (local (j_1 (v_2 ...)) (in-hole L_2 (v_3 ... (return) e ...)) e_2 ...))))
+     (--> (s j (v ...) (in-hole L (v_1 ... (local (j_1 (v_2 ...)) (in-hole L_2 (v_3 ... (return) e ...))) e_2 ...)))
           (s j (v ...) (in-hole L (v_1 ... v_3 ... e_2 ...))))
 
-     (--> (s j (v ...) (in-hole L (v_1 ... (local (j_1 (v_2 ...)) (v_3 ... (trap) e ...)) e_2 ...)))
-          (s j (v ...) (in-hole L ((trap)))))
+     (--> (s j (v ...) (in-hole L (v_1 ... (local (j_1 (v_2 ...)) ((trap))) e_2 ...)))
+          (s j (v ...) (in-hole L (v_1 ... (trap) e_2 ...))))
 
      ;; TODO: Can we assume v_3 ... has the right arity and types to return?
      (--> (s j (v ...) (in-hole L (v_1 ... (local (j_1 (v_2 ...)) (v_3 ...)) e_2 ...)))
