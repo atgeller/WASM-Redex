@@ -199,6 +199,24 @@
                     ()
                     ((i64 const 65)))))
 
+  (test-->>E -> ;; store i32, load i8 (test of endianness)
+             (term ((((() () (table) (memory 0)))
+                     ()
+                     ((bits ,(make-memory 128))))
+                    0
+                    ()
+                    ((i32 const 0)
+                     (i32 const 0)
+                     (i32 const 305419896) ; 0x12345678
+                     (i32 store 0 4)
+                     (i32 load (i8 unsigned) 0 4))))
+             (term ((((() () (table) (memory 0)))
+                     ()
+                     ((bits ,(store (make-memory 128) 32 32 305419896))))
+                    0
+                    ()
+                    ((i32 const 120))))) ; 0x78, would be 0x12 if big-endian
+
   (test-->>E -> ;; store out-of-bounds than load
              (term ((((() () (table) (memory 0)))
                      ()
