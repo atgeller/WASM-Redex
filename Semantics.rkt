@@ -94,7 +94,7 @@
           (s j (v ...) (in-hole L (v_1 ... v_2 (br j_2) e ...)))
           (side-condition (> (term c) (length (term (j_1 ...))))))
 
-     (--> (s j (v ...) (in-hole L (v_1 ... (label () (v_2 ...)) e ...)))
+     (--> (s j (v ...) (in-hole L (v_1 ... (label (e_1 ...) (v_2 ...)) e ...)))
           (s j (v ...) (v_1 ... v_2 ... e ...)))
 
      ;; Locals!
