@@ -127,6 +127,16 @@
                     () ; locals
                     ())))
 
+  (test-->>E -> ;; call cl, return ensure branching with instructions after local
+             (term ((() () ()) ; store
+                    0 ; inst
+                    () ; locals
+                    ((call (0 (() (func (() -> (i32)) (local () ((i32 const 42) (return) (unreachable))))))) (i32 const 2) (i32 add))))
+             (term ((() () ()) ; store
+                    0 ; inst
+                    () ; locals
+                    ((i32 const 44)))))
+
   (test-->>E -> ;; call_indirect
              (term ((((() () (table 1) (memory)))
                     (((0 (() (func ((i32) -> (i32)) (local () ((get-local 0) (return))))))
@@ -245,7 +255,7 @@
                     ()
                     ((i32 const 2)))))
 
-    (test-->>E -> ;; if-false
+  (test-->>E -> ;; if-false
              (term ((() () ())
                     0
                     ()
@@ -258,7 +268,17 @@
                     0
                     ()
                     ((i32 const 3)))))
-  
+
+  (test-->>E -> ;; loop with trap (trap inside label with instructions)
+             (term ((() () ())
+                    0
+                    ()
+                    ((loop (() -> ())
+                           ((unreachable))))))
+             (term ((() () ())
+                    0
+                    ()
+                    ((trap)))))
 
   (test-->>E -> ;; loop, if
                (term ((((((0 (() (func ((i32) -> (i32))
