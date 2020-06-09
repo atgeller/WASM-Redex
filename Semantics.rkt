@@ -53,7 +53,7 @@
           (s j (v ...) (in-hole L (v_1 ... e ...))))
      
      (--> (s j (v ...) (in-hole L (v_1 ... (i32 const 0) (if tf (e_1 ...) else (e_2 ...)) e ...)))
-          (s j (v ...) (in-hole L (v_1 ... (block tf (e_1 ...)) e ...))))
+          (s j (v ...) (in-hole L (v_1 ... (block tf (e_2 ...)) e ...))))
 
      (--> (s j (v ...) (in-hole L (v_1 ... (i32 const c) (if tf (e_1 ...) else (e_2 ...)) e ...)))
           (s j (v ...) (in-hole L (v_1 ... (block tf (e_1 ...)) e ...)))
