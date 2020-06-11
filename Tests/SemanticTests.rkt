@@ -61,22 +61,22 @@
   ;; Tests of function calls
   (test-->>E -> ;; call j, call cl, get-local, return
              (term ((((() () (table) (memory))
-                     (((0 (() (func ((i32) -> ()) (local () ((get-local 0))))))
-                       (1 (() (func ((i32 i32) -> ()) (local () ((get-local 1))))))
-                       (2 (() (func ((i32 i32 i32) -> ()) (local () ((get-local 2)))))))
-                      () (table) (memory))
-                     (() ()  (table) (memory)))
+                      (((0 (() (func ((i32) -> ()) (local () ((get-local 0))))))
+                        (1 (() (func ((i32 i32) -> ()) (local () ((get-local 1))))))
+                        (2 (() (func ((i32 i32 i32) -> ()) (local () ((get-local 2)))))))
+                       () (table) (memory))
+                      (() ()  (table) (memory)))
                      ()
                      ()) ; store
                     1 ; inst
                     () ; locals
                     ((i32 const 0) (i32 const 1) (i32 const 2) (call 1)))) ; e stream
              (term ((((() () (table) (memory))
-                     (((0 (() (func ((i32) -> ()) (local () ((get-local 0))))))
-                       (1 (() (func ((i32 i32) -> ()) (local () ((get-local 1))))))
-                       (2 (() (func ((i32 i32 i32) -> ()) (local () ((get-local 2)))))))
-                      () (table) (memory))
-                     (() ()  (table) (memory)))
+                      (((0 (() (func ((i32) -> ()) (local () ((get-local 0))))))
+                        (1 (() (func ((i32 i32) -> ()) (local () ((get-local 1))))))
+                        (2 (() (func ((i32 i32 i32) -> ()) (local () ((get-local 2)))))))
+                       () (table) (memory))
+                      (() ()  (table) (memory)))
                      ()
                      ()) ; store
                     1 ; inst
@@ -126,6 +126,16 @@
                     0 ; inst
                     () ; locals
                     ())))
+
+  (test-->>E -> ;; call cl, return ensure branching with instructions after local
+             (term ((() () ()) ; store
+                    0 ; inst
+                    () ; locals
+                    ((call (0 (() (func (() -> (i32)) (local () ((i32 const 42) (return) (unreachable))))))) (i32 const 2) (i32 add))))
+             (term ((() () ()) ; store
+                    0 ; inst
+                    () ; locals
+                    ((i32 const 44)))))
 
   (test-->>E -> ;; call_indirect
              (term ((((() () (table 1) (memory)))
@@ -189,6 +199,24 @@
                     ()
                     ((i64 const 65)))))
 
+  (test-->>E -> ;; store i32, load i8 (test of endianness)
+             (term ((((() () (table) (memory 0)))
+                     ()
+                     ((bits ,(make-memory 128))))
+                    0
+                    ()
+                    ((i32 const 0)
+                     (i32 const 0)
+                     (i32 const 305419896) ; 0x12345678
+                     (i32 store 0 4)
+                     (i32 load (i8 unsigned) 0 4))))
+             (term ((((() () (table) (memory 0)))
+                     ()
+                     ((bits ,(store (make-memory 128) 32 32 305419896))))
+                    0
+                    ()
+                    ((i32 const 120))))) ; 0x78, would be 0x12 if big-endian
+
   (test-->>E -> ;; store out-of-bounds than load
              (term ((((() () (table) (memory 0)))
                      ()
@@ -230,4 +258,85 @@
                     0
                     ()
                     ((i32 const 128)))))
+
+  (test-->>E -> ;; if-true
+             (term ((() () ())
+                    0
+                    ()
+                    ((i32 const 1)
+                     (if (() -> (i32))
+                         ((i32 const 2))
+                         else
+                         ((i32 const 3))))))
+             (term ((() () ())
+                    0
+                    ()
+                    ((i32 const 2)))))
+
+  (test-->>E -> ;; if-false
+             (term ((() () ())
+                    0
+                    ()
+                    ((i32 const 0)
+                     (if (() -> (i32))
+                         ((i32 const 2))
+                         else
+                         ((i32 const 3))))))
+             (term ((() () ())
+                    0
+                    ()
+                    ((i32 const 3)))))
+
+  (test-->>E -> ;; loop with trap (trap inside label with instructions)
+             (term ((() () ())
+                    0
+                    ()
+                    ((loop (() -> ())
+                           ((unreachable))))))
+             (term ((() () ())
+                    0
+                    ()
+                    ((trap)))))
+
+  (test-->>E -> ;; loop, if
+               (term ((((((0 (() (func ((i32) -> (i32))
+                                       (local (i32) ((loop (() -> (i32))
+                                                           ((get-local 0)
+                                                            (if (() -> (i32))
+                                                                ((get-local 0)
+                                                                 (get-local 1)
+                                                                 (i32 add)
+                                                                 (set-local 1)
+                                                                 (get-local 0)
+                                                                 (i32 const 1)
+                                                                 (i32 sub)
+                                                                 (set-local 0)
+                                                                 (br 1))
+                                                                else
+                                                                ((get-local 1)))))))))))
+                         () (table) (memory))) ; store
+                       () ())
+                      0
+                      ()
+                      ((i32 const 5) (call 0))))
+             (term ((((((0 (() (func ((i32) -> (i32))
+                                     (local (i32) ((loop (() -> (i32))
+                                                         ((get-local 0)
+                                                          (if (() -> (i32))
+                                                              ((get-local 0)
+                                                               (get-local 1)
+                                                               (i32 add)
+                                                               (set-local 1)
+                                                               (get-local 0)
+                                                               (i32 const 1)
+                                                               (i32 sub)
+                                                               (set-local 0)
+                                                               (br 1))
+                                                              else
+                                                              ((get-local 1)))))))))))
+                       () (table) (memory))) ; store
+                     () ())
+                    0
+                    ()
+                    ((i32 const 15)))))
   )

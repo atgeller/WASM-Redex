@@ -53,7 +53,7 @@
           (s j (v ...) (in-hole L (v_1 ... e ...))))
      
      (--> (s j (v ...) (in-hole L (v_1 ... (i32 const 0) (if tf (e_1 ...) else (e_2 ...)) e ...)))
-          (s j (v ...) (in-hole L (v_1 ... (block tf (e_1 ...)) e ...))))
+          (s j (v ...) (in-hole L (v_1 ... (block tf (e_2 ...)) e ...))))
 
      (--> (s j (v ...) (in-hole L (v_1 ... (i32 const c) (if tf (e_1 ...) else (e_2 ...)) e ...)))
           (s j (v ...) (in-hole L (v_1 ... (block tf (e_1 ...)) e ...)))
@@ -94,18 +94,18 @@
           (s j (v ...) (in-hole L (v_1 ... v_2 (br j_2) e ...)))
           (side-condition (> (term c) (length (term (j_1 ...))))))
 
-     (--> (s j (v ...) (in-hole L (v_1 ... (label () (v_2 ...)) e ...)))
+     (--> (s j (v ...) (in-hole L (v_1 ... (label (e_1 ...) (v_2 ...)) e ...)))
           (s j (v ...) (v_1 ... v_2 ... e ...)))
 
      ;; Locals!
      (--> (s j (v ...) (in-hole L (v_1 ... (get-local j_1) e ...)))
           (s j (v ...) (in-hole L (v_1 ... (do-get (v ...) j_1) e ...))))
      
-     (--> (s j (v ...) (in-hole L (v_1 ... v_2 (set-local j) e ...)))
-          (s j (do-set (v ...) j v_2) (in-hole L (v_1 ... e ...))))
+     (--> (s j (v ...) (in-hole L (v_1 ... v_2 (set-local j_1) e ...)))
+          (s j (do-set (v ...) j_1 v_2) (in-hole L (v_1 ... e ...))))
 
-     (--> (s j (v ...) (in-hole L (v_1 ... v_2 (tee-local j) e ...)))
-          (s j (v ...) (in-hole L (v_1 ... v_2 v_2 (set-local j) e ...))))
+     (--> (s j (v ...) (in-hole L (v_1 ... v_2 (tee-local j_1) e ...)))
+          (s j (v ...) (in-hole L (v_1 ... v_2 v_2 (set-local j_1) e ...))))
 
      ;; Store stuff!
      (--> (((inst ...) (tabinst ...) (meminst ...)) j (v ...) (in-hole L (v_1 ... (get-global j_1) e ...)))
