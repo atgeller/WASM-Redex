@@ -43,7 +43,7 @@
 (define-judgment-form WASMTyping
   #:contract (⊢-module-global C glob ((ex ...) tg))
 
-  [(where t tg)
+  [(where (#f t) tg)
    (⊢ C (e ...) (() -> (t)))
    -------------------------
    (⊢-module-global C
@@ -51,7 +51,7 @@
                     ((ex ...) tg))]
 
   ;; Can't have exports if global is mutable
-  [(where (mut t) tg)
+  [(where (#t t) tg)
    (where () (ex ...))
    (⊢ C (e ...) (() -> (t)))
    -------------------------
@@ -65,8 +65,7 @@
 (define-judgment-form WASMTyping
   #:contract (⊢-module-global-list (glob ...) (((ex ...) tg) ...))
 
-  [-----------------------------
-   (⊢-module-global-list () ())]
+  [(⊢-module-global-list () ())]
 
   [(⊢-module-global ((func ()) (global (tg ...)) (table) (memory) (local ()) (label ()) (return)) glob_1 ((ex_1 ...) tg_1))
    (⊢-module-global-list (glob ...) (((ex ...) tg) ...))

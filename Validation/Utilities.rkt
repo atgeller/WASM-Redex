@@ -37,8 +37,3 @@
    (label-types ((t ...) ...) (j_2 ...) (t_2 ...))
    -----------------------------------
    (label-types ((t ...) ...) (j j_2 ...) (t_2 ...))])
-
-(define-metafunction WASMrt
-  global-type : tg -> t
-  [(global-type t) t]
-  [(global-type (mut t)) t])

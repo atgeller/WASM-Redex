@@ -19,7 +19,8 @@
   (t ::= i32 i64) ; f32 f64 No floats for now
   (tp ::= i8 i16 i32)
   (tf ::= ((t ...) -> (t ...)))
-  (tg ::= (mut t) t)
+  (mut? ::= boolean)
+  (tg ::= (mut? t) t)
   (sx ::= signed unsigned)
 
   ;(unop ::= clz ctz popcnt) Omitted, need bit magic
@@ -61,8 +62,7 @@
         ((cl ...) (v ...) (table) (memory)))
 
   (tabinst ::= (cl ...))
-  (meminst ::= (bits any))
-  )
+  (meminst ::= (bits any)))
 
 #| TODO: Deprecated
 (define-language WASM
