@@ -4,6 +4,9 @@
 
 (provide (except-out (all-defined-out) wasm_binop->racket wasm_testop->racket wasm_relop->racket))
 
+;; TODO: operations should gracefully overflow/underflow in WASM
+;;       div and rem should have sign indicators
+;;       shl and shr
 (define wasm_binop->racket
   `([add . ,+]
     [sub . ,-]
@@ -17,13 +20,14 @@
 (define wasm_testop->racket
   `([eqz . ,(if (curry = 0) 1 0)]))
 
+;; TODO: signed comparisons
 (define wasm_relop->racket
   `([eq . ,=]
     [ne . ,(lambda (a b) (not (= a b)))]
-    [lt . ,<]
-    [gt . ,>]
-    [le . ,<=]
-    [ge . ,>=]))
+    [(lt unsigned) . ,<]
+    [(gt unsigned) . ,>]
+    [(le unsigned) . ,<=]
+    [(ge unsigned) . ,>=]))
 
 (define-metafunction WASMrt
   eval-binop : binop c c t -> e
@@ -39,12 +43,12 @@
 (define-metafunction WASMrt
   eval-testop : testop c t -> e
   [(eval-testop testop c t)
-   (t const ,((dict-ref wasm_testop->racket (term testop)) (term c)))])
+   (i32 const ,((dict-ref wasm_testop->racket (term testop)) (term c)))])
 
 (define-metafunction WASMrt
   eval-relop : relop c c -> e
   [(eval-relop relop c_1 c_2 t)
-   (t const ,(if ((dict-ref wasm_relop->racket (term binop)) (term c_1) (term c_2)) 1 0))])
+   (i32 const ,(if ((dict-ref wasm_relop->racket (term relop)) (term c_1) (term c_2)) 1 0))])
 
 ;; Decompose local contexts
 ; Function to calculate local context depth

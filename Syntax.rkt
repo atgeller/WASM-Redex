@@ -20,14 +20,14 @@
   (tp ::= i8 i16 i32)
   (tf ::= ((t ...) -> (t ...)))
   (mut? ::= boolean)
-  (tg ::= (mut? t) t)
+  (tg ::= (mut? t))
   (sx ::= signed unsigned)
 
   ;(unop ::= clz ctz popcnt) Omitted, need bit magic
-  (binop ::= add sub mul div rem
-         and or xor) ; shl shr rotl rotr Omitted, need bit magic
+  (binop ::= add sub mul (div sx) (rem sx)
+         and or xor shl (shr sx)) ; rotl rotr Omitted, need bit magic
   (testop ::= eqz)
-  (relop ::= eq ne lt gt le ge)
+  (relop ::= eq ne (lt sx) (gt sx) (le sx) (ge sx))
   (cvtop ::= convert reinterpret) ; Ignored for now because no floats
 
   (i j ::= natural)
