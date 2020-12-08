@@ -25,7 +25,7 @@
 
   ;(unop ::= clz ctz popcnt) Omitted, need bit magic
   (binop ::= add sub mul (div sx) (rem sx)
-         and or xor shl (shr sx)) ; rotl rotr Omitted, need bit magic
+         and or xor shl (shr sx) rotl rotr)
   (testop ::= eqz)
   (relop ::= eq ne (lt sx) (gt sx) (le sx) (ge sx))
   (cvtop ::= convert reinterpret) ; Ignored for now because no floats

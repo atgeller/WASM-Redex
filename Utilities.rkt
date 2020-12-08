@@ -6,7 +6,7 @@
 
 ;; TODO: operations should gracefully overflow/underflow in WASM
 ;;       div and rem should have sign indicators
-;;       shl and shr
+;;       shl, shr, rotl, and rotr
 (define wasm_binop->racket
   `([add . ,+]
     [sub . ,-]
