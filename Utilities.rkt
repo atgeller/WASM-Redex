@@ -1,54 +1,63 @@
 #lang racket
 
-(require redex/reduction-semantics "Syntax.rkt" "Bits.rkt")
+(require redex/reduction-semantics "Syntax.rkt" "Bits.rkt" "MachineOps.rkt")
 
 (provide (except-out (all-defined-out) wasm_binop->racket wasm_testop->racket wasm_relop->racket))
 
-;; TODO: operations should gracefully overflow/underflow in WASM
-;;       div and rem should have sign indicators
-;;       shl, shr, rotl, and rotr
-(define wasm_binop->racket
-  `([add . ,+]
-    [sub . ,-]
-    [mul . ,*]
-    [div . ,(lambda (a b) (exact-floor (/ a b)))]
-    [rem . ,remainder]
-    [and . ,bitwise-and]
-    [or . ,bitwise-ior]
-    [xor . ,bitwise-xor]))
+(define (wasm_binop->racket size binop)
+  (match binop
+    [`add (curry sized-add size)]
+    [`sub (curry sized-sub size)]
+    [`mul (curry sized-mul size)]
+    [`(div unsigned) (curry sized-unsigned-div size)]
+    [`(div signed) (curry sized-signed-div size)]
+    [`(rem unsigned) (curry sized-unsigned-rem size)]
+    [`(rem signed) (curry sized-signed-rem size)]
+    [`and bitwise-and]
+    [`or bitwise-ior]
+    [`xor bitwise-xor]
+    [`shl (curry sized-shl size)]
+    [`(shr unsigned) (curry sized-unsigned-shr size)]
+    [`(shr signed) (curry sized-signed-shr size)]
+    [`rotl (curry sized-rotl size)]
+    [`rotr (curry sized-rotr size)]))
 
 (define wasm_testop->racket
   `([eqz . ,(if (curry = 0) 1 0)]))
 
-;; TODO: signed comparisons
-(define wasm_relop->racket
-  `([eq . ,=]
-    [ne . ,(lambda (a b) (not (= a b)))]
-    [(lt unsigned) . ,<]
-    [(gt unsigned) . ,>]
-    [(le unsigned) . ,<=]
-    [(ge unsigned) . ,>=]))
+(define (wasm_relop->racket word-size relop)
+  (match relop
+    [`eq =]
+    [`ne (lambda (a b) (not (= a b)))]
+    [`(lt unsigned) <]
+    [`(gt unsigned) >]
+    [`(le unsigned) <=]
+    [`(ge unsigned) >=]
+    [`(lt signed) (lambda (a b) (< (to-signed-sized word-size a) (to-signed-sized word-size b)))]
+    [`(gt signed) (lambda (a b) (> (to-signed-sized word-size a) (to-signed-sized word-size b)))]
+    [`(le signed) (lambda (a b) (<= (to-signed-sized word-size a) (to-signed-sized word-size b)))]
+    [`(ge signed) (lambda (a b) (>= (to-signed-sized word-size a) (to-signed-sized word-size b)))]))
 
 (define-metafunction WASMrt
   eval-binop : binop c c t -> e
-  [(eval-binop div c 0 t)
+  [(eval-binop (div _) c 0 t)
    (trap)]
-  [(eval-binop rem c 0 t)
+  [(eval-binop (rem _) c 0 t)
    (trap)]
   [(eval-binop binop c_1 c_2 t)
-   (t const ,((dict-ref wasm_binop->racket (term binop)) (term c_1) (term c_2)))
+   (t const ,((wasm_binop->racket (type-width (term t)) (term binop)) (term c_1) (term c_2)))
    (side-condition (not (and (eq? (term c_2) 0)
                              (or (eq? (term binop) 'rem) (eq? (term binop) 'div)))))])
 
 (define-metafunction WASMrt
   eval-testop : testop c t -> e
   [(eval-testop testop c t)
-   (i32 const ,((dict-ref wasm_testop->racket (term testop)) (term c)))])
+   (i32 const ,((wasm_testop->racket (type-width (term t)) (term testop)) (term c)))])
 
 (define-metafunction WASMrt
   eval-relop : relop c c -> e
   [(eval-relop relop c_1 c_2 t)
-   (i32 const ,(if ((dict-ref wasm_relop->racket (term relop)) (term c_1) (term c_2)) 1 0))])
+   (i32 const ,(if ((wasm_relop->racket (type-width (term t)) (term relop)) (term c_1) (term c_2)) 1 0))])
 
 ;; Decompose local contexts
 ; Function to calculate local context depth
