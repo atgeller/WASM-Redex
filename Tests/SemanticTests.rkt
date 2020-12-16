@@ -16,33 +16,101 @@
   (test-->>E -> ;; mul
              (term ((() () ()) 0 () ((i32 const 2) (i32 const 1) (i32 mul))))
              (term ((() () ()) 0 () ((i32 const 2)))))
-  (test-->>E -> ;; div
-             (term ((() () ()) 0 () ((i32 const 2) (i32 const 1) (i32 div))))
+  (test-->>E -> ;; div-s
+             (term ((() () ()) 0 () ((i32 const 2) (i32 const 1) (i32 div-s))))
              (term ((() () ()) 0 () ((i32 const 2)))))
-  (test-->>E -> ;; div 0
-             (term ((() () ()) 0 () ((i32 const 1) (i32 const 0) (i32 div))))
+  (test-->>E -> ;; div-s -1
+             (term ((() () ()) 0 () ((i32 const 2) (i32 const 4294967295) (i32 div-s))))
+             (term ((() () ()) 0 () ((i32 const 4294967294)))))
+  (test-->>E -> ;; div-s 0
+             (term ((() () ()) 0 () ((i32 const 1) (i32 const 0) (i32 div-s))))
              (term ((() () ()) 0 () ((trap)))))
-  (test-->>E -> ;; rem
-             (term ((() () ()) 0 () ((i32 const 3) (i32 const 2) (i32 rem))))
+  (test-->>E -> ;; div-u
+             (term ((() () ()) 0 () ((i32 const 2) (i32 const 1) (i32 div-u))))
+             (term ((() () ()) 0 () ((i32 const 2)))))
+  (test-->>E -> ;; div-u -1
+             (term ((() () ()) 0 () ((i32 const 2) (i32 const 4294967295) (i32 div-u))))
+             (term ((() () ()) 0 () ((i32 const 0)))))
+  (test-->>E -> ;; div-u 0
+             (term ((() () ()) 0 () ((i32 const 1) (i32 const 0) (i32 div-u))))
+             (term ((() () ()) 0 () ((trap)))))
+  (test-->>E -> ;; rem-s
+             (term ((() () ()) 0 () ((i32 const 3) (i32 const 2) (i32 rem-s))))
              (term ((() () ()) 0 () ((i32 const 1)))))
-  (test-->>E -> ;; rem 0
-             (term ((() () ()) 0 () ((i32 const 1) (i32 const 0) (i32 rem))))
+  (test-->>E -> ;; rem-s 3 -2
+             (term ((() () ()) 0 () ((i32 const 1) (i32 const 4294967294) (i32 rem-s))))
+             (term ((() () ()) 0 () ((i32 const 4294967295)))))
+  (test-->>E -> ;; rem-s 0
+             (term ((() () ()) 0 () ((i32 const 1) (i32 const 0) (i32 rem-s))))
+             (term ((() () ()) 0 () ((trap)))))
+  (test-->>E -> ;; rem-u
+             (term ((() () ()) 0 () ((i32 const 3) (i32 const 2) (i32 rem-u))))
+             (term ((() () ()) 0 () ((i32 const 1)))))
+  (test-->>E -> ;; rem-u 1 -2
+             (term ((() () ()) 0 () ((i32 const 3) (i32 const 4294967294) (i32 rem-u))))
+             (term ((() () ()) 0 () ((i32 const 3)))))
+  (test-->>E -> ;; rem-u 0
+             (term ((() () ()) 0 () ((i32 const 1) (i32 const 0) (i32 rem-u))))
              (term ((() () ()) 0 () ((trap)))))
   (test-->>E -> ;; and
-             (term ((() () ()) 0 () ((i32 const 3) (i32 const 2) (i32 and))))
-             (term ((() () ()) 0 () ((i32 const 2)))))
+             (term ((() () ()) 0 () ((i32 const 5) (i32 const 3) (i32 and))))
+             (term ((() () ()) 0 () ((i32 const 1)))))
   (test-->>E -> ;; or
-             (term ((() () ()) 0 () ((i32 const 3) (i32 const 6) (i32 or))))
+             (term ((() () ()) 0 () ((i32 const 5) (i32 const 3) (i32 or))))
              (term ((() () ()) 0 () ((i32 const 7)))))
   (test-->>E -> ;; xor
-             (term ((() () ()) 0 () ((i32 const 3) (i32 const 6) (i32 xor))))
-             (term ((() () ()) 0 () ((i32 const 5)))))
-  #;(test-->>E -> ;; shl OMITTED
+             (term ((() () ()) 0 () ((i32 const 5) (i32 const 3) (i32 xor))))
+             (term ((() () ()) 0 () ((i32 const 6)))))
+  (test-->>E -> ;; shl
              (term ((() () ()) 0 () ((i32 const 2) (i32 const 1) (i32 shl))))
              (term ((() () ()) 0 () ((i32 const 4)))))
-  #;(test-->>E -> ;; shr OMITTED
-             (term ((() () ()) 0 () ((i32 const 4) (i32 const 1) (i32 shr))))
+  (test-->>E -> ;; shl overflow
+             (term ((() () ()) 0 () ((i32 const 2) (i32 const 31) (i32 shl))))
+             (term ((() () ()) 0 () ((i32 const 0)))))
+  (test-->>E -> ;; shr-s
+             (term ((() () ()) 0 () ((i32 const 4) (i32 const 1) (i32 shr-s))))
              (term ((() () ()) 0 () ((i32 const 2)))))
+  (test-->>E -> ;; shr-s underflow
+             (term ((() () ()) 0 () ((i32 const 4) (i32 const 3) (i32 shr-s))))
+             (term ((() () ()) 0 () ((i32 const 0)))))
+  (test-->>E -> ;; shr-s negative
+             (term ((() () ()) 0 () ((i32 const #x80000000) (i32 const 31) (i32 shr-s))))
+             (term ((() () ()) 0 () ((i32 const #xFFFFFFFF)))))
+  (test-->>E -> ;; shr-u
+             (term ((() () ()) 0 () ((i32 const 4) (i32 const 1) (i32 shr-u))))
+             (term ((() () ()) 0 () ((i32 const 2)))))
+  (test-->>E -> ;; shr-u underflow
+             (term ((() () ()) 0 () ((i32 const 4) (i32 const 3) (i32 shr-u))))
+             (term ((() () ()) 0 () ((i32 const 0)))))
+  (test-->>E -> ;; shr-u negative
+             (term ((() () ()) 0 () ((i32 const #x80000000) (i32 const 31) (i32 shr-u))))
+             (term ((() () ()) 0 () ((i32 const #x00000001)))))
+  (test-->>E -> ;; rotl
+             (term ((() () ()) 0 () ((i32 const #xFF0000FF) (i32 const 8) (i32 rotl))))
+             (term ((() () ()) 0 () ((i32 const #x0000FFFF)))))
+  (test-->>E -> ;; rotl far
+             (term ((() () ()) 0 () ((i32 const #xFF0000FF) (i32 const 40) (i32 rotl))))
+             (term ((() () ()) 0 () ((i32 const #x0000FFFF)))))
+  (test-->>E -> ;; rotr
+             (term ((() () ()) 0 () ((i32 const #xFF0000FF) (i32 const 8) (i32 rotr))))
+             (term ((() () ()) 0 () ((i32 const #xFFFF0000)))))
+  (test-->>E -> ;; rotr far
+             (term ((() () ()) 0 () ((i32 const #xFF0000FF) (i32 const 40) (i32 rotr))))
+             (term ((() () ()) 0 () ((i32 const #xFFFF0000)))))
+  
+  (test-->>E -> ;; i64 math
+             (term ((() () ()) 0 () ((i64 const 4294967295) (i64 const 2) (i64 mul))))
+             (term ((() () ()) 0 () ((i64 const 8589934590)))))
+
+  ;; TODO: testop, relop
+
+  ;; nop, drop
+  (test-->>E -> ;; nop
+             (term ((() () ()) 0 () ((i32 const 0) (nop))))
+             (term ((() () ()) 0 () ((i32 const 0)))))
+  (test-->>E -> ;; drop
+             (term ((() () ()) 0 () ((i32 const 0) (i32 const 1) (drop))))
+             (term ((() () ()) 0 () ((i32 const 0)))))
 
   ;; Tests of br (and unreachable)
   (test-->>E -> ;; jump out
@@ -258,6 +326,8 @@
                     0
                     ()
                     ((i32 const 128)))))
+
+  ;; TODO: grow memory
 
   (test-->>E -> ;; if-true
              (term ((() () ())

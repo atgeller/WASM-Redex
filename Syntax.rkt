@@ -24,10 +24,10 @@
   (sx ::= signed unsigned)
 
   ;(unop ::= clz ctz popcnt) Omitted, need bit magic
-  (binop ::= add sub mul (div sx) (rem sx)
-         and or xor shl (shr sx) rotl rotr)
+  (binop ::= add sub mul div-s div-u rem-s rem-u
+         and or xor shl shr-s shr-u rotl rotr)
   (testop ::= eqz)
-  (relop ::= eq ne (lt sx) (gt sx) (le sx) (ge sx))
+  (relop ::= eq ne lt-s lt-u gt-s gt-u le-s le-u ge-s ge-u)
   (cvtop ::= convert reinterpret) ; Ignored for now because no floats
 
   (i j ::= natural)

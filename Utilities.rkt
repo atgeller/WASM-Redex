@@ -9,45 +9,51 @@
     [`add (curry sized-add size)]
     [`sub (curry sized-sub size)]
     [`mul (curry sized-mul size)]
-    [`(div unsigned) (curry sized-unsigned-div size)]
-    [`(div signed) (curry sized-signed-div size)]
-    [`(rem unsigned) (curry sized-unsigned-rem size)]
-    [`(rem signed) (curry sized-signed-rem size)]
+    [`div-s (curry sized-signed-div size)]
+    [`div-u (curry sized-unsigned-div size)]
+    [`rem-s (curry sized-signed-rem size)]
+    [`rem-u (curry sized-unsigned-rem size)]
     [`and bitwise-and]
     [`or bitwise-ior]
     [`xor bitwise-xor]
     [`shl (curry sized-shl size)]
-    [`(shr unsigned) (curry sized-unsigned-shr size)]
-    [`(shr signed) (curry sized-signed-shr size)]
+    [`shr-s (curry sized-signed-shr size)]
+    [`shr-u (curry sized-unsigned-shr size)]
     [`rotl (curry sized-rotl size)]
     [`rotr (curry sized-rotr size)]))
 
-(define wasm_testop->racket
-  `([eqz . ,(if (curry = 0) 1 0)]))
+(define (wasm_testop->racket word-size testop)
+  (match testop
+    [`eqz (lambda (n) (if (= n 0) 1 0))]))
 
 (define (wasm_relop->racket word-size relop)
   (match relop
     [`eq =]
     [`ne (lambda (a b) (not (= a b)))]
-    [`(lt unsigned) <]
-    [`(gt unsigned) >]
-    [`(le unsigned) <=]
-    [`(ge unsigned) >=]
-    [`(lt signed) (lambda (a b) (< (to-signed-sized word-size a) (to-signed-sized word-size b)))]
-    [`(gt signed) (lambda (a b) (> (to-signed-sized word-size a) (to-signed-sized word-size b)))]
-    [`(le signed) (lambda (a b) (<= (to-signed-sized word-size a) (to-signed-sized word-size b)))]
-    [`(ge signed) (lambda (a b) (>= (to-signed-sized word-size a) (to-signed-sized word-size b)))]))
+    [`lt-u <]
+    [`gt-u >]
+    [`le-u <=]
+    [`ge-u >=]
+    [`lt-s (lambda (a b) (< (to-signed-sized word-size a) (to-signed-sized word-size b)))]
+    [`gt-s (lambda (a b) (> (to-signed-sized word-size a) (to-signed-sized word-size b)))]
+    [`le-s (lambda (a b) (<= (to-signed-sized word-size a) (to-signed-sized word-size b)))]
+    [`ge-s (lambda (a b) (>= (to-signed-sized word-size a) (to-signed-sized word-size b)))]))
 
 (define-metafunction WASMrt
   eval-binop : binop c c t -> e
-  [(eval-binop (div _) c 0 t)
+  [(eval-binop div-s c 0 t)
    (trap)]
-  [(eval-binop (rem _) c 0 t)
+  [(eval-binop div-u c 0 t)
+   (trap)]
+  [(eval-binop rem-s c 0 t)
+   (trap)]
+  [(eval-binop rem-u c 0 t)
    (trap)]
   [(eval-binop binop c_1 c_2 t)
    (t const ,((wasm_binop->racket (type-width (term t)) (term binop)) (term c_1) (term c_2)))
    (side-condition (not (and (eq? (term c_2) 0)
-                             (or (eq? (term binop) 'rem) (eq? (term binop) 'div)))))])
+                             (or (eq? (term binop) 'div-s) (eq? (term binop) 'div-u)
+                                 (eq? (term binop) 'rem-s) (eq? (term binop) 'rem-u)))))])
 
 (define-metafunction WASMrt
   eval-testop : testop c t -> e
