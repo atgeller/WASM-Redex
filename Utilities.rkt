@@ -4,6 +4,12 @@
 
 (provide (except-out (all-defined-out) wasm_binop->racket wasm_testop->racket wasm_relop->racket))
 
+(define (wasm_unop->racket size unop)
+  (match unop
+    [`clz (curry sized-clz size)]
+    [`ctz (curry sized-ctz size)]
+    [`popcnt (curry sized-popcnt size)]))
+
 (define (wasm_binop->racket size binop)
   (match binop
     [`add (curry sized-add size)]
@@ -44,6 +50,11 @@
     [`wrap (curry to-unsigned-sized to-size)]
     [`extend-s (lambda (c) (to-unsigned-sized to-size (to-signed-sized from-size c)))]
     [`extend-u identity]))
+
+(define-metafunction WASMrt
+  eval-unop : unop c t -> e
+  [(eval-unop unop c t)
+   (t const ,((wasm_unop->racket (type-width (term t)) (term unop)) (term c)))])
 
 (define-metafunction WASMrt
   eval-binop : binop c c t -> e

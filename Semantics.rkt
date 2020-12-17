@@ -27,6 +27,9 @@
      ;; Todo: It would be nice to reduce the boilerplate for those that don't.
      
      ;; Due to validation we can be sure we are returning the proper number of values
+     (--> (s j (v ...) (in-hole L (v_1 ... (t const c) (t unop) e ...)))
+          (s j (v ...) (in-hole L (v_1 ... (eval-unop unop c t) e ...))))
+     
      (--> (s j (v ...) (in-hole L (v_1 ... (t const c_1) (t const c_2) (t binop) e ...)))
           (s j (v ...) (in-hole L (v_1 ... (eval-binop binop c_1 c_2 t) e ...))))
      

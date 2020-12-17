@@ -63,3 +63,23 @@
 (define (sized-rotr size n1 n2)
   (to-unsigned-sized size (bitwise-ior (arithmetic-shift n1 (- (modulo n2 size)))
                                        (arithmetic-shift n1 (- size (modulo n2 size))))))
+
+(define (sized-clz size n)
+  (cond
+    [(= size 0) 0]
+    [(>= n (expt 2 (sub1 size))) 0]
+    [else (add1 (sized-clz (sub1 size) n))]))
+
+(define (sized-ctz size n)
+  (cond
+    [(= size 0) 0]
+    [(= 1 (modulo n 2)) 0]
+    [else (add1 (sized-ctz (sub1 size) (arithmetic-shift n -1)))]))
+
+(define (sized-popcnt size n)
+  (cond
+    [(= size 0) 0]
+    [(>= n (expt 2 (sub1 size)))
+     (add1 (sized-popcnt (sub1 size) (- n (expt 2 (sub1 size)))))]
+    [else
+     (sized-popcnt (sub1 size) n)]))

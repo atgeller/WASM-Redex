@@ -6,6 +6,35 @@
            "../Bits.rkt"
            rackunit)
 
+  ;; Tests of unops
+  (test-->>E -> ;; clz 0
+             (term ((() () ()) 0 () ((i32 const 0) (i32 clz))))
+             (term ((() () ()) 0 () ((i32 const 32)))))
+  (test-->>E -> ;; clz #xFFFFFFFF
+             (term ((() () ()) 0 () ((i32 const #xFFFFFFFF) (i32 clz))))
+             (term ((() () ()) 0 () ((i32 const 0)))))
+  (test-->>E -> ;; clz single bit
+             (term ((() () ()) 0 () ((i32 const #x00800000) (i32 clz))))
+             (term ((() () ()) 0 () ((i32 const 8)))))
+  (test-->>E -> ;; ctz 0
+             (term ((() () ()) 0 () ((i32 const 0) (i32 ctz))))
+             (term ((() () ()) 0 () ((i32 const 32)))))
+  (test-->>E -> ;; ctz #xFFFFFFFF
+             (term ((() () ()) 0 () ((i32 const #xFFFFFFFF) (i32 ctz))))
+             (term ((() () ()) 0 () ((i32 const 0)))))
+  (test-->>E -> ;; ctz single bit
+             (term ((() () ()) 0 () ((i32 const #x00800000) (i32 ctz))))
+             (term ((() () ()) 0 () ((i32 const 23)))))
+  (test-->>E -> ;; popcnt 0
+             (term ((() () ()) 0 () ((i32 const 0) (i32 popcnt))))
+             (term ((() () ()) 0 () ((i32 const 0)))))
+  (test-->>E -> ;; popcnt #xFFFFFFFF
+             (term ((() () ()) 0 () ((i32 const #xFFFFFFFF) (i32 popcnt))))
+             (term ((() () ()) 0 () ((i32 const 32)))))
+  (test-->>E -> ;; popcnt #xDEADBEEF
+             (term ((() () ()) 0 () ((i32 const #xDEADBEEF) (i32 popcnt))))
+             (term ((() () ()) 0 () ((i32 const 24)))))
+
   ;; Tests of simple binops
   (test-->>E -> ;; add
              (term ((() () ()) 0 () ((i32 const 2) (i32 const 1) (i32 add))))

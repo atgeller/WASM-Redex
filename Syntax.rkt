@@ -23,7 +23,7 @@
   (tg ::= (mut? t))
   (sx ::= signed unsigned)
 
-  ;(unop ::= clz ctz popcnt) Omitted, need bit magic
+  (unop ::= clz ctz popcnt)
   (binop ::= add sub mul div-s div-u rem-s rem-u
          and or xor shl shr-s shr-u rotl rotr)
   (testop ::= eqz)
