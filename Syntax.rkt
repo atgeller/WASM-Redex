@@ -28,7 +28,7 @@
          and or xor shl shr-s shr-u rotl rotr)
   (testop ::= eqz)
   (relop ::= eq ne lt-s lt-u gt-s gt-u le-s le-u ge-s ge-u)
-  (cvtop ::= convert reinterpret) ; Ignored for now because no floats
+  (cvtop ::= wrap extend-s extend-u) ; trunc, convert, demote, promote, reinterpret omitted because no floats
 
   (i j ::= natural)
   (c ::= natural) ; No floats for now

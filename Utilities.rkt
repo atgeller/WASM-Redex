@@ -22,11 +22,11 @@
     [`rotl (curry sized-rotl size)]
     [`rotr (curry sized-rotr size)]))
 
-(define (wasm_testop->racket word-size testop)
+(define (wasm_testop->racket size testop)
   (match testop
     [`eqz (lambda (n) (if (= n 0) 1 0))]))
 
-(define (wasm_relop->racket word-size relop)
+(define (wasm_relop->racket size relop)
   (match relop
     [`eq =]
     [`ne (lambda (a b) (not (= a b)))]
@@ -34,10 +34,16 @@
     [`gt-u >]
     [`le-u <=]
     [`ge-u >=]
-    [`lt-s (lambda (a b) (< (to-signed-sized word-size a) (to-signed-sized word-size b)))]
-    [`gt-s (lambda (a b) (> (to-signed-sized word-size a) (to-signed-sized word-size b)))]
-    [`le-s (lambda (a b) (<= (to-signed-sized word-size a) (to-signed-sized word-size b)))]
-    [`ge-s (lambda (a b) (>= (to-signed-sized word-size a) (to-signed-sized word-size b)))]))
+    [`lt-s (lambda (a b) (< (to-signed-sized size a) (to-signed-sized size b)))]
+    [`gt-s (lambda (a b) (> (to-signed-sized size a) (to-signed-sized size b)))]
+    [`le-s (lambda (a b) (<= (to-signed-sized size a) (to-signed-sized size b)))]
+    [`ge-s (lambda (a b) (>= (to-signed-sized size a) (to-signed-sized size b)))]))
+
+(define (wasm_cvtop->racket from-size to-size cvtop)
+  (match cvtop
+    [`wrap (curry to-unsigned-sized to-size)]
+    [`extend-s (lambda (c) (to-unsigned-sized to-size (to-signed-sized from-size c)))]
+    [`extend-u identity]))
 
 (define-metafunction WASMrt
   eval-binop : binop c c t -> e
@@ -65,6 +71,11 @@
   [(eval-relop relop c_1 c_2 t)
    (i32 const ,(if ((wasm_relop->racket (type-width (term t)) (term relop)) (term c_1) (term c_2)) 1 0))])
 
+(define-metafunction WASMrt
+  eval-cvtop : cvtop c t_1 t_2 -> e
+  [(eval-cvtop cvtop c t_1 t_2)
+   (t_2 const ,((wasm_cvtop->racket (type-width (term t_1)) (type-width (term t_2)) (term cvtop)) (term c)))])
+
 ;; Decompose local contexts
 ; Function to calculate local context depth
 (define-metafunction WASMrt
@@ -90,7 +101,7 @@
 (define-metafunction WASMrt
   do-get : (any ...) j -> any
   [(do-get () j)
-   (error "Not enough locals!")]
+   (error "do-get index out of bounds!")]
   [(do-get (any ...) j)
    ,(car (drop (term (any ...)) (term j)))])
 

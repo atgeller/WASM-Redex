@@ -35,6 +35,9 @@
      
      (--> (s j (v ...) (in-hole L (v_1 ... (t const c_1) (t const c_2) (t relop) e ...)))
           (s j (v ...) (in-hole L (v_1 ... (eval-relop relop c_1 c_2 t) e ...))))
+
+     (--> (s j (v ...) (in-hole L (v_1 ... (t const c) (t_2 cvtop t) e ...)))
+          (s j (v ...) (in-hole L (v_1 ... (eval-cvtop cvtop c t t_2) e ...))))
           
      (--> (s j (v ...) (in-hole L (v_1 ... (nop) e ...)))
           (s j (v ...) (in-hole L (v_1 ... e ...))))

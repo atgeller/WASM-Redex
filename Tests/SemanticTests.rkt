@@ -20,8 +20,8 @@
              (term ((() () ()) 0 () ((i32 const 2) (i32 const 1) (i32 div-s))))
              (term ((() () ()) 0 () ((i32 const 2)))))
   (test-->>E -> ;; div-s -1
-             (term ((() () ()) 0 () ((i32 const 2) (i32 const 4294967295) (i32 div-s))))
-             (term ((() () ()) 0 () ((i32 const 4294967294)))))
+             (term ((() () ()) 0 () ((i32 const 2) (i32 const #xFFFFFFFF) (i32 div-s))))
+             (term ((() () ()) 0 () ((i32 const #xFFFFFFFE)))))
   (test-->>E -> ;; div-s 0
              (term ((() () ()) 0 () ((i32 const 1) (i32 const 0) (i32 div-s))))
              (term ((() () ()) 0 () ((trap)))))
@@ -29,7 +29,7 @@
              (term ((() () ()) 0 () ((i32 const 2) (i32 const 1) (i32 div-u))))
              (term ((() () ()) 0 () ((i32 const 2)))))
   (test-->>E -> ;; div-u -1
-             (term ((() () ()) 0 () ((i32 const 2) (i32 const 4294967295) (i32 div-u))))
+             (term ((() () ()) 0 () ((i32 const 2) (i32 const #xFFFFFFFF) (i32 div-u))))
              (term ((() () ()) 0 () ((i32 const 0)))))
   (test-->>E -> ;; div-u 0
              (term ((() () ()) 0 () ((i32 const 1) (i32 const 0) (i32 div-u))))
@@ -38,8 +38,8 @@
              (term ((() () ()) 0 () ((i32 const 3) (i32 const 2) (i32 rem-s))))
              (term ((() () ()) 0 () ((i32 const 1)))))
   (test-->>E -> ;; rem-s 3 -2
-             (term ((() () ()) 0 () ((i32 const 1) (i32 const 4294967294) (i32 rem-s))))
-             (term ((() () ()) 0 () ((i32 const 4294967295)))))
+             (term ((() () ()) 0 () ((i32 const 1) (i32 const #xFFFFFFFE) (i32 rem-s))))
+             (term ((() () ()) 0 () ((i32 const #xFFFFFFFF)))))
   (test-->>E -> ;; rem-s 0
              (term ((() () ()) 0 () ((i32 const 1) (i32 const 0) (i32 rem-s))))
              (term ((() () ()) 0 () ((trap)))))
@@ -47,7 +47,7 @@
              (term ((() () ()) 0 () ((i32 const 3) (i32 const 2) (i32 rem-u))))
              (term ((() () ()) 0 () ((i32 const 1)))))
   (test-->>E -> ;; rem-u 1 -2
-             (term ((() () ()) 0 () ((i32 const 3) (i32 const 4294967294) (i32 rem-u))))
+             (term ((() () ()) 0 () ((i32 const 3) (i32 const #xFFFFFFFE) (i32 rem-u))))
              (term ((() () ()) 0 () ((i32 const 3)))))
   (test-->>E -> ;; rem-u 0
              (term ((() () ()) 0 () ((i32 const 1) (i32 const 0) (i32 rem-u))))
@@ -103,6 +103,26 @@
              (term ((() () ()) 0 () ((i64 const 8589934590)))))
 
   ;; TODO: testop, relop
+
+  ;; cvtop
+  (test-->>E -> ;; i64 1 -> i32 1
+             (term ((() () ()) 0 () ((i64 const 1) (i32 wrap i64))))
+             (term ((() () ()) 0 () ((i32 const 1)))))
+  (test-->>E -> ;; i64 -1 -> i32 -1
+             (term ((() () ()) 0 () ((i64 const #xFFFFFFFFFFFFFFFF) (i32 wrap i64))))
+             (term ((() () ()) 0 () ((i32 const #xFFFFFFFF)))))
+  (test-->>E -> ;; i32 1 -> i64 1
+             (term ((() () ()) 0 () ((i32 const 1) (i64 extend-s i32))))
+             (term ((() () ()) 0 () ((i64 const 1)))))
+  (test-->>E -> ;; i32 -1 -> i64 -1
+             (term ((() () ()) 0 () ((i32 const #xFFFFFFFF) (i64 extend-s i32))))
+             (term ((() () ()) 0 () ((i64 const #xFFFFFFFFFFFFFFFF)))))
+  (test-->>E -> ;; i32 1 -> i64 1 unsigned
+             (term ((() () ()) 0 () ((i32 const 1) (i64 extend-u i32))))
+             (term ((() () ()) 0 () ((i64 const 1)))))
+  (test-->>E -> ;; i32 -1 -> i64 -1 unsigned
+             (term ((() () ()) 0 () ((i32 const #xFFFFFFFF) (i64 extend-u i32))))
+             (term ((() () ()) 0 () ((i64 const #xFFFFFFFF)))))
 
   ;; nop, drop
   (test-->>E -> ;; nop
