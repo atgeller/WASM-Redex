@@ -2,7 +2,8 @@
 
 (require redex/reduction-semantics
          bitsyntax
-         "Syntax.rkt")
+         "Syntax.rkt"
+         "MachineOps.rkt")
 
 (provide (all-defined-out))
 
@@ -30,11 +31,12 @@
     [(redex-match? WASMrt i64 type) 64]))
 
 (define (wrapped-load mem type align index (tp_sx #f))
-  (let* ([tp (and tp_sx (car tp_sx))]
-         [sign (and tp_sx (cdr tp_sx))]
+  (let* ([tp (and tp_sx (first tp_sx))]
+         [sign (and tp_sx (second tp_sx))]
          [width (type-width type tp)]
          [conversionfn (if (redex-match? WASMrt signed sign)
-                           bit-string->signed-integer
+                           (compose (curry to-unsigned-sized (type-width type))
+                                    bit-string->signed-integer)
                            bit-string->unsigned-integer)])
     (let ([bit-index (* 8 index)])
       (if (<= 0 bit-index (+ bit-index width) (bit-string-length mem))

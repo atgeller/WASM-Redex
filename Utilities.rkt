@@ -35,7 +35,7 @@
 (define (wasm_relop->racket size relop)
   (match relop
     [`eq =]
-    [`ne (lambda (a b) (not (= a b)))]
+    [`ne (compose not =)]
     [`lt-u <]
     [`gt-u >]
     [`le-u <=]

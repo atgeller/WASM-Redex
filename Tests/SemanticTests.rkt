@@ -323,16 +323,34 @@
                     0
                     ()
                     ((i32 const 0)
-                     (i32 const 0)
-                     (i32 const 305419896) ; 0x12345678
+                     (i32 const #x12345678)
                      (i32 store 0 4)
+                     (i32 const 0)
                      (i32 load (i8 unsigned) 0 4))))
              (term ((((() () (table) (memory 0)))
                      ()
-                     ((bits ,(store (make-memory 128) 32 32 305419896))))
+                     ((bits ,(store (make-memory 128) 32 32 #x12345678))))
                     0
                     ()
-                    ((i32 const 120))))) ; 0x78, would be 0x12 if big-endian
+                    ((i32 const #x78))))) ; would be #x12 if big-endian
+
+  (test-->>E -> ;; store 255, load signed i8
+             (term ((((() () (table) (memory 0)))
+                     ()
+                     ((bits ,(make-memory 128))))
+                    0
+                    ()
+                    ((i32 const 0)
+                     (i32 const #xFF)
+                     (i32 store 0 4)
+                     (i32 const 0)
+                     (i32 load (i8 signed) 0 4))))
+             (term ((((() () (table) (memory 0)))
+                     ()
+                     ((bits ,(store (make-memory 128) 32 32 #xFF))))
+                    0
+                    ()
+                    ((i32 const #xFFFFFFFF)))))
 
   (test-->>E -> ;; store out-of-bounds than load
              (term ((((() () (table) (memory 0)))
