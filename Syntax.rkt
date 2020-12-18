@@ -33,16 +33,15 @@
   (i j ::= natural)
   (c ::= natural) ; No floats for now
 
-  ;; TODO: We don't handle imports
   (f ::= ((ex ...) (func tf (local (t ...) (e ...))))
-     #;((ex ...) (func tf im)))
+     ((ex ...) (func tf im)))
   (glob ::= ((ex ...) (global tg (e ...)))
-        #;((ex ...) (global tg im)))
+        ((ex ...) (global tg im)))
   (tab ::= ((ex ...) (table j (i ...)))
-       #;((ex ...) (table j im)))
+       ((ex ...) (table j im)))
   (mem ::= ((ex ...) (memory i))
-       #;((ex ...) (memory im)))
-  ;(im ::= (import string string))
+       ((ex ...) (memory i im)))
+  (im ::= (import string string))
   (ex ::= (export string))
   (m ::= (module (f ...) (glob ...) (tab ...) (mem ...)))
   )

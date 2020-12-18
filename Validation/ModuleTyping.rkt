@@ -23,6 +23,11 @@
    (⊢-module-func ((func (tf_1 ...)) (global (tg ...)) (table j_1 ...) (memory j_2 ...) _ _ _)
                   ((ex ...) (func tf (local (t ...) (e ...))))
                   ((ex ...) tf))]
+
+  [--------------------------------------
+   (⊢-module-func C
+                  ((ex ...) (func tf im))
+                  ((ex ...) tf))]
   )
 
 ;; Helper judgement to ensure that function declarations/definitions are valid
@@ -57,6 +62,13 @@
    -------------------------
    (⊢-module-global C
                     ((ex ...) (global tg (e ...)))
+                    ((ex ...) tg))]
+
+  ;; Imported globals are immutable
+  [(where (#f t) tg)
+   ------------------
+   (⊢-module-global C
+                    ((ex ...) (global tg im))
                     ((ex ...) tg))]
   )
 
@@ -94,6 +106,11 @@
    (⊢-module-table C
                    ((ex ...) (table i (j ...)))
                    ((ex ...) i))]
+
+  [-----------------
+   (⊢-module-table C
+                   ((ex ...) (table i im))
+                   ((ex ...) i))]
   )
 
 ;; Returns all exports and the memory size
@@ -102,6 +119,9 @@
 
   [----------------------------------------------------
    (⊢-module-mem C ((ex ...) (memory i)) ((ex ...) i))]
+
+  [------------------------------------------------------
+   (⊢-module-mem C ((ex ...) (memory i im)) ((ex ...) i))]
   )
 
 ;; Validates all definitions in the module against the types declared in the module

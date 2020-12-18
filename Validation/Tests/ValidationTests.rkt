@@ -41,7 +41,7 @@
 
   ;; relop
   (test-judgment-holds ⊢
-                       (derivation `(⊢ ,empty-context ((i64 const 0) (i64 const 1) (i64 gt)) (() -> (i32)))
+                       (derivation `(⊢ ,empty-context ((i64 const 0) (i64 const 1) (i64 gt-u)) (() -> (i32)))
                                    #f
                                    (list
                                     (derivation `(⊢ ,empty-context ((i64 const 0) (i64 const 1)) (() -> (i64 i64)))
@@ -52,25 +52,25 @@
                                                              #f
                                                              (list
                                                               (derivation `(⊢ ,empty-context ((i64 const 1)) (() -> (i64))) #f (list))))))
-                                    (derivation `(⊢ ,empty-context ((i64 gt)) ((i64 i64) -> (i32)))
+                                    (derivation `(⊢ ,empty-context ((i64 gt-u)) ((i64 i64) -> (i32)))
                                                 #f
                                                 (list)))))
 
   ;; unreachable allows any following
   (test-judgment-holds ⊢
-                       (derivation `(⊢ ,empty-context ((unreachable) (i64 gt)) (() -> (i32)))
+                       (derivation `(⊢ ,empty-context ((unreachable) (i64 gt-u)) (() -> (i32)))
                                    #f
                                    (list
                                     (derivation `(⊢ ,empty-context ((unreachable)) (() -> (i64 i64)))
                                                 #f
                                                 (list))
-                                    (derivation `(⊢ ,empty-context ((i64 gt)) ((i64 i64) -> (i32)))
+                                    (derivation `(⊢ ,empty-context ((i64 gt-u)) ((i64 i64) -> (i32)))
                                                 #f
                                                 (list)))))
 
   ;; unreachable allows any proceeding
   (test-judgment-holds ⊢
-                       (derivation `(⊢ ,empty-context ((i32 const 0) (unreachable) (i64 gt)) (() -> (i32)))
+                       (derivation `(⊢ ,empty-context ((i32 const 0) (unreachable) (i64 gt-u)) (() -> (i32)))
                                    #f
                                    (list
                                     (derivation `(⊢ ,empty-context ((i32 const 0) (unreachable)) (() -> (i64 i64)))
@@ -82,7 +82,7 @@
                                                  (derivation `(⊢ ,empty-context ((unreachable)) ((i32) -> (i64 i64)))
                                                              #f
                                                              (list))))
-                                    (derivation `(⊢ ,empty-context ((i64 gt)) ((i64 i64) -> (i32)))
+                                    (derivation `(⊢ ,empty-context ((i64 gt-u)) ((i64 i64) -> (i32)))
                                                 #f
                                                 (list)))))
 
