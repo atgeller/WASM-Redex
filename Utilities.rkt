@@ -25,7 +25,12 @@
     [`popcnt (curry sized-popcnt (type-width type))]
     [`abs abs]
     [`neg -]
-    [`sqrt sqrt]
+    [`sqrt (lambda (c)
+             (if (negative? c)
+                 (match type
+                   [`f32 +nan.f]
+                   [`f64 +nan.0])
+                 (sqrt c)))]
     [`ceil ceiling]
     [`floor floor]
     [`nearest round]))
@@ -58,8 +63,8 @@
     [`max max]
     [`copysign
      (lambda (a b)
-       (if (or (eq? b -0.0) (eq? b -inf.0) (eq? (sgn b) -1.0)
-               (eq? b -0.0f0) (eq? b -inf.f) (eq? (sgn b) -1.0f0))
+       (if (or (eq? b -0.0) (eq? b -inf.0) (equal? (sgn b) -1.0)
+               (eq? b -0.0f0) (eq? b -inf.f) (equal? (sgn b) -1.0f0))
            (- (abs a))
            (abs a)))]))
 

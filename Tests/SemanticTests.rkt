@@ -35,6 +35,37 @@
              (term ((() () ()) 0 () ((i32 const #xDEADBEEF) (i32 popcnt))))
              (term ((() () ()) 0 () ((i32 const 24)))))
 
+  (test-->>E -> ;; abs 3
+             (term ((() () ()) 0 () ((f64 const 3.0) (f64 abs))))
+             (term ((() () ()) 0 () ((f64 const 3.0)))))
+  (test-->>E -> ;; abs -3
+             (term ((() () ()) 0 () ((f64 const -3.0) (f64 abs))))
+             (term ((() () ()) 0 () ((f64 const 3.0)))))
+  (test-->>E -> ;; neg 3
+             (term ((() () ()) 0 () ((f64 const 3.0) (f64 neg))))
+             (term ((() () ()) 0 () ((f64 const -3.0)))))
+  (test-->>E -> ;; neg -3
+             (term ((() () ()) 0 () ((f64 const -3.0) (f64 neg))))
+             (term ((() () ()) 0 () ((f64 const 3.0)))))
+  (test-->>E -> ;; sqrt
+             (term ((() () ()) 0 () ((f64 const 4.0) (f64 sqrt))))
+             (term ((() () ()) 0 () ((f64 const 2.0)))))
+  (test-->>E -> ;; sqrt negative
+             (term ((() () ()) 0 () ((f64 const -4.0) (f64 sqrt))))
+             (term ((() () ()) 0 () ((f64 const +nan.0)))))
+  (test-->>E -> ;; ceil
+             (term ((() () ()) 0 () ((f64 const ,pi) (f64 ceil))))
+             (term ((() () ()) 0 () ((f64 const 4.0)))))
+  (test-->>E -> ;; floor
+             (term ((() () ()) 0 () ((f64 const ,pi) (f64 floor))))
+             (term ((() () ()) 0 () ((f64 const 3.0)))))
+  (test-->>E -> ;; nearest
+             (term ((() () ()) 0 () ((f64 const ,pi) (f64 nearest))))
+             (term ((() () ()) 0 () ((f64 const 3.0)))))
+  (test-->>E -> ;; nearest
+             (term ((() () ()) 0 () ((f64 const 1.5) (f64 nearest))))
+             (term ((() () ()) 0 () ((f64 const 2.0)))))
+
   ;; Tests of simple binops
   (test-->>E -> ;; add
              (term ((() () ()) 0 () ((i32 const 2) (i32 const 1) (i32 add))))
@@ -131,7 +162,65 @@
              (term ((() () ()) 0 () ((i64 const 4294967295) (i64 const 2) (i64 mul))))
              (term ((() () ()) 0 () ((i64 const 8589934590)))))
 
-  ;; TODO: testop, relop
+  (test-->>E -> ;; f64 add
+             (term ((() () ()) 0 () ((f64 const 0.1) (f64 const 0.2) (f64 add))))
+             (term ((() () ()) 0 () ((f64 const 0.30000000000000004)))))
+  (test-->>E -> ;; f64 sub
+             (term ((() () ()) 0 () ((f64 const 0.3) (f64 const 0.2) (f64 sub))))
+             (term ((() () ()) 0 () ((f64 const 0.09999999999999998)))))
+  (test-->>E -> ;; f64 mul
+             (term ((() () ()) 0 () ((f64 const 42.0) (f64 const 0.1) (f64 mul))))
+             (term ((() () ()) 0 () ((f64 const 4.2)))))
+  (test-->>E -> ;; f64 mul
+             (term ((() () ()) 0 () ((f64 const 42.0) (f64 const 0.0) (f64 mul))))
+             (term ((() () ()) 0 () ((f64 const 0.0)))))
+  (test-->>E -> ;; f64 mul
+             (term ((() () ()) 0 () ((f64 const -42.0) (f64 const 0.0) (f64 mul))))
+             (term ((() () ()) 0 () ((f64 const -0.0)))))
+  (test-->>E -> ;; f64 div
+             (term ((() () ()) 0 () ((f64 const 5.0) (f64 const 2.5) (f64 div))))
+             (term ((() () ()) 0 () ((f64 const 2.0)))))
+  (test-->>E -> ;; f64 div
+             (term ((() () ()) 0 () ((f64 const 1.0) (f64 const 0.0) (f64 div))))
+             (term ((() () ()) 0 () ((f64 const +inf.0)))))
+  (test-->>E -> ;; f64 div
+             (term ((() () ()) 0 () ((f64 const -1.0) (f64 const 0.0) (f64 div))))
+             (term ((() () ()) 0 () ((f64 const -inf.0)))))
+  (test-->>E -> ;; f64 min
+             (term ((() () ()) 0 () ((f64 const 1.0) (f64 const 0.1) (f64 min))))
+             (term ((() () ()) 0 () ((f64 const 0.1)))))
+  (test-->>E -> ;; f64 min
+             (term ((() () ()) 0 () ((f64 const +inf.0) (f64 const -inf.0) (f64 min))))
+             (term ((() () ()) 0 () ((f64 const -inf.0)))))
+  (test-->>E -> ;; f64 max
+             (term ((() () ()) 0 () ((f64 const 1.0) (f64 const 0.1) (f64 max))))
+             (term ((() () ()) 0 () ((f64 const 1.0)))))
+  (test-->>E -> ;; f64 max
+             (term ((() () ()) 0 () ((f64 const +inf.0) (f64 const -inf.0) (f64 max))))
+             (term ((() () ()) 0 () ((f64 const +inf.0)))))
+  (test-->>E -> ;; f64 copysign
+             (term ((() () ()) 0 () ((f64 const 2.0) (f64 const -3.0) (f64 copysign))))
+             (term ((() () ()) 0 () ((f64 const -2.0)))))
+  (test-->>E -> ;; f64 copysign
+             (term ((() () ()) 0 () ((f64 const 2.0) (f64 const -0.0) (f64 copysign))))
+             (term ((() () ()) 0 () ((f64 const -2.0)))))
+  (test-->>E -> ;; f64 copysign
+             (term ((() () ()) 0 () ((f64 const -3.0) (f64 const 2.0) (f64 copysign))))
+             (term ((() () ()) 0 () ((f64 const 3.0)))))
+
+  ;; Cursed becuase Racket has an understandable hatred for reading single precision floats
+  (test-->>E -> ;; f32 add
+             (term ((() () ()) 0 () ((f32 const ,(real->single-flonum 0.2f0)) (f32 const ,(real->single-flonum 0.1f0)) (f32 add))))
+             (term ((() () ()) 0 () ((f32 const ,(real->single-flonum 0.3f0))))))
+
+  (test-->>E -> ;; eqz false
+             (term ((() () ()) 0 () ((i32 const 8) (i32 eqz))))
+             (term ((() () ()) 0 () ((i32 const 0)))))
+  (test-->>E -> ;; eqz true
+             (term ((() () ()) 0 () ((i32 const 0) (i32 eqz))))
+             (term ((() () ()) 0 () ((i32 const 1)))))
+  
+  ;; TODO: relops
 
   ;; cvtop
   (test-->>E -> ;; i64 1 -> i32 1
@@ -152,6 +241,31 @@
   (test-->>E -> ;; i32 -1 -> i64 -1 unsigned
              (term ((() () ()) 0 () ((i32 const #xFFFFFFFF) (i64 convert i32 unsigned))))
              (term ((() () ()) 0 () ((i64 const #xFFFFFFFF)))))
+  (test-->>E -> ;; f32 -> f64
+             (term ((() () ()) 0 () ((f32 const ,(real->single-flonum 2.3f0)) (f64 convert f32))))
+             (term ((() () ()) 0 () ((f64 const 2.299999952316284)))))
+  (test-->>E -> ;; f64 -> f32
+             (term ((() () ()) 0 () ((f64 const 2.3) (f32 convert f64))))
+             (term ((() () ()) 0 () ((f32 const ,(real->single-flonum 2.3f0))))))
+  (test-->>E -> ;; f64 -> f32 inf
+             (term ((() () ()) 0 () ((f64 const 2.3e+40) (f32 convert f64))))
+             (term ((() () ()) 0 () ((f32 const ,(real->single-flonum +inf.f))))))
+  ;; TODO: floating -> integer and integer -> floating
+  (test-->>E -> ;; reinterpret i32 -> f32 0
+             (term ((() () ()) 0 () ((i32 const 0) (f32 reinterpret i32))))
+             (term ((() () ()) 0 () ((f32 const ,(real->single-flonum 0.0f0))))))
+  (test-->>E -> ;; reinterpret i32 -> f32 inf
+             (term ((() () ()) 0 () ((i32 const #x7F800000) (f32 reinterpret i32))))
+             (term ((() () ()) 0 () ((f32 const ,(real->single-flonum +inf.f))))))
+  (test-->>E -> ;; reinterpret i64 -> f64 42.0
+             (term ((() () ()) 0 () ((i64 const #x4045000000000000) (f64 reinterpret i64))))
+             (term ((() () ()) 0 () ((f64 const 42.0)))))
+  (test-->>E -> ;; reinterpret f32 -> i32 -0.0
+             (term ((() () ()) 0 () ((f32 const ,(real->single-flonum -0.0f0)) (i32 reinterpret f32))))
+             (term ((() () ()) 0 () ((i32 const #x80000000)))))
+  (test-->>E -> ;; reinterpret f64 -> i64 -1.0
+             (term ((() () ()) 0 () ((f64 const -1.0) (i64 reinterpret f64))))
+             (term ((() () ()) 0 () ((i64 const #xBFF0000000000000)))))
 
   ;; nop, drop
   (test-->>E -> ;; nop
