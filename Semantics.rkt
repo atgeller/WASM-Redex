@@ -133,20 +133,20 @@
           (s j (v ...) (in-hole L (setup-call (v_1 ...) cl (e ...)))))
 
      ; Stuff inside functions calls
-     ;; TODO: Can we assume v_3 ... is the right arity and types to return?
      ;; NOTE: This is fun decomposition...
-     (--> (s j (v ...) (in-hole L (v_1 ... (local (j_1 (v_2 ...)) (in-hole L_2 (v_3 ... (return) e ...))) e_2 ...)))
-          (s j (v ...) (in-hole L (v_1 ... v_3 ... e_2 ...))))
+     (--> (s j (v ...) (in-hole L (v_1 ... (local n (j_1 (v_2 ...)) (in-hole L_2 (v_3 ... (return) e ...))) e_2 ...)))
+          (s j (v ...) (in-hole L (v_1 ... v_3 ... e_2 ...)))
+          (where n ,(length (term (v_3 ...)))))
 
-     (--> (s j (v ...) (in-hole L (v_1 ... (local (j_1 (v_2 ...)) ((trap))) e_2 ...)))
+     (--> (s j (v ...) (in-hole L (v_1 ... (local n (j_1 (v_2 ...)) ((trap))) e_2 ...)))
           (s j (v ...) (in-hole L (v_1 ... (trap) e_2 ...))))
 
-     ;; TODO: Can we assume v_3 ... has the right arity and types to return?
-     (--> (s j (v ...) (in-hole L (v_1 ... (local (j_1 (v_2 ...)) (v_3 ...)) e_2 ...)))
-          (s j (v ...) (in-hole L (v_1 ... v_3 ... e_2 ...))))
+     (--> (s j (v ...) (in-hole L (v_1 ... (local n (j_1 (v_2 ...)) (v_3 ...)) e_2 ...)))
+          (s j (v ...) (in-hole L (v_1 ... v_3 ... e_2 ...)))
+          (where n ,(length (term (v_3 ...)))))
 
-     (--> (s j (v ...) (in-hole L (v_1 ... (local (j_1 (v_2 ...)) (e ...)) e_2 ...)))
-          (s_new j (v ...) (in-hole L (v_1 ... (local (j_1 (v_2new ...)) (e_new ...)) e_2 ...)))
+     (--> (s j (v ...) (in-hole L (v_1 ... (local n (j_1 (v_2 ...)) (e ...)) e_2 ...)))
+          (s_new j (v ...) (in-hole L (v_1 ... (local n (j_1 (v_2new ...)) (e_new ...)) e_2 ...)))
           (where ((s_new j_1 (v_2new ...) (e_new ...)))
                  ,(apply-reduction-relation -> (term (s j_1 (v_2 ...) (e ...))))))
 

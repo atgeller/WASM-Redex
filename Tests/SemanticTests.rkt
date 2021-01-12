@@ -178,9 +178,9 @@
   ;; Tests of function calls
   (test-->>E -> ;; call j, call cl, get-local, return
              (term ((((() () (table) (memory))
-                      (((0 (() (func ((i32) -> ()) (local () ((get-local 0))))))
-                        (1 (() (func ((i32 i32) -> ()) (local () ((get-local 1))))))
-                        (2 (() (func ((i32 i32 i32) -> ()) (local () ((get-local 2)))))))
+                      (((0 (() (func ((i32) -> (i32)) (local () ((get-local 0))))))
+                        (1 (() (func ((i32 i32) -> (i32)) (local () ((get-local 1))))))
+                        (2 (() (func ((i32 i32 i32) -> (i32)) (local () ((get-local 2)))))))
                        () (table) (memory))
                       (() ()  (table) (memory)))
                      ()
@@ -189,9 +189,9 @@
                     () ; locals
                     ((i32 const 0) (i32 const 1) (i32 const 2) (call 1)))) ; e stream
              (term ((((() () (table) (memory))
-                      (((0 (() (func ((i32) -> ()) (local () ((get-local 0))))))
-                        (1 (() (func ((i32 i32) -> ()) (local () ((get-local 1))))))
-                        (2 (() (func ((i32 i32 i32) -> ()) (local () ((get-local 2)))))))
+                      (((0 (() (func ((i32) -> (i32)) (local () ((get-local 0))))))
+                        (1 (() (func ((i32 i32) -> (i32)) (local () ((get-local 1))))))
+                        (2 (() (func ((i32 i32 i32) -> (i32)) (local () ((get-local 2)))))))
                        () (table) (memory))
                       (() ()  (table) (memory)))
                      ()
@@ -202,9 +202,9 @@
 
   (test-->>E -> ;; call j, call cl, get-local, return
              (term ((((() () (table) (memory))
-                     (((0 (() (func ((i32) -> ()) (local () ((get-local 0))))))
-                       (1 (() (func ((i32 i32) -> ()) (local () ((get-local 1))))))
-                       (2 (() (func ((i32 i32 i32) -> ()) (local () ((get-local 2)))))))
+                     (((0 (() (func ((i32) -> (i32)) (local () ((get-local 0))))))
+                       (1 (() (func ((i32 i32) -> (i32)) (local () ((get-local 1))))))
+                       (2 (() (func ((i32 i32 i32) -> (i32)) (local () ((get-local 2)))))))
                       () (table) (memory))
                      (() ()  (table) (memory)))
                      ()
@@ -213,9 +213,9 @@
                     () ; locals
                     ((i32 const 0) (i32 const 1) (i32 const 2) (call 1)))) ; e stream
              (term ((((() () (table) (memory))
-                     (((0 (() (func ((i32) -> ()) (local () ((get-local 0))))))
-                       (1 (() (func ((i32 i32) -> ()) (local () ((get-local 1))))))
-                       (2 (() (func ((i32 i32 i32) -> ()) (local () ((get-local 2)))))))
+                     (((0 (() (func ((i32) -> (i32)) (local () ((get-local 0))))))
+                       (1 (() (func ((i32 i32) -> (i32)) (local () ((get-local 1))))))
+                       (2 (() (func ((i32 i32 i32) -> (i32)) (local () ((get-local 2)))))))
                       () (table) (memory))
                      (() ()  (table) (memory)))
                      ()
@@ -228,7 +228,7 @@
              (term ((() () ()) ; store
                     0 ; inst
                     () ; locals
-                    ((local (0 ()) ((unreachable)))))) ; e stream
+                    ((local 0 (0 ()) ((unreachable)))))) ; e stream
              (term ((() () ()) ; store
                     0 ; inst
                     () ; locals
