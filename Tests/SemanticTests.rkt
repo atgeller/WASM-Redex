@@ -135,22 +135,22 @@
 
   ;; cvtop
   (test-->>E -> ;; i64 1 -> i32 1
-             (term ((() () ()) 0 () ((i64 const 1) (i32 wrap i64))))
+             (term ((() () ()) 0 () ((i64 const 1) (i32 convert i64))))
              (term ((() () ()) 0 () ((i32 const 1)))))
   (test-->>E -> ;; i64 -1 -> i32 -1
-             (term ((() () ()) 0 () ((i64 const #xFFFFFFFFFFFFFFFF) (i32 wrap i64))))
+             (term ((() () ()) 0 () ((i64 const #xFFFFFFFFFFFFFFFF) (i32 convert i64))))
              (term ((() () ()) 0 () ((i32 const #xFFFFFFFF)))))
   (test-->>E -> ;; i32 1 -> i64 1
-             (term ((() () ()) 0 () ((i32 const 1) (i64 extend-s i32))))
+             (term ((() () ()) 0 () ((i32 const 1) (i64 convert i32 signed))))
              (term ((() () ()) 0 () ((i64 const 1)))))
   (test-->>E -> ;; i32 -1 -> i64 -1
-             (term ((() () ()) 0 () ((i32 const #xFFFFFFFF) (i64 extend-s i32))))
+             (term ((() () ()) 0 () ((i32 const #xFFFFFFFF) (i64 convert i32 signed))))
              (term ((() () ()) 0 () ((i64 const #xFFFFFFFFFFFFFFFF)))))
   (test-->>E -> ;; i32 1 -> i64 1 unsigned
-             (term ((() () ()) 0 () ((i32 const 1) (i64 extend-u i32))))
+             (term ((() () ()) 0 () ((i32 const 1) (i64 convert i32 unsigned))))
              (term ((() () ()) 0 () ((i64 const 1)))))
   (test-->>E -> ;; i32 -1 -> i64 -1 unsigned
-             (term ((() () ()) 0 () ((i32 const #xFFFFFFFF) (i64 extend-u i32))))
+             (term ((() () ()) 0 () ((i32 const #xFFFFFFFF) (i64 convert i32 unsigned))))
              (term ((() () ()) 0 () ((i64 const #xFFFFFFFF)))))
 
   ;; nop, drop

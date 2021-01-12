@@ -40,7 +40,10 @@
           (s j (v ...) (in-hole L (v_1 ... (eval-relop relop c_1 c_2 t) e ...))))
 
      (--> (s j (v ...) (in-hole L (v_1 ... (t const c) (t_2 cvtop t) e ...)))
-          (s j (v ...) (in-hole L (v_1 ... (eval-cvtop cvtop c t t_2) e ...))))
+          (s j (v ...) (in-hole L (v_1 ... (eval-cvtop cvtop c t t_2 #f) e ...))))
+
+     (--> (s j (v ...) (in-hole L (v_1 ... (t const c) (t_2 cvtop t sx) e ...)))
+          (s j (v ...) (in-hole L (v_1 ... (eval-cvtop cvtop c t t_2 sx) e ...))))
           
      (--> (s j (v ...) (in-hole L (v_1 ... (nop) e ...)))
           (s j (v ...) (in-hole L (v_1 ... e ...))))
@@ -66,16 +69,18 @@
           (side-condition (> (term c) 0)))
 
      (--> (s j (v ...) (in-hole L (v_1 ... (block ((t_1 ...) -> (t_2 ...)) (e_1 ...)) e_2 ...)))
-          (s j (v ...) (in-hole L (v_2 ... (label () (v_3 ... e_1 ...)) e_2 ...)))
+          (s j (v ...) (in-hole L (v_2 ... (label m () (v_3 ... e_1 ...)) e_2 ...)))
           (where (v_2 ...) ,(drop-right (term (v_1 ...)) (length (term (t_1 ...)))))
-          (where (v_3 ...) ,(take-right (term (v_1 ...)) (length (term (t_1 ...))))))
+          (where (v_3 ...) ,(take-right (term (v_1 ...)) (length (term (t_1 ...)))))
+          (where m ,(length (term (t_2 ...)))))
 
      (--> (s j (v ...) (in-hole L (v_1 ... (loop ((t_1 ...) -> (t_2 ...)) (e_1 ...)) e_2 ...)))
-          (s j (v ...) (in-hole L (v_2 ... (label ((loop ((t_1 ...) -> (t_2 ...)) (e_1 ...))) (v_3 ... e_1 ...)) e_2 ...)))
+          (s j (v ...) (in-hole L (v_2 ... (label n ((loop ((t_1 ...) -> (t_2 ...)) (e_1 ...))) (v_3 ... e_1 ...)) e_2 ...)))
           (where (v_2 ...) ,(drop-right (term (v_1 ...)) (length (term (t_1 ...)))))
-          (where (v_3 ...) ,(take-right (term (v_1 ...)) (length (term (t_1 ...))))))
+          (where (v_3 ...) ,(take-right (term (v_1 ...)) (length (term (t_1 ...)))))
+          (where n ,(length (term (t_1 ...)))))
 
-     (--> (s j (v ...) (in-hole L (v_1 ... (label (e ...) ((trap))) e_2 ...)))
+     (--> (s j (v ...) (in-hole L (v_1 ... (label n (e ...) ((trap))) e_2 ...)))
           (s j (v ...) (in-hole L (v_1 ... (trap) e_2 ...))))
 
      (--> (s j (v ...) (in-hole L (v_1 ... (trap) e_2 ...)))
@@ -100,7 +105,7 @@
           (s j (v ...) (in-hole L (v_1 ... v_2 (br j_2) e ...)))
           (side-condition (> (term c) (length (term (j_1 ...))))))
 
-     (--> (s j (v ...) (in-hole L (v_1 ... (label (e_1 ...) (v_2 ...)) e ...)))
+     (--> (s j (v ...) (in-hole L (v_1 ... (label n (e_1 ...) (v_2 ...)) e ...)))
           (s j (v ...) (v_1 ... v_2 ... e ...)))
 
      ;; Locals!

@@ -26,6 +26,13 @@
         (- unsigned (expt 2 size)))))
 
 
+(define ui32? (curry unsigned-int-size? 32))
+(define ui64? (curry unsigned-int-size? 64))
+
+(define si32? (curry signed-int-size? 32))
+(define si64? (curry signed-int-size? 64))
+
+
 (define (sized-add size n1 n2)
   (to-unsigned-sized size (+ n1 n2)))
 
