@@ -25,7 +25,30 @@
   [-----------------------------------
    (⊢ C ((t relop)) ((t t) -> (i32)))]
 
-  [ ----------------------------------------------
+  [(where (t_!_1 t_!_1) (t_1 t_2))
+   (side-condition ,(or (and (integer-type? (term t_1))
+                             (integer-type? (term t_2))
+                             (< (type-width (term t_1)) (type-width (term t_2))))
+                        (and (floating-type? (term t_1))
+                             (floating-type? (term t_2)))))
+   ------------------------------------------
+   (⊢ C ((t_1 convert t_2)) ((t_2) -> (t_1)))]
+
+  [(where (t_!_1 t_!_1) (t_1 t_2))
+   (side-condition ,(nor (and (integer-type? (term t_1))
+                              (integer-type? (term t_2))
+                              (< (type-width (term t_1)) (type-width (term t_2))))
+                         (and (floating-type? (term t_1))
+                              (floating-type? (term t_2)))))
+   ---------------------------------------------
+   (⊢ C ((t_1 convert t_2 sx)) ((t_2) -> (t_1)))]
+
+  [(where (t_!_1 t_!_1) (t_1 t_2))
+   (side-condition ,(= (type-width (term t_1)) (type-width (term t_2))))
+   ----------------------------------------------
+   (⊢ C ((t_1 reinterpret t_2)) ((t_2) -> (t_1)))]
+
+  [----------------------------------------------
    (⊢ C ((unreachable)) ((t_1 ...) -> (t_2 ...)))]
 
   [-------------------------

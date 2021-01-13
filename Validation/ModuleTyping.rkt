@@ -126,7 +126,7 @@
 
 ;; Validates all definitions in the module against the types declared in the module
 (define-judgment-form WASMTyping
-  #:contract (⊢-module m C)
+  #:contract (⊢-module mod C)
 
   [(where ((func (tf ...)) (global (tg ...)) (table i) (memory j) (local ()) (label ()) (return)) C)
    (⊢-module-func-list C (f ...) (((ex_1_ ...) tf) ...))
@@ -174,7 +174,7 @@
 ;; Extracts the declared module type (consisting of all declared function and global types in that module, as well as the size of table and memory if applicable)
 ;; Eventually may be useful for deriving module types
 (define-metafunction WASMTyping
-  extract-module-type : m -> C
+  extract-module-type : mod -> C
   [(extract-module-type (module (f ...) (glob ...) ((table i _)) ((memory j))))
    ((extract-func-types (f ...)) (extract-global-types (glob ...)) (table i) (memory j) (local ()) (label ()) (return))]
   [(extract-module-type (module (f ...) (glob ...) ((table i _)) ()))
