@@ -28,7 +28,9 @@
     [(redex-match? WASMrt i16 tp) 16]
     [(redex-match? WASMrt i32 tp) 32]
     [(redex-match? WASMrt i32 type) 32]
-    [(redex-match? WASMrt i64 type) 64]))
+    [(redex-match? WASMrt i64 type) 64]
+    [(redex-match? WASMrt f32 type) 32]
+    [(redex-match? WASMrt f64 type) 64]))
 
 (define (wrapped-load mem type align index (tp_sx #f))
   (let* ([tp (and tp_sx (first tp_sx))]
