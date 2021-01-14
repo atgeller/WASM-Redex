@@ -425,7 +425,7 @@
                     ((i32 const 0) (i32 const 0) (i64 const 65) (i64 store 0 8) (i64 load 0 8))))
              (term ((((() () (table) (memory 0)))
                      ()
-                     ((bits ,(store (make-memory 128) 64 64 65))))
+                     ((bits ,(store-integer (make-memory 128) 64 64 65))))
                     0
                     ()
                     ((i64 const 65)))))
@@ -443,7 +443,7 @@
                      (i32 load (i8 unsigned) 0 4))))
              (term ((((() () (table) (memory 0)))
                      ()
-                     ((bits ,(store (make-memory 128) 32 32 #x12345678))))
+                     ((bits ,(store-integer (make-memory 128) 32 32 #x12345678))))
                     0
                     ()
                     ((i32 const #x78))))) ; would be #x12 if big-endian
@@ -461,7 +461,7 @@
                      (i32 load (i8 signed) 0 4))))
              (term ((((() () (table) (memory 0)))
                      ()
-                     ((bits ,(store (make-memory 128) 32 32 #xFF))))
+                     ((bits ,(store-integer (make-memory 128) 32 32 #xFF))))
                     0
                     ()
                     ((i32 const #xFFFFFFFF)))))
@@ -489,7 +489,7 @@
                     ((i32 const 0) (i32 const 0) (i64 const 65) (i64 store 0 8) (i64 load 0 200))))
              (term ((((() () (table) (memory 0)))
                      ()
-                     ((bits ,(store (make-memory 128) 64 64 65))))
+                     ((bits ,(store-integer (make-memory 128) 64 64 65))))
                     0
                     ()
                     ((trap)))))

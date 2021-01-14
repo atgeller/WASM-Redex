@@ -21,44 +21,86 @@
             (+ (memory-size mem) newsize))
       (cons mem -1)))
 
-(define (type-width type (tp #f))
-  ;; One of these is true by well-formedness
-  (cond 
-    [(redex-match? WASMrt i8 tp) 8]
-    [(redex-match? WASMrt i16 tp) 16]
-    [(redex-match? WASMrt i32 tp) 32]
-    [(redex-match? WASMrt i32 type) 32]
-    [(redex-match? WASMrt i64 type) 64]
-    [(redex-match? WASMrt f32 type) 32]
-    [(redex-match? WASMrt f64 type) 64]))
+(define (type-width type)
+  (match type
+    [`i8 8]
+    [`i16 16]
+    [`i32 32]
+    [`i64 64]
+    [`f32 32]
+    [`f64 64]))
 
-(define (wrapped-load mem type align index (tp_sx #f))
-  (let* ([tp (and tp_sx (first tp_sx))]
-         [sign (and tp_sx (second tp_sx))]
-         [width (type-width type tp)]
-         [conversionfn (if (redex-match? WASMrt signed sign)
-                           (compose (curry to-unsigned-sized (type-width type))
-                                    bit-string->signed-integer)
-                           bit-string->unsigned-integer)])
-    (let ([bit-index (* 8 index)])
-      (if (<= 0 bit-index (+ bit-index width) (bit-string-length mem))
-          (term (,type const ,(load mem bit-index width conversionfn)))
-          (term (trap))))))
+(define (integer-type? t)
+  (match t
+    [`i32 #t]
+    [`i64 #t]
+    [`f32 #f]
+    [`f64 #f]))
+
+(define (floating-type? t)
+  (match t
+    [`i32 #f]
+    [`i64 #f]
+    [`f32 #t]
+    [`f64 #t]))
+
+;; TODO: I don't think we need bitsyntax, can just use Racket bytestrings
+;; TODO: load/store floating point numbers
+
+(define (valid-bit-index? mem bit-index width)
+  (<= 0 bit-index (+ bit-index width) (bit-string-length mem)))
+
+(define (wrapped-load-packed mem type align index tp sign)
+  (let ([width (type-width tp)]
+        [bit-index (* 8 index)])
+    (if (valid-bit-index? mem bit-index width)
+        (term (,type const ,(load mem bit-index width
+                                  (match sign
+                                    [`signed (compose (curry to-unsigned-sized (type-width type))
+                                                      bit-string->signed-integer)]
+                                    [`unsigned bit-string->unsigned-integer]))))
+        (term (trap)))))
+
+(define (wrapped-load mem type align index)
+  (let ([width (type-width type)]
+        [bit-index (* 8 index)])
+    (if (valid-bit-index? mem bit-index width)
+        (term (,type const ,(load mem bit-index width
+                                  (match type
+                                    [`i32 bit-string->unsigned-integer]
+                                    [`i64 bit-string->unsigned-integer]
+                                    [`f32 (lambda (val end) (real->single-flonum (real->floating-point-bytes val 4 end)))]
+                                    [`f64 (lambda (val end) (real->floating-point-bytes val 8 end))]))))
+        (term (trap)))))
 
 ;; Shouldn't really be provided, but useful for testing and debugging
 (define (load mem offset width conversionfn)
   (conversionfn (sub-bit-string mem offset (+ offset width)) endianess))
 
-(define (wrapped-store mem type align index value (tp #f))
-  (let* ([width (type-width type tp)])
-    (let ([bit-index (* 8 index)])
-      (if (<= 0 bit-index (+ bit-index width) (bit-string-length mem))
-          (term (bits ,(store mem bit-index width value)))
-          (term (trap))))))
+(define (wrapped-store-packed mem type align index value tp)
+  (let ([width (type-width tp)]
+        [bit-index (* 8 index)])
+    (if (valid-bit-index? mem bit-index width)
+        (term (bits ,(store mem bit-index (integer->integer-bytes (modulo value (expt 2 width))))))
+        (term (trap)))))
+
+(define (wrapped-store mem type align index value)
+  (let ([bit-index (* 8 index)])
+    (if (valid-bit-index? mem bit-index (type-width type))
+        (term (bits ,(store mem bit-index
+                            (match type
+                              [`i32 (integer->integer-bytes value 4 #f endianess)]
+                              [`i64 (integer->integer-bytes value 8 #f endianess)]
+                              [`f32 (real->floating-point-bytes value 4 endianess)]
+                              [`f64 (real->floating-point-bytes value 8 endianess)]))))
+        (term (trap)))))
 
 ;; Shouldn't really be provided, but useful for testing and debugging
-(define (store mem offset width value)
-  (define packed (integer->bit-string value width endianess))
+(define (store mem offset bytes)
   (bit-string-pack (bit-string-append (bit-string-take mem offset)
-                                      packed
-                                      (bit-string-drop mem (+ offset width)))))
+                                      bytes
+                                      (bit-string-drop mem (bit-string-length bytes)))))
+
+;; For tests
+(define (store-integer mem offset width value)
+  (store mem offset (integer->integer-bytes value (/ width 8) #f endianess)))

@@ -4,20 +4,6 @@
 
 (provide (except-out (all-defined-out) wasm_binop->racket wasm_testop->racket wasm_relop->racket))
 
-(define (integer-type? t)
-  (match t
-    [`i32 #t]
-    [`i64 #t]
-    [`f32 #f]
-    [`f64 #f]))
-
-(define (floating-type? t)
-  (match t
-    [`i32 #f]
-    [`i64 #f]
-    [`f32 #t]
-    [`f64 #t]))
-
 (define (wasm_unop->racket type unop)
   (match unop
     [`clz (curry sized-clz (type-width type))]
@@ -280,27 +266,40 @@
 ;; TODO: cleanup on aisle 5
 (define-metafunction WASMrt
   ; c - align, c_1 - offset + index
-  do-load : s j t c c_1 any -> e
-  [(do-load ((inst ...) (tabinst ...) (meminst ...)) j t c c_1 (name tp-sx? any))
-   ,(wrapped-load (car (get-mem (term (inst ...)) (term (meminst ...)) (term j)))
-                  (term t)
-                  (term c)   ; align
-                  (term c_1) ; offset + index
-                  (term tp-sx?))])
+  do-load : s j t a o any -> e
+  [(do-load ((inst ...) (tabinst ...) (meminst ...)) j t a o (name tp-sx? any))
+   ,(let ([mem (car (get-mem (term (inst ...)) (term (meminst ...)) (term j)))])
+      (if (term tp-sx?)
+          (wrapped-load-packed mem
+                               (term t)
+                               (term a)   ; align
+                               (term o) ; offset + index
+                               (first (term tp-sx?))
+                               (second (term tp-sx?)))
+          (wrapped-load mem
+                        (term t)
+                        (term a)
+                        (term o))))])
 
 (define-metafunction WASMrt
   ; c - align, c_1 - offset + index, c_2 - value
-  do-store : s j t c c_1 c_2 any -> (s (e ...))
-  [(do-store ((inst ...) (tabinst ...) (meminst ...)) j t c c_1 c_2 (name tp? any))
+  do-store : s j t a o c any -> (s (e ...))
+  [(do-store ((inst ...) (tabinst ...) (meminst ...)) j t a o c (name tp? any))
    ,(let* ([meminfo (get-mem (term (inst ...)) (term (meminst ...)) (term j))]
            [mem (car meminfo)]
            [memindex (cdr meminfo)]
-           [result (wrapped-store mem
-                                  (term t)
-                                  (term c)   ; align
-                                  (term c_1) ; offset + index
-                                  (term c_2) ; value
-                                  (term tp?))])
+           [result (if (term tp?)
+                       (wrapped-store-packed mem
+                                             (term t)
+                                             (term a) ; align
+                                             (term o) ; offset + index
+                                             (term c) ; value
+                                             (term tp?))
+                       (wrapped-store mem
+                                      (term t)
+                                      (term a)
+                                      (term o)
+                                      (term c)))])
       (if (redex-match? WASMrt (trap) result)
           (term (((inst ...) (tabinst ...) (meminst ...)) ((trap))))
           (term (((inst ...)
