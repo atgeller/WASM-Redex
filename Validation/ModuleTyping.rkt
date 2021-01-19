@@ -9,7 +9,11 @@
          ⊢-module-global
          ⊢-module-func-list
          ⊢-module-global-list
-         ⊢-module)
+         ⊢-module-table
+         ⊢-module-mem
+         ⊢-module
+         valid-indexes
+         extract-module-type)
 
 ;; Validates the function definition and returns all exports and the type of the function
 (define-judgment-form WASMTyping
@@ -21,12 +25,12 @@
       (() -> (t_2 ...)))
    ---------------------
    (⊢-module-func ((func (tf_1 ...)) (global (tg ...)) (table j_1 ...) (memory j_2 ...) _ _ _)
-                  ((ex ...) (func tf (local (t ...) (e ...))))
+                  (func (ex ...) tf (local (t ...) (e ...)))
                   ((ex ...) tf))]
 
   [--------------------------------------
    (⊢-module-func C
-                  ((ex ...) (func tf im))
+                  (func (ex ...) tf im)
                   ((ex ...) tf))]
   )
 
@@ -52,7 +56,7 @@
    (⊢ C (e ...) (() -> (t)))
    -------------------------
    (⊢-module-global C
-                    ((ex ...) (global tg (e ...)))
+                    (global (ex ...) tg (e ...))
                     ((ex ...) tg))]
 
   ;; Can't have exports if global is mutable
@@ -61,14 +65,14 @@
    (⊢ C (e ...) (() -> (t)))
    -------------------------
    (⊢-module-global C
-                    ((ex ...) (global tg (e ...)))
+                    (global (ex ...) tg (e ...))
                     ((ex ...) tg))]
 
   ;; Imported globals are immutable
   [(where (#f t) tg)
    ------------------
    (⊢-module-global C
-                    ((ex ...) (global tg im))
+                    (global (ex ...) tg im)
                     ((ex ...) tg))]
   )
 
@@ -88,8 +92,8 @@
 ;; Helper function to ensure a table is well-formed
 ;; Checks that there are exactly `i` indices (j ...), and that each one points to a valid function
 (define-metafunction WASMTyping
-  valid-indexes : (tf ...) (j ...) i -> boolean
-  [(valid-indexes (tf ...) (j ...) i)
+  valid-indexes : C (j ...) i -> boolean
+  [(valid-indexes ((func (tf ...)) _ _ _ _ _ _) (j ...) i)
    ,(and (= (length (term (j ...))) (term i))
          (let ([bound (length (term (tf ...)))])
            (andmap
@@ -100,16 +104,15 @@
 (define-judgment-form WASMTyping
   #:contract (⊢-module-table C tab ((ex ...) i))
 
-  [(where ((func (tf ...)) _ _ _ _ _ _) C)
-   (where #t (valid-indexes (tf ...) (j ...) i))
+  [(where #t (valid-indexes C (j ...) i))
    ---------------------------------------------
    (⊢-module-table C
-                   ((ex ...) (table i (j ...)))
+                   (table (ex ...) i (j ...))
                    ((ex ...) i))]
 
   [-----------------
    (⊢-module-table C
-                   ((ex ...) (table i im))
+                   (table (ex ...) i im)
                    ((ex ...) i))]
   )
 
@@ -118,10 +121,10 @@
   #:contract (⊢-module-mem C mem ((ex ...) i))
 
   [----------------------------------------------------
-   (⊢-module-mem C ((ex ...) (memory i)) ((ex ...) i))]
+   (⊢-module-mem C (memory (ex ...) i) ((ex ...) i))]
 
   [------------------------------------------------------
-   (⊢-module-mem C ((ex ...) (memory i im)) ((ex ...) i))]
+   (⊢-module-mem C (memory (ex ...) i im) ((ex ...) i))]
   )
 
 ;; Validates all definitions in the module against the types declared in the module
