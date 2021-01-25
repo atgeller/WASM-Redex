@@ -36,8 +36,8 @@
   (t ::= i32 i64 f32 f64)
   (tp ::= i8 i16 i32)
   (tf ::= ((t ...) -> (t ...)))
-  (mut? ::= boolean)
-  (tg ::= (mut? t))
+  (mut ::= const var)
+  (tg ::= (mut t))
   (sx ::= signed unsigned)
 
   (unop ::= iunop funop)
