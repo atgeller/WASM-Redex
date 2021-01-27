@@ -3,7 +3,9 @@
 (require redex/reduction-semantics
          "../Syntax.rkt"
          "../Bits.rkt"
-         "ModuleTyping.rkt")
+         "ModuleTyping.rkt"
+         "InstructionTyping.rkt"
+         "Utilities.rkt")
 
 ;; I'm doing this all using Racket's match instead of Redexes term-match
 ;; because I like the syntax of Racket's match better.
@@ -244,6 +246,31 @@
                    (let ([t (last (drop-right (first stacks) 1))])
                      (apply-pre-post stacks (list t t 'i32) (list t))))))]
 
+      [`(block (,b-pre -> ,b-post) ,_)
+       (apply-pre-post stacks b-pre b-post)]
+
+      [`(loop (,l-pre -> ,l-post) ,_)
+       (apply-pre-post stacks l-pre l-post)]
+
+      [`(if (,i-pre -> ,i-post) ,_ else ,_)
+       (apply-pre-post stacks (append i-pre (list 'i32)) i-post)]
+
+      [`(br ,i)
+       (match/values (consume stacks (term (get-label ,C ,i)))
+         [(#f _) #f]
+         [(_ new-stacks) (cons (list (length new-stacks)) new-stacks)])]
+
+      [`(br-if ,i)
+       (let ([ts (term (get-label ,C ,i))])
+         (apply-pre-post stacks (append ts (list 'i32)) ts))]
+
+      [`(br-table ,i ...)
+       (if (judgment-holds (label-types (get-labels ,C) ,i (t ...)))
+           (match/values (consume stacks (term (get-label ,C ,(first i))))
+             [(#f _) #f]
+             [(_ new-stacks) (cons (list (length new-stacks)) new-stacks)])
+           #f)]
+
       ;; TODO: rest of instructions
 
       [`(current-memory)
@@ -338,6 +365,43 @@
                                   (list))
                       e-pre e-post)]
 
+      [`(block (,b-pre -> ,b-post) ,b-ins)
+       (match (typecheck-ins (term (in-label ,C ,b-post)) b-ins b-pre b-post)
+         [#f #f]
+         [b-deriv (stack-polyize (derivation `(⊢ ,C (,e) (,b-pre -> ,b-post)) #f (list b-deriv))
+                                 e-pre e-post)])]
+
+      [`(loop (,l-pre -> ,l-post) ,l-ins)
+       (match (typecheck-ins (term (in-label ,C ,l-pre)) l-ins l-pre l-post)
+         [#f #f]
+         [l-deriv (stack-polyize (derivation `(⊢ ,C (,e) (,l-pre -> l-post)) #f (list l-deriv))
+                                 e-pre e-post)])]
+
+      [`(if (,i-pre -> ,i-post) ,then-ins else ,else-ins)
+       (match (typecheck-ins (term (in-label ,C ,i-post)) then-ins i-pre i-post)
+         [#f #f]
+         [then-deriv
+          (match (typecheck-ins (term (in-label ,C ,i-post)) else-ins i-pre i-post)
+            [#f #f]
+            [else-deriv
+             (stack-polyize (derivation `(⊢ ,C (,e) (,(append i-pre (list 'i32)) -> ,i-post))
+                                        #f
+                                        (list then-deriv else-deriv))
+                            e-pre e-post)])])]
+
+      [`(br ,i)
+       ;; if synthesize-stacks succeeded then the stack types br
+       (derivation `(⊢ ,C (,e) (,e-pre -> ,e-post)) #f (list))]
+
+      [`(br-if ,i)
+       (let ([ts (term (get-label ,C ,i))])
+         (stack-polyize (derivation `(⊢ ,C (,e) (,(append ts (list 'i32)) -> ,ts)) #f (list))
+                        e-pre e-post))]
+
+      [`(br-table ,i ...)
+       ;; if synthesize-stacks succeeded then the stack types br-table
+       (derivation `(⊢ ,C (,e) (,e-pre -> ,e-post)) #f (list))]
+
       ;; TODO: rest of the instructions
 
       [`(current-memory)
@@ -365,7 +429,7 @@
              [es-deriv
               (derivation `(⊢ ,C ,(reverse ins-rev) (,(last stacks) -> ,(first stacks)))
                           #f
-                          (list e-deriv es-deriv))])])))
+                          (list es-deriv e-deriv))])])))
 
   (if (empty? ins)
       (cond

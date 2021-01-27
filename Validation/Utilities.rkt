@@ -25,6 +25,18 @@
   [(in-label ((func (tf ...)) (global (tg ...)) (table j_1 ...) (memory j_2 ...) (local (t_1 ...)) (label ((t_2 ...) ...)) (return)) (t ...))
    ((func (tf ...)) (global (tg ...)) (table j_1 ...) (memory j_2 ...) (local (t_1 ...)) (label ((t_2 ...) ... (t ...))) (return))])
 
+(define-metafunction WASMTyping
+  get-labels : C -> ((t ...) ...)
+  [(get-labels ((func (tf ...)) (global (tg ...)) (table j_1 ...) (memory j_2 ...) (local (t_1 ...)) (label ((t_2 ...) ...)) (return (t_3 ...))))
+   ((t_2 ...) ...)]
+  [(get-labels ((func (tf ...)) (global (tg ...)) (table j_1 ...) (memory j_2 ...) (local (t_1 ...)) (label ((t_2 ...) ...)) (return)))
+   ((t_2 ...) ...)])
+
+(define-metafunction WASMTyping
+  get-label : C i -> (t ...)
+  [(get-label C i)
+   (reverse-get (get-labels C) i)])
+
 (define-judgment-form WASMTyping
   #:contract (label-types ((t ...) ...) (j ...) (t ...))
   #:mode (label-types I I O)
