@@ -124,14 +124,16 @@
 (define (typecheck-func C func)
   (match func
     [`(func ,exs (,t_1 -> ,t_2) (local (,tl ...) ,ins))
-     (match C
-       [`(,funcs ,globs ,tables ,memories ,_ ,_ ,_)
-        (let* ([C2 `(,funcs ,globs ,tables ,memories (local (,@t_1 ,@tl)) (label (,t_2)) (return ,t_2))]
-               [ins-deriv? (typecheck-ins C2 ins)])
-          ;; TODO: check if the derivation is true, and if it matches `() -> `(,t_2 ...)
-          #f)])]
+     (match-let ([`(,funcs ,globs ,tables ,memories ,_ ,_ ,_) C])
+       (let* ([C2 `(,funcs ,globs ,tables ,memories (local (,@t_1 ,@tl)) (label (,t_2)) (return ,t_2))]
+              [ins-deriv? (typecheck-ins C2 ins `() t_2)])
+         (if ins-deriv?
+             (derivation `(⊢-module-func ,C ,func (,exs (,t_1 -> ,t_2)))
+                         #f
+                         (list ins-deriv?))
+             #f)))]
     [`(func ,exs ,tf (import ,_ ,_))
-     (derivation `(⊢-module-fun ,C ,func (,exs ,tf)) #f (list))]))
+     (derivation `(⊢-module-func ,C ,func (,exs ,tf)) #f (list))]))
 
 ;; C (listof e) (listof t) (listof t) -> (listof t) or #f
 ;; synthesizes stacks for the instruction sequence or #f upon failure
