@@ -273,7 +273,62 @@
              [(_ new-stacks) (cons (list (length new-stacks)) new-stacks)])
            #f)]
 
-      ;; TODO: rest of instructions
+      [`(return)
+       (match C
+         [`(,_ ,_ ,_ ,_ ,_ ,_ (return)) #f]
+         [`(,_ ,_ ,_ ,_ ,_ ,_ (return ,ts))
+          (match/values (consume stacks ts)
+            [(#f _) #f]
+            [(_ new-stacks) (cons (list (length new-stacks)) new-stacks)])])]
+
+      [`(call ,i)
+       (match-let ([`((func ,tfs) ,_ ,_ ,_ ,_ ,_ ,_) C])
+         (if (< i (length tfs))
+             (match-let ([`(,c-pre -> ,c-post) (list-ref tfs i)])
+               (apply-pre-post stacks c-pre c-post))
+             #f))]
+
+      [`(call-indirect (,c-pre -> ,c-post))
+       (apply-pre-post stacks (append c-pre (list 'i32)) c-post)]
+
+      [`(get-local ,i)
+       (match-let ([`(,_ ,_ ,_ ,_ (local ,locals) ,_ ,_) C])
+         (if (< i (length locals))
+             (apply-pre-post stacks (list) (list (list-ref locals i)))
+             #f))]
+
+      [`(set-local ,i)
+       (match-let ([`(,_ ,_ ,_ ,_ (local ,locals) ,_ ,_) C])
+         (if (< i (length locals))
+             (apply-pre-post stacks (list (list-ref locals i)) (list))
+             #f))]
+
+      [`(tee-local ,i)
+       (match-let ([`(,_ ,_ ,_ ,_ (local ,locals) ,_ ,_) C])
+         (if (< i (length locals))
+             (let ([t (list-ref locals i)])
+               (apply-pre-post stacks (list t) (list t)))
+             #f))]
+
+      [`(get-global ,i)
+       (match-let ([`(,_ (global ,globals) ,_ ,_ ,_ ,_ ,_) C])
+         (if (< i (length globals))
+             (apply-pre-post stacks (list) (list (second (list-ref globals i))))
+             #f))]
+
+      [`(set-global ,i)
+       (match-let ([`(,_ (global ,globals) ,_ ,_ ,_ ,_ ,_) C])
+         (if (< i (length globals))
+             (apply-pre-post stacks (list (second (list-ref globals i))) (list))
+             #f))]
+
+      [(or `(,t load ,_ ,_)
+           `(,t load ,_ ,_ ,_))
+       (apply-pre-post stacks (list 'i32) (list t))]
+
+      [(or `(,t store ,_ ,_)
+           `(,t store ,_ ,_ ,_))
+       (apply-pre-post stacks (list 'i32 t) (list))]
 
       [`(current-memory)
        (apply-pre-post stacks (list) (list 'i32))]
@@ -392,7 +447,7 @@
                             e-pre e-post)])])]
 
       [`(br ,i)
-       ;; if synthesize-stacks succeeded then the stack types br
+       ;; if synthesize-stacks succeeded then the given stacks type br
        (derivation `(⊢ ,C (,e) (,e-pre -> ,e-post)) #f (list))]
 
       [`(br-if ,i)
@@ -401,10 +456,95 @@
                         e-pre e-post))]
 
       [`(br-table ,i ...)
-       ;; if synthesize-stacks succeeded then the stack types br-table
+       ;; if synthesize-stacks succeeded then the given stacks type br-table
        (derivation `(⊢ ,C (,e) (,e-pre -> ,e-post)) #f (list))]
 
-      ;; TODO: rest of the instructions
+      [`(return)
+       ;; if synthesize-stacks succeeded then the given stacks type return
+       (derivation `(⊢ ,C (,e) (,e-pre -> ,e-post)) #f (list))]
+
+      [`(call ,i)
+       (match-let* ([`((func ,tfs) ,_ ,_ ,_ ,_ ,_ ,_) C]
+                    [`(,c-pre -> ,c-post) (list-ref tfs i)])
+         (stack-polyize (derivation `(⊢ ,C (,e) (,c-pre -> ,c-post)) #f (list))
+                        e-pre e-post))]
+
+      [`(call-indirect (,c-pre -> ,c-post))
+       (match C
+         [`(,_ ,_ (table) ,_ ,_ ,_ ,_) #f]
+         [`(,_ ,_ (table ,_) ,_ ,_ ,_ ,_)
+          (derivation `(⊢ ,C (,e) (,(append c-pre (list 'i32)) -> ,c-post)) #f (list))])]
+
+      [`(get-local ,i)
+       (match-let ([`(,_ ,_ ,_ ,_ (local ,locals) ,_ ,_) C])
+         (stack-polyize (derivation `(⊢ ,C (,e) (() -> (,(list-ref locals i)))) #f (list))
+                        e-pre e-post))]
+
+      [`(set-local ,i)
+       (match-let ([`(,_ ,_ ,_ ,_ (local ,locals) ,_ ,_) C])
+         (stack-polyize (derivation `(⊢ ,C (,e) ((,(list-ref locals i)) -> ())) #f (list))
+                        e-pre e-post))]
+
+      [`(tee-local ,i)
+       (match-let ([`(,_ ,_ ,_ ,_ (local ,locals) ,_ ,_) C])
+         (let ([t (list-ref locals i)])
+           (stack-polyize (derivation `(⊢ ,C (,e) ((,t) -> (,t))) #f (list))
+                          e-pre e-post)))]
+
+      [`(get-global ,i)
+       (match-let ([`(,_ (global ,globals) ,_ ,_ ,_ ,_ ,_) C])
+         (stack-polyize (derivation `(⊢ ,C (,e) (() -> (,(second (list-ref globals i))))) #f (list))
+                        e-pre e-post))]
+
+      [`(set-global ,i)
+       (match-let ([`(,_ (global ,globals) ,_ ,_ ,_ ,_ ,_) C])
+         (if (< i (length globals))
+             (let ([glob (list-ref globals i)])
+               (if (equal? (first glob) 'var)
+                   (stack-polyize (derivation `(⊢ ,C (,e) ((,(second glob)) -> ())) #f (list))
+                                  e-pre e-post)
+                   #f))
+             #f))]
+
+      [`(,t load ,a ,_)
+       (match C
+         [`(,_ ,_ ,_ (memory) ,_ ,_ ,_) #f]
+         [`(,_ ,_ ,_ (memory ,_) ,_ ,_ ,_)
+          (if (<= (expt 2 a) (type-width t))
+              (stack-polyize (derivation `(⊢ ,C (,e) ((i32) -> (,t))) #f (list))
+                             e-pre e-post)
+              #f)])]
+
+      [`(,t load (,tp ,sx) ,a ,_)
+       (match C
+         [`(,_ ,_ ,_ (memory) ,_ ,_ ,_) #f]
+         [`(,_ ,_ ,_ (memory ,_) ,_ ,_ ,_)
+          (if (and (<= (expt 2 a) (type-width tp))
+                   (< (type-width tp) (type-width t))
+                   (integer-type? t))
+              (stack-polyize (derivation `(⊢ ,C (,e) ((i32) -> (,t))) #f (list))
+                             e-pre e-post)
+              #f)])]
+
+      [`(,t store ,a ,_)
+       (match C
+         [`(,_ ,_ ,_ (memory) ,_ ,_ ,_) #f]
+         [`(,_ ,_ ,_ (memory ,_) ,_ ,_ ,_)
+          (if (<= (expt 2 a) (type-width t))
+              (stack-polyize (derivation `(⊢ ,C (,e) ((i32 ,t) -> ())) #f (list))
+                             e-pre e-post)
+              #f)])]
+
+      [`(,t store (,tp) ,a ,_)
+       (match C
+         [`(,_ ,_ ,_ (memory) ,_ ,_ ,_) #f]
+         [`(,_ ,_ ,_ (memory ,_) ,_ ,_ ,_)
+          (if (and (<= (expt 2 a) (type-width tp))
+                   (< (type-width tp) (type-width t))
+                   (integer-type? t))
+              (stack-polyize (derivation `(⊢ ,C (,e) ((i32 ,t) -> ())) #f (list))
+                             e-pre e-post)
+              #f)])]
 
       [`(current-memory)
        (match-let ([`(,_ ,_ ,_ (memory ,j ...) ,_ ,_ ,_) C])

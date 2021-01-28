@@ -125,8 +125,8 @@
    (⊢ ((_ (global (tg ...)) _ _ _ _)) ((set-global j)) ((t) -> ()))]
 
   [(where (_ _ _ (memory j) _ _ _) C)
-   (side-condition ,(< (expt 2 (term a))
-                       (type-width (term t))))
+   (side-condition ,(<= (expt 2 (term a))
+                        (type-width (term t))))
    ------------------------------------------
    (⊢ C ((t load a _)) ((i32) -> (t)))]
 
@@ -136,11 +136,11 @@
    (side-condition ,(< (type-width (term tp)) (type-width (term t))))
    (side-condition ,(integer-type? (term t)))
    -----------------------------------------------------
-   (⊢ C ((t load (tp sz) a _)) ((i32) -> (t)))]
+   (⊢ C ((t load (tp sx) a _)) ((i32) -> (t)))]
 
   [(where (_ _ _ (memory j) _ _ _) C)
-   (side-condition ,(< (expt 2 (term j_1))
-                       (type-width (term t))))
+   (side-condition ,(<= (expt 2 (term j_1))
+                        (type-width (term t))))
    -------------------------------------------
    (⊢ C ((t store j_1 _)) ((i32 t) -> ()))]
 
