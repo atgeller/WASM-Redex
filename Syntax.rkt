@@ -1,6 +1,7 @@
 #lang racket
 
-(require redex/reduction-semantics)
+(require redex/reduction-semantics
+         bitsyntax)
 
 (require "MachineOps.rkt")
 
@@ -19,19 +20,19 @@
      (t load a o) (t load (tp sx) a o) (t store a o)
      (t store (tp) a o) (current-memory) (grow-memory)
 
-     (i.t iunop) (f.t funop)
-     (i.t ibinop) (f.t fbinop)
-     (i.t itestop)
-     (i.t irelop) (f.t frelop)
+     (inn iunop) (fnn funop)
+     (inn ibinop) (fnn fbinop)
+     (inn itestop)
+     (inn irelop) (fnn frelop)
      (t cvtop t) (t cvtop t sx)
      
-     (i32 const (side-condition integer_1 ((or/c ui32? si32?) (term integer_1))))
-     (i64 const (side-condition integer_1 ((or/c ui64? si64?) (term integer_1))))
+     (i32 const (side-condition integer_1 (u32? (term integer_1))))
+     (i64 const (side-condition integer_1 (u64? (term integer_1))))
      (f32 const (side-condition real_1 (single-flonum? (term real_1))))
      (f64 const (side-condition real_1 (double-flonum? (term real_1)))))
 
-  (i.t ::= i32 i64)
-  (f.t ::= f32 f64)
+  (inn ::= i32 i64)
+  (fnn ::= f32 f64)
   
   (t ::= i32 i64 f32 f64)
   (tp ::= i8 i16 i32)
@@ -58,7 +59,7 @@
   (cvtop ::= convert reinterpret)
 
   (i j n m ::= natural)
-  (a o ::= (side-condition natural_1 (ui32? (term natural_1))))
+  (a o ::= (side-condition natural_1 (u32? (term natural_1))))
   
   ; real is a superset of all constant types
   (c ::= real)
@@ -90,4 +91,4 @@
         ((cl ...) (v ...) (table) (memory)))
 
   (tabinst ::= (cl ...))
-  (meminst ::= (bits any)))
+  (meminst ::= (bits (side-condition any_1 (bit-string? (term any_1))))))

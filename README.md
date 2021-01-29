@@ -7,9 +7,10 @@ The syntactic representation used in the model is `s-expression` based.
 It contains a few more parentheses than are present in the original grammer (to speed up parsing).
 Other small differences include:
 * The removal of the `.` character between types and a number of terminal expressions (e.g., `(i32.add)` becomes `(i32 add)`).
+* The explicit enumeration of the `sx` non-terminal in binops and relops.
 * Optional terms are handled via enumeration or faked using lists (there's a hidden low-priority TODO to clean this up).
 
-The WASM Redex language is defined in `Syntax.rkt`. A typeset version can be viewed below and uses similar terminology to the 
+The WASM Redex language is defined in `Syntax.rkt`. A typeset version can be viewed below and uses similar terminology to the
 
 ![The WebAssembly language syntax](Syntax.pdf)
 
@@ -25,4 +26,8 @@ There are four parameters: `(s j v* e*) -> (s j v* e*)` with roughly equivalent 
 * `v*`: the list of local variables (referred to by an index).
 * `e*`: the list of instructions. Since values are expressions it is more helpful to think of this as `v* e*` where `v*` is the stack values and `e*` is the instruction list.
 
-## Validation (In Progress)
+## Validation
+The type system is in the form of deduction rules on a context `C`, a sequence of instructions `e*`, and a function type `tf`.
+The typing rules for instructions are defined in `Validation/InstructionTyping.rkt`.
+In `Typechecking.rkt` we provide an algorithm for finding a derivation that types a given program.
+This algorithm is more complicated than the reference validation algorithm since it is easier to determine if there exists a derivation that types a given program than it is to find one of those derivations.
