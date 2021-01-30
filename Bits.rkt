@@ -1,25 +1,25 @@
 #lang racket
 
-(require redex/reduction-semantics
-         bitsyntax
-         "Syntax.rkt"
-         "MachineOps.rkt")
+(require "MachineOps.rkt")
 
 (provide (all-defined-out))
 
-(define endianess #f)
-(define max-memory-size 8192) ;; Arbitrary
+;(define memory-page-size 65536)
+(define memory-page-size 128)
+(define max-memory-pages 32) ;; Arbitrary
 
-(define memory-size bit-string-byte-count)
+(define memory-size bytes-length)
+(define (memory-pages mem)
+  (/ (memory-size mem) memory-page-size))
 
 (define (make-memory size)
-  (bit-string (0 :: little-endian bytes size)))
+  (make-bytes (* memory-page-size size) 0))
 
 (define (grow-memory mem newsize)
-  (if (<= 0 newsize max-memory-size)
-      (cons (bit-string-pack (bit-string-append mem (make-memory newsize)))
-            (+ (memory-size mem) newsize))
-      (cons mem -1)))
+  (if (<= (+ (memory-pages mem) newsize) max-memory-pages)
+      (values (bytes-append mem (make-memory newsize))
+              (+ (memory-pages mem) newsize))
+      (values mem -1)))
 
 (define (type-width type)
   (match type
@@ -44,63 +44,48 @@
     [`f32 #t]
     [`f64 #t]))
 
-;; TODO: I don't think we need bitsyntax, can just use Racket bytestrings
-;; TODO: load/store floating point numbers
-
-(define (valid-bit-index? mem bit-index width)
-  (<= 0 bit-index (+ bit-index width) (bit-string-length mem)))
+(define (valid-index? mem index width)
+  (<= 0 index (+ index width) (bytes-length mem)))
 
 (define (wrapped-load-packed mem type align index tp sign)
-  (let ([width (type-width tp)]
-        [bit-index (* 8 index)])
-    (if (valid-bit-index? mem bit-index width)
-        (term (,type const ,(load mem bit-index width
-                                  (match sign
-                                    [`signed (compose (curry to-unsigned-sized (type-width type))
-                                                      bit-string->signed-integer)]
-                                    [`unsigned bit-string->unsigned-integer]))))
-        (term (trap)))))
+  (let ([width (/ (type-width tp) 8)])
+    (if (valid-index? mem index width)
+        (match sign
+          [`signed (to-unsigned-sized (type-width type) (integer-bytes->integer mem #t #f index (+ index width)))]
+          [`unsigned (integer-bytes->integer mem #f #f index (+ index width))])
+        #f)))
 
 (define (wrapped-load mem type align index)
-  (let ([width (type-width type)]
-        [bit-index (* 8 index)])
-    (if (valid-bit-index? mem bit-index width)
-        (term (,type const ,(load mem bit-index width
-                                  (match type
-                                    [`i32 bit-string->unsigned-integer]
-                                    [`i64 bit-string->unsigned-integer]
-                                    [`f32 (lambda (val end) (real->single-flonum (real->floating-point-bytes val 4 end)))]
-                                    [`f64 (lambda (val end) (real->floating-point-bytes val 8 end))]))))
-        (term (trap)))))
-
-;; Shouldn't really be provided, but useful for testing and debugging
-(define (load mem offset width conversionfn)
-  (conversionfn (sub-bit-string mem offset (+ offset width)) endianess))
+  (if (valid-index? mem index (/ (type-width type) 8))
+      (match type
+        [`i32 (integer-bytes->integer mem #f #f index (+ index 4))]
+        [`i64 (integer-bytes->integer mem #f #f index (+ index 8))]
+        [`f32 (real->single-flonum (floating-point-bytes->real mem #f index (+ index 4)))]
+        [`f64 (real->double-flonum (floating-point-bytes->real mem #f index (+ index 8)))])
+      #f))
 
 (define (wrapped-store-packed mem type align index value tp)
-  (let ([width (type-width tp)]
-        [bit-index (* 8 index)])
-    (if (valid-bit-index? mem bit-index width)
-        (term (bits ,(store mem bit-index (integer->integer-bytes (modulo value (expt 2 width))))))
-        (term (trap)))))
+  (let* ([bit-width (type-width tp)]
+         [width (/ bit-width 8)])
+    (if (valid-index? mem index width)
+        (integer->integer-bytes (modulo value (expt 2 bit-width)) width #f #f mem index)
+        #f)))
 
 (define (wrapped-store mem type align index value)
-  (let ([bit-index (* 8 index)])
-    (if (valid-bit-index? mem bit-index (type-width type))
-        (term (bits ,(store mem bit-index
-                            (match type
-                              [`i32 (integer->integer-bytes value 4 #f endianess)]
-                              [`i64 (integer->integer-bytes value 8 #f endianess)]
-                              [`f32 (real->floating-point-bytes value 4 endianess)]
-                              [`f64 (real->floating-point-bytes value 8 endianess)]))))
-        (term (trap)))))
+  (if (valid-index? mem index (/ (type-width type) 8))
+      (match type
+        [`i32 (integer->integer-bytes value 4 #f #f mem index)]
+        [`i64 (integer->integer-bytes value 8 #f #f mem index)]
+        [`f32 (real->floating-point-bytes value 4 #f mem index)]
+        [`f64 (real->floating-point-bytes value 8 #f mem index)])
+      #f))
 
 ;; Shouldn't really be provided, but useful for testing and debugging
-(define (store mem offset bytes)
-  (bit-string-pack (bit-string-append (bit-string-take mem offset)
-                                      bytes
-                                      (bit-string-drop mem (bit-string-length bytes)))))
+#;(define (store mem offset bytes)
+  (bytes-append (subbytes mem 0 offset)
+                bytes
+                (subbytes mem (+ offset (bytes-length bytes)))))
 
 ;; For tests
-(define (store-integer mem offset width value)
-  (store mem offset (integer->integer-bytes value (/ width 8) #f endianess)))
+#;(define (store-integer mem offset width value)
+  (store mem offset (integer->integer-bytes value (/ width 8) #f #f)))

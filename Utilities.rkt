@@ -219,7 +219,7 @@
 
 (define-metafunction WASMrt
   setup-call : (v ...) cl (e ...) -> (e ...)
-  [(setup-call (v ...) (j (() (func ((t ...) -> (t_2 ...)) (local (t_3 ...) (e ...))))) (e_2 ...))
+  [(setup-call (v ...) (j (func _ ((t ...) -> (t_2 ...)) (local (t_3 ...) (e ...)))) (e_2 ...))
    ; 1. strip arguments from stack
    ,(let-values ([(stack args) (split-at (term (v ...)) (- (length (term (v ...)))
                                                            (length (term (t ...)))))])
@@ -243,9 +243,9 @@
 
 (define-metafunction WASMrt
   check-tf : tf cl -> e
-  [(check-tf tf (j (_ (func tf (local (t ...) (e ...))))))
-   (call (j (() (func tf (local (t ...) (e ...))))))]
-  [(check-tf tf_!_ (_ (_ (func tf_!_ _))))
+  [(check-tf tf (j (func (ex ...) tf (local (t ...) (e ...)))))
+   (call (j (func (ex ...) tf (local (t ...) (e ...)))))]
+  [(check-tf tf_!_ (_ (func _ tf_!_ _)))
    (trap)])
 
 (define-metafunction WASMrt
@@ -258,63 +258,62 @@
               j_1))])
 
 (define (get-mem insts meminsts index)
-  (match-let* ([memindex (term (inst-memory (do-get ,insts ,index)))]
-               [`(bits ,mem) (term (do-get ,meminsts ,memindex))])
-    (cons mem memindex)))
+  (let* ([memindex (term (inst-memory (do-get ,insts ,index)))]
+         [mem (term (do-get ,meminsts ,memindex))])
+    (values mem memindex)))
 
 ; Memory operations
 ;; TODO: cleanup on aisle 5
 (define-metafunction WASMrt
-  ; c - align, c_1 - offset + index
-  do-load : s j t a o any -> e
-  [(do-load ((inst ...) (tabinst ...) (meminst ...)) j t a o (name tp-sx? any))
-   ,(let ([mem (car (get-mem (term (inst ...)) (term (meminst ...)) (term j)))])
-      (if (term tp-sx?)
-          (wrapped-load-packed mem
-                               (term t)
-                               (term a)   ; align
-                               (term o) ; offset + index
-                               (first (term tp-sx?))
-                               (second (term tp-sx?)))
-          (wrapped-load mem
-                        (term t)
-                        (term a)
-                        (term o))))])
+  do-load : s j t a o -> e
+  [(do-load ((inst ...) (tabinst ...) (meminst ...)) j t a o)
+   ,(let-values ([(mem _) (get-mem (term (inst ...)) (term (meminst ...)) (term j))])
+      (match (wrapped-load mem (term t) (term a) (term o))
+        [#f (term (trap))]
+        [val (term (t const ,val))]))])
 
 (define-metafunction WASMrt
-  ; c - align, c_1 - offset + index, c_2 - value
-  do-store : s j t a o c any -> (s (e ...))
-  [(do-store ((inst ...) (tabinst ...) (meminst ...)) j t a o c (name tp? any))
-   ,(let* ([meminfo (get-mem (term (inst ...)) (term (meminst ...)) (term j))]
-           [mem (car meminfo)]
-           [memindex (cdr meminfo)]
-           [result (if (term tp?)
-                       (wrapped-store-packed mem
-                                             (term t)
-                                             (term a) ; align
-                                             (term o) ; offset + index
-                                             (term c) ; value
-                                             (term tp?))
-                       (wrapped-store mem
-                                      (term t)
-                                      (term a)
-                                      (term o)
-                                      (term c)))])
-      (if (redex-match? WASMrt (trap) result)
-          (term (((inst ...) (tabinst ...) (meminst ...)) ((trap))))
-          (term (((inst ...)
-                  (tabinst ...)
-                  (do-set (meminst ...) ,memindex ,result))
-                 ()))))])
+  do-load-packed : s j t a o tp sx -> e
+  [(do-load-packed ((inst ...) (tabinst ...) (meminst ...)) j t a o tp sx)
+   ,(let-values ([(mem _) (get-mem (term (inst ...)) (term (meminst ...)) (term j))])
+      (match (wrapped-load-packed mem (term t) (term a) (term o) (term tp) (term sx))
+        [#f (term (trap))]
+        [val (term (t const ,val))]))])
+
+(define-metafunction WASMrt
+  do-store : s j t a o c -> (s (e ...))
+  [(do-store ((inst ...) (tabinst ...) (meminst ...)) j t a o c)
+   ,(let-values ([(mem memindex) (get-mem (term (inst ...)) (term (meminst ...)) (term j))])
+      (match (wrapped-store mem (term t) (term a) (term o) (term c))
+        [#f (term (((inst ...) (tabinst ...) (meminst ...)) ((trap))))]
+        [newmem (term (((inst ...)
+                        (tabinst ...)
+                        (do-set (meminst ...) ,memindex ,newmem))
+                       ()))]))])
+
+(define-metafunction WASMrt
+  do-store-packed : s j t a o c tp -> (s (e ...))
+  [(do-store-packed ((inst ...) (tabinst ...) (meminst ...)) j t a o c tp)
+   ,(let-values ([(mem memindex) (get-mem (term (inst ...)) (term (meminst ...)) (term j))])
+      (match (wrapped-store-packed mem (term t) (term a) (term o) (term c) (term tp))
+        [#f (term (((inst ...) (tabinst ...) (meminst ...)) ((trap))))]
+        [newmem (term (((inst ...)
+                        (tabinst ...)
+                        (do-set (meminst ...) ,memindex ,newmem))
+                       ()))]))])
 
 (define-metafunction WASMrt
   mem-size : s j -> v
   [(mem-size ((inst ...) _ (meminst ...)) j)
-   (i32 const ,(memory-size (car (get-mem (term (inst ...)) (term (meminst ...)) (term j)))))])
+   (i32 const ,(let-values ([(mem _) (get-mem (term (inst ...)) (term (meminst ...)) (term j))])
+                 (memory-pages mem)))])
 
 (define-metafunction WASMrt
   grow-mem : s j c -> (s (e ...))
-  [(grow-mem ((inst ...) _ (meminst ...)) j c)
-   ,(match-let* ([(cons mem memindex) (get-mem (term (inst ...)) (term (meminst ...)) (term j))]
-                 [(cons newmem res) (grow-memory (car mem) (term c))])
-      (term (((inst ...) _ (do-set (meminst ...) ,memindex ,res)) (i32 const ,res))))])
+  [(grow-mem ((inst ...) (tabinst ...) (meminst ...)) j c)
+   ,(let*-values ([(mem memindex) (get-mem (term (inst ...)) (term (meminst ...)) (term j))]
+                  [(newmem res) (grow-memory mem (term c))])
+      (term (((inst ...)
+              (tabinst ...)
+              (do-set (meminst ...) ,memindex ,newmem))
+             ((i32 const ,res)))))])

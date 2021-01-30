@@ -1,7 +1,6 @@
 #lang racket
 
-(require redex/reduction-semantics
-         bitsyntax)
+(require redex/reduction-semantics)
 
 (require "MachineOps.rkt")
 
@@ -91,4 +90,4 @@
         ((cl ...) (v ...) (table) (memory)))
 
   (tabinst ::= (cl ...))
-  (meminst ::= (bits (side-condition any_1 (bit-string? (term any_1))))))
+  (meminst ::= (side-condition any_1 (bytes? (term any_1)))))

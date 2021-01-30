@@ -154,19 +154,19 @@
           (s j (v ...) (in-hole L (v_1 ... (handle-call-indirect s j j_1 tf) e ...))))
 
      ; Memory instructions
-     (--> (s j (v ...) (in-hole L (v_1 ... (i32 const c) (t load c_1 c_2) e ...)))
-          (s j (v ...) (in-hole L (v_1 ... (do-load s j t c_1 ,(+ (term c_2) (term c)) #f) e ...))))
+     (--> (s j (v ...) (in-hole L (v_1 ... (i32 const c) (t load a o) e ...)))
+          (s j (v ...) (in-hole L (v_1 ... (do-load s j t a ,(+ (term o) (term c))) e ...))))
 
-     (--> (s j (v ...) (in-hole L (v_1 ... (i32 const c) (t load (tp sx) c_1 c_2) e ...)))
-          (s j (v ...) (in-hole L (v_1 ... (do-load s j t c_1 ,(+ (term c_2) (term c)) (tp sx)) e ...))))
+     (--> (s j (v ...) (in-hole L (v_1 ... (i32 const c) (t load (tp sx) a o) e ...)))
+          (s j (v ...) (in-hole L (v_1 ... (do-load-packed s j t a ,(+ (term o) (term c)) tp sx) e ...))))
 
-     (--> (s j (v ...) (in-hole L (v_1 ... (i32 const c) (t const c_1) (t store c_2 c_3) e ...)))
+     (--> (s j (v ...) (in-hole L (v_1 ... (i32 const c) (t const c_1) (t store a o) e ...)))
           (s_new j (v ...) (in-hole L (v_1 ... e_new ... e ...)))
-          (where (s_new (e_new ...)) (do-store s j t c_2 ,(+ (term c_3) (term c)) c_1 #f)))
+          (where (s_new (e_new ...)) (do-store s j t a ,(+ (term o) (term c)) c_1)))
 
-     (--> (s j (v ...) (in-hole L (v_1 ... (i32 const c) (t const c_1) (t store (tp) c_2 c_3) e ...)))
+     (--> (s j (v ...) (in-hole L (v_1 ... (i32 const c) (t const c_1) (t store (tp) a o) e ...)))
           (s_new j (v ...) (in-hole L (v_1 ... e_new ... e ...)))
-          (where (s_new (e_new ...)) (do-store s j t c_2 ,(+ (term c_3) (term c)) c_1 tp)))
+          (where (s_new (e_new ...)) (do-store-packed s j t a ,(+ (term o) (term c)) c_1 tp)))
 
      (--> (s j (v ...) (in-hole L (v_1 ... (current-memory) e ...)))
           (s j (v ...) (in-hole L (v_1 ... (mem-size s j) e ...))))
