@@ -50,6 +50,9 @@
   (test-->>E -> ;; sqrt
              (term ((() () ()) 0 () ((f64 const 4.0) (f64 sqrt))))
              (term ((() () ()) 0 () ((f64 const 2.0)))))
+  (test-->>E -> ;; sqrt
+             (term ((() () ()) 0 () ((f64 const 4.0) (f64 sqrt) (f64 sqrt))))
+             (term ((() () ()) 0 () ((f64 const 1.4142135623730951)))))
   (test-->>E -> ;; sqrt negative
              (term ((() () ()) 0 () ((f64 const -4.0) (f64 sqrt))))
              (term ((() () ()) 0 () ((f64 const +nan.0)))))
@@ -65,6 +68,13 @@
   (test-->>E -> ;; nearest
              (term ((() () ()) 0 () ((f64 const 1.5) (f64 nearest))))
              (term ((() () ()) 0 () ((f64 const 2.0)))))
+
+  (test-->>E -> ;; f32 sqrt
+             (term ((() () ()) 0 () ((f32 const ,(real->single-flonum 2.0f0)) (f32 sqrt))))
+             (term ((() () ()) 0 () ((f32 const ,(real->single-flonum 1.4142135f0))))))
+  (test-->>E -> ;; f32 sqrt negative
+             (term ((() () ()) 0 () ((f32 const ,(real->single-flonum -2.0f0)) (f32 sqrt))))
+             (term ((() () ()) 0 () ((f32 const ,(real->single-flonum +nan.f))))))
 
   ;; Tests of simple binops
   (test-->>E -> ;; add
@@ -220,7 +230,183 @@
              (term ((() () ()) 0 () ((i32 const 0) (i32 eqz))))
              (term ((() () ()) 0 () ((i32 const 1)))))
   
-  ;; TODO: relops
+  (test-->>E -> ;; eq true
+             (term ((() () ()) 0 () ((i32 const 42) (i32 const 42) (i32 eq))))
+             (term ((() () ()) 0 () ((i32 const 1)))))
+  (test-->>E -> ;; eq false
+             (term ((() () ()) 0 () ((i32 const 42) (i32 const 43) (i32 eq))))
+             (term ((() () ()) 0 () ((i32 const 0)))))
+
+  (test-->>E -> ;; eq float true
+             (term ((() () ()) 0 () ((f64 const 42.0) (f64 const 42.0) (f64 eq))))
+             (term ((() () ()) 0 () ((i32 const 1)))))
+  (test-->>E -> ;; eq float true
+             (term ((() () ()) 0 () ((f64 const 0.0) (f64 const -0.0) (f64 eq))))
+             (term ((() () ()) 0 () ((i32 const 1)))))
+  (test-->>E -> ;; eq float false
+             (term ((() () ()) 0 () ((f64 const 0.0) (f64 const 42.0) (f64 eq))))
+             (term ((() () ()) 0 () ((i32 const 0)))))
+  
+  (test-->>E -> ;; ne false
+             (term ((() () ()) 0 () ((i32 const 42) (i32 const 42) (i32 ne))))
+             (term ((() () ()) 0 () ((i32 const 0)))))
+  (test-->>E -> ;; ne true
+             (term ((() () ()) 0 () ((i32 const 42) (i32 const 43) (i32 ne))))
+             (term ((() () ()) 0 () ((i32 const 1)))))
+  
+  (test-->>E -> ;; ne float false
+             (term ((() () ()) 0 () ((f64 const 42.0) (f64 const 42.0) (f64 ne))))
+             (term ((() () ()) 0 () ((i32 const 0)))))
+  (test-->>E -> ;; ne float false
+             (term ((() () ()) 0 () ((f64 const 0.0) (f64 const -0.0) (f64 ne))))
+             (term ((() () ()) 0 () ((i32 const 0)))))
+  (test-->>E -> ;; ne float true
+             (term ((() () ()) 0 () ((f64 const 0.0) (f64 const 42.0) (f64 ne))))
+             (term ((() () ()) 0 () ((i32 const 1)))))
+  
+  (test-->>E -> ;; lt-u
+             (term ((() () ()) 0 () ((i32 const 42) (i32 const 42) (i32 lt-u))))
+             (term ((() () ()) 0 () ((i32 const 0)))))
+  (test-->>E -> ;; lt-u
+             (term ((() () ()) 0 () ((i32 const 2) (i32 const 43) (i32 lt-u))))
+             (term ((() () ()) 0 () ((i32 const 1)))))
+  (test-->>E -> ;; lt-u
+             (term ((() () ()) 0 () ((i32 const 2) (i32 const 1) (i32 lt-u))))
+             (term ((() () ()) 0 () ((i32 const 0)))))
+  (test-->>E -> ;; lt-u signed
+             (term ((() () ()) 0 () ((i32 const #xFFFFFFFF) (i32 const 0) (i32 lt-u))))
+             (term ((() () ()) 0 () ((i32 const 0)))))
+  
+  (test-->>E -> ;; lt-s
+             (term ((() () ()) 0 () ((i32 const 42) (i32 const 42) (i32 lt-s))))
+             (term ((() () ()) 0 () ((i32 const 0)))))
+  (test-->>E -> ;; lt-s
+             (term ((() () ()) 0 () ((i32 const 2) (i32 const 3) (i32 lt-s))))
+             (term ((() () ()) 0 () ((i32 const 1)))))
+  (test-->>E -> ;; lt-s
+             (term ((() () ()) 0 () ((i32 const 2) (i32 const 1) (i32 lt-s))))
+             (term ((() () ()) 0 () ((i32 const 0)))))
+  (test-->>E -> ;; lt-s signed
+             (term ((() () ()) 0 () ((i32 const #xFFFFFFFF) (i32 const 0) (i32 lt-s))))
+             (term ((() () ()) 0 () ((i32 const 1)))))
+    
+  (test-->>E -> ;; gt-u
+             (term ((() () ()) 0 () ((i32 const 42) (i32 const 42) (i32 gt-u))))
+             (term ((() () ()) 0 () ((i32 const 0)))))
+  (test-->>E -> ;; gt-u
+             (term ((() () ()) 0 () ((i32 const 2) (i32 const 3) (i32 gt-u))))
+             (term ((() () ()) 0 () ((i32 const 0)))))
+  (test-->>E -> ;; gt-u
+             (term ((() () ()) 0 () ((i32 const 2) (i32 const 1) (i32 gt-u))))
+             (term ((() () ()) 0 () ((i32 const 1)))))
+  (test-->>E -> ;; gt-u signed
+             (term ((() () ()) 0 () ((i32 const #xFFFFFFFF) (i32 const 0) (i32 gt-u))))
+             (term ((() () ()) 0 () ((i32 const 1)))))
+  
+  (test-->>E -> ;; gt-s
+             (term ((() () ()) 0 () ((i32 const 42) (i32 const 42) (i32 gt-s))))
+             (term ((() () ()) 0 () ((i32 const 0)))))
+  (test-->>E -> ;; gt-s
+             (term ((() () ()) 0 () ((i32 const 2) (i32 const 3) (i32 gt-s))))
+             (term ((() () ()) 0 () ((i32 const 0)))))
+  (test-->>E -> ;; gt-s
+             (term ((() () ()) 0 () ((i32 const 2) (i32 const 1) (i32 gt-s))))
+             (term ((() () ()) 0 () ((i32 const 1)))))
+  (test-->>E -> ;; gt-s signed
+             (term ((() () ()) 0 () ((i32 const #xFFFFFFFF) (i32 const 0) (i32 gt-s))))
+             (term ((() () ()) 0 () ((i32 const 0)))))
+  
+  (test-->>E -> ;; le-u
+             (term ((() () ()) 0 () ((i32 const 42) (i32 const 42) (i32 le-u))))
+             (term ((() () ()) 0 () ((i32 const 1)))))
+  (test-->>E -> ;; le-u
+             (term ((() () ()) 0 () ((i32 const 2) (i32 const 3) (i32 le-u))))
+             (term ((() () ()) 0 () ((i32 const 1)))))
+  (test-->>E -> ;; le-u
+             (term ((() () ()) 0 () ((i32 const 2) (i32 const 1) (i32 le-u))))
+             (term ((() () ()) 0 () ((i32 const 0)))))
+  (test-->>E -> ;; le-u signed
+             (term ((() () ()) 0 () ((i32 const #xFFFFFFFF) (i32 const 0) (i32 le-u))))
+             (term ((() () ()) 0 () ((i32 const 0)))))
+  
+  (test-->>E -> ;; le-s
+             (term ((() () ()) 0 () ((i32 const 42) (i32 const 42) (i32 le-s))))
+             (term ((() () ()) 0 () ((i32 const 1)))))
+  (test-->>E -> ;; le-s
+             (term ((() () ()) 0 () ((i32 const 2) (i32 const 3) (i32 le-s))))
+             (term ((() () ()) 0 () ((i32 const 1)))))
+  (test-->>E -> ;; le-s
+             (term ((() () ()) 0 () ((i32 const 2) (i32 const 1) (i32 le-s))))
+             (term ((() () ()) 0 () ((i32 const 0)))))
+  (test-->>E -> ;; le-s signed
+             (term ((() () ()) 0 () ((i32 const #xFFFFFFFF) (i32 const 0) (i32 le-s))))
+             (term ((() () ()) 0 () ((i32 const 1)))))
+  
+  (test-->>E -> ;; ge-u
+             (term ((() () ()) 0 () ((i32 const 42) (i32 const 42) (i32 ge-u))))
+             (term ((() () ()) 0 () ((i32 const 1)))))
+  (test-->>E -> ;; ge-u
+             (term ((() () ()) 0 () ((i32 const 2) (i32 const 3) (i32 ge-u))))
+             (term ((() () ()) 0 () ((i32 const 0)))))
+  (test-->>E -> ;; ge-u
+             (term ((() () ()) 0 () ((i32 const 2) (i32 const 1) (i32 ge-u))))
+             (term ((() () ()) 0 () ((i32 const 1)))))
+  (test-->>E -> ;; ge-u signed
+             (term ((() () ()) 0 () ((i32 const #xFFFFFFFF) (i32 const 0) (i32 ge-u))))
+             (term ((() () ()) 0 () ((i32 const 1)))))
+  
+  (test-->>E -> ;; ge-s
+             (term ((() () ()) 0 () ((i32 const 42) (i32 const 42) (i32 ge-s))))
+             (term ((() () ()) 0 () ((i32 const 1)))))
+  (test-->>E -> ;; ge-s
+             (term ((() () ()) 0 () ((i32 const 2) (i32 const 3) (i32 ge-s))))
+             (term ((() () ()) 0 () ((i32 const 0)))))
+  (test-->>E -> ;; ge-s
+             (term ((() () ()) 0 () ((i32 const 2) (i32 const 1) (i32 ge-s))))
+             (term ((() () ()) 0 () ((i32 const 1)))))
+  (test-->>E -> ;; ge-s signed
+             (term ((() () ()) 0 () ((i32 const #xFFFFFFFF) (i32 const 0) (i32 ge-s))))
+             (term ((() () ()) 0 () ((i32 const 0)))))
+  
+  (test-->>E -> ;; lt
+             (term ((() () ()) 0 () ((f64 const 1.0) (f64 const 1.0) (f64 lt))))
+             (term ((() () ()) 0 () ((i32 const 0)))))
+  (test-->>E -> ;; lt
+             (term ((() () ()) 0 () ((f64 const 1.0) (f64 const -1.0) (f64 lt))))
+             (term ((() () ()) 0 () ((i32 const 0)))))
+  (test-->>E -> ;; lt
+             (term ((() () ()) 0 () ((f64 const -1.0) (f64 const 1.0) (f64 lt))))
+             (term ((() () ()) 0 () ((i32 const 1)))))
+  
+  (test-->>E -> ;; gt
+             (term ((() () ()) 0 () ((f64 const 1.0) (f64 const 1.0) (f64 gt))))
+             (term ((() () ()) 0 () ((i32 const 0)))))
+  (test-->>E -> ;; gt
+             (term ((() () ()) 0 () ((f64 const 1.0) (f64 const -1.0) (f64 gt))))
+             (term ((() () ()) 0 () ((i32 const 1)))))
+  (test-->>E -> ;; gt
+             (term ((() () ()) 0 () ((f64 const -1.0) (f64 const 1.0) (f64 gt))))
+             (term ((() () ()) 0 () ((i32 const 0)))))
+  
+  (test-->>E -> ;; le
+             (term ((() () ()) 0 () ((f64 const 1.0) (f64 const 1.0) (f64 le))))
+             (term ((() () ()) 0 () ((i32 const 1)))))
+  (test-->>E -> ;; le
+             (term ((() () ()) 0 () ((f64 const 1.0) (f64 const -1.0) (f64 le))))
+             (term ((() () ()) 0 () ((i32 const 0)))))
+  (test-->>E -> ;; le
+             (term ((() () ()) 0 () ((f64 const -1.0) (f64 const 1.0) (f64 le))))
+             (term ((() () ()) 0 () ((i32 const 1)))))
+  
+  (test-->>E -> ;; ge
+             (term ((() () ()) 0 () ((f64 const 1.0) (f64 const 1.0) (f64 ge))))
+             (term ((() () ()) 0 () ((i32 const 1)))))
+  (test-->>E -> ;; ge
+             (term ((() () ()) 0 () ((f64 const 1.0) (f64 const -1.0) (f64 ge))))
+             (term ((() () ()) 0 () ((i32 const 1)))))
+  (test-->>E -> ;; ge
+             (term ((() () ()) 0 () ((f64 const -1.0) (f64 const 1.0) (f64 ge))))
+             (term ((() () ()) 0 () ((i32 const 0)))))
 
   ;; cvtop
   (test-->>E -> ;; i64 1 -> i32 1
@@ -396,100 +582,130 @@
   (define (store-integer mem offset width value)
     (integer->integer-bytes value width #f #f mem offset))
 
-  (test-->>E -> ;; store then load
-             (term ((((() () (table) (memory 0)))
-                     ()
-                     (,(make-memory 1)))
-                    0
-                    ()
-                    ((i32 const 0) (i32 const 0) (i64 const 65) (i64 store 0 8) (i64 load 0 8))))
-             (term ((((() () (table) (memory 0)))
-                     ()
-                     (,(store-integer (make-memory 1) 8 8 65)))
-                    0
-                    ()
-                    ((i64 const 65)))))
+  ;; Use a smaller page size for testing
+  (parameterize ([memory-page-size 64]
+                 [max-memory-pages 2])
 
-  (test-->>E -> ;; store i32, load i8 (test of endianness)
-             (term ((((() () (table) (memory 0)))
-                     ()
-                     (,(make-memory 1)))
-                    0
-                    ()
-                    ((i32 const 0)
-                     (i32 const #x12345678)
-                     (i32 store 0 4)
-                     (i32 const 0)
-                     (i32 load (i8 unsigned) 0 4))))
-             (term ((((() () (table) (memory 0)))
-                     ()
-                     (,(store-integer (make-memory 1) 4 4 #x12345678)))
-                    0
-                    ()
-                    ((i32 const #x78))))) ; would be #x12 if big-endian
+    (test-->>E -> ;; store then load
+               (term ((((() () (table) (memory 0)))
+                       ()
+                       (,(make-memory 1)))
+                      0
+                      ()
+                      ((i32 const 0) (i32 const 0) (i64 const 65) (i64 store 0 8) (i64 load 0 8))))
+               (term ((((() () (table) (memory 0)))
+                       ()
+                       (,(store-integer (make-memory 1) 8 8 65)))
+                      0
+                      ()
+                      ((i64 const 65)))))
 
-  (test-->>E -> ;; store 255, load signed i8
-             (term ((((() () (table) (memory 0)))
-                     ()
-                     (,(make-memory 1)))
-                    0
-                    ()
-                    ((i32 const 0)
-                     (i32 const #xFF)
-                     (i32 store 0 4)
-                     (i32 const 0)
-                     (i32 load (i8 signed) 0 4))))
-             (term ((((() () (table) (memory 0)))
-                     ()
-                     (,(store-integer (make-memory 1) 4 4 #xFF)))
-                    0
-                    ()
-                    ((i32 const #xFFFFFFFF)))))
+    (test-->>E -> ;; store i32, load i8 (test of endianness)
+               (term ((((() () (table) (memory 0)))
+                       ()
+                       (,(make-memory 1)))
+                      0
+                      ()
+                      ((i32 const 0)
+                       (i32 const #x12345678)
+                       (i32 store 0 4)
+                       (i32 const 0)
+                       (i32 load (i8 unsigned) 0 4))))
+               (term ((((() () (table) (memory 0)))
+                       ()
+                       (,(store-integer (make-memory 1) 4 4 #x12345678)))
+                      0
+                      ()
+                      ((i32 const #x78))))) ; would be #x12 if big-endian
 
-  ;; TODO: these will need to be changed with the page size
-  (test-->>E -> ;; store out-of-bounds than load
-             (term ((((() () (table) (memory 0)))
-                     ()
-                     (,(make-memory 1)))
-                    0
-                    ()
-                    ((i32 const 0) (i32 const 0) (i64 const 65) (i64 store 0 200) (i64 load 0 8))))
-             (term ((((() () (table) (memory 0)))
-                     ()
-                     (,(make-memory 1)))
-                    0
-                    ()
-                    ((trap)))))
+    (test-->>E -> ;; store 255, load signed i8
+               (term ((((() () (table) (memory 0)))
+                       ()
+                       (,(make-memory 1)))
+                      0
+                      ()
+                      ((i32 const 0)
+                       (i32 const #xFF)
+                       (i32 store 0 4)
+                       (i32 const 0)
+                       (i32 load (i8 signed) 0 4))))
+               (term ((((() () (table) (memory 0)))
+                       ()
+                       (,(store-integer (make-memory 1) 4 4 #xFF)))
+                      0
+                      ()
+                      ((i32 const #xFFFFFFFF)))))
 
-  (test-->>E -> ;; store than load out-of-bounds
-             (term ((((() () (table) (memory 0)))
-                     ()
-                     (,(make-memory 1)))
-                    0
-                    ()
-                    ((i32 const 0) (i32 const 0) (i64 const 65) (i64 store 0 8) (i64 load 0 200))))
-             (term ((((() () (table) (memory 0)))
-                     ()
-                     (,(store-integer (make-memory 1) 8 8 65)))
-                    0
-                    ()
-                    ((trap)))))
+    (test-->>E -> ;; store out-of-bounds than load
+               (term ((((() () (table) (memory 0)))
+                       ()
+                       (,(make-memory 1)))
+                      0
+                      ()
+                      ((i32 const 0) (i32 const 0) (i64 const 65) (i64 store 0 200) (i64 load 0 8))))
+               (term ((((() () (table) (memory 0)))
+                       ()
+                       (,(make-memory 1)))
+                      0
+                      ()
+                      ((trap)))))
 
-  (test-->>E -> ;; current-memory
-             (term ((((() () (table) (memory 0)))
-                     ()
-                     (,(make-memory 1)))
-                    0
-                    ()
-                    ((current-memory))))
-             (term ((((() () (table) (memory 0)))
-                     ()
-                     (,(make-memory 1)))
-                    0
-                    ()
-                    ((i32 const 1)))))
+    (test-->>E -> ;; store than load out-of-bounds
+               (term ((((() () (table) (memory 0)))
+                       ()
+                       (,(make-memory 1)))
+                      0
+                      ()
+                      ((i32 const 0) (i32 const 0) (i64 const 65) (i64 store 0 8) (i64 load 0 200))))
+               (term ((((() () (table) (memory 0)))
+                       ()
+                       (,(store-integer (make-memory 1) 8 8 65)))
+                      0
+                      ()
+                      ((trap)))))
 
-  ;; TODO: grow memory
+    (test-->>E -> ;; current-memory
+               (term ((((() () (table) (memory 0)))
+                       ()
+                       (,(make-memory 1)))
+                      0
+                      ()
+                      ((current-memory))))
+               (term ((((() () (table) (memory 0)))
+                       ()
+                       (,(make-memory 1)))
+                      0
+                      ()
+                      ((i32 const 1)))))
+
+    (test-->>E -> ;; grow-memory
+               (term ((((() () (table) (memory 0)))
+                       ()
+                       (,(make-memory 1)))
+                      0
+                      ()
+                      ((i32 const 1) (grow-memory))))
+               (term ((((() () (table) (memory 0)))
+                       ()
+                       (,(make-memory 2)))
+                      0
+                      ()
+                      ((i32 const 2)))))
+
+    (test-->>E -> ;; grow-memory failure
+               (term ((((() () (table) (memory 0)))
+                       ()
+                       (,(make-memory 1)))
+                      0
+                      ()
+                      ((i32 const 2) (grow-memory))))
+               (term ((((() () (table) (memory 0)))
+                       ()
+                       (,(make-memory 1)))
+                      0
+                      ()
+                      ((i32 const #xFFFFFFFF)))))
+    )
 
   (test-->>E -> ;; if-true
              (term ((() () ())

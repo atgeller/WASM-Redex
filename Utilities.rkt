@@ -14,7 +14,7 @@
     [`sqrt (lambda (c)
              (if (negative? c)
                  (match type
-                   [`f32 +nan.f]
+                   [`f32 (real->single-flonum +nan.f)]
                    [`f64 +nan.0])
                  (sqrt c)))]
     [`ceil ceiling]
@@ -128,7 +128,7 @@
    (i32 const ,((wasm_testop->racket (term t) (term testop)) (term c)))])
 
 (define-metafunction WASMrt
-  eval-relop : relop c c -> e
+  eval-relop : relop c c t -> e
   [(eval-relop relop c_1 c_2 t)
    (i32 const ,(if ((wasm_relop->racket (term t) (term relop)) (term c_1) (term c_2)) 1 0))])
 
