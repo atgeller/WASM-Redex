@@ -77,10 +77,18 @@
     [`ge >=]))
 
 (define (wasm-truncate to-size sx c)
-  (let ([val (inexact->exact (truncate c))])
-    (match sx
-      [`signed (max (min-signed-int to-size) (min (max-signed-int to-size) val))]
-      [`unsigned (max 0 (min (max-unsigned-int to-size) val))])))
+  (cond
+    [(nan? c) #f]
+    [(infinite? c) #f]
+    [else
+     (let ([val (inexact->exact (truncate c))])
+       (match sx
+         [`signed (if (< (sub1 (- (expt 2 (sub1 to-size)))) val (expt 2 (sub1 to-size)))
+                      (to-unsigned-sized to-size val)
+                      #f)]
+         [`unsigned (if (< -1 val (expt 2 to-size))
+                        val
+                        #f)]))]))
 
 (define (wasm_cvtop->racket from-type to-type cvtop sx?)
   (match cvtop
@@ -89,9 +97,15 @@
        [`(i64 i32) (curry to-unsigned-sized 32)]
        [`(i32 i64) (match sx?
                      [`signed (lambda (c) (to-unsigned-sized 64 (to-signed-sized 32 c)))]
-                     [`unsigned (curry to-unsigned-sized 64)])]
-       [`(,_ f32) real->single-flonum]
-       [`(,_ f64) real->double-flonum]
+                     [`unsigned identity])]
+       [`(f64 f32) real->single-flonum]
+       [`(f32 f64) real->double-flonum]
+       [`(,_ f32) (match sx?
+                    [`signed (lambda (c) (real->single-flonum (to-signed-sized (type-width from-type) c)))]
+                    [`unsigned real->single-flonum])]
+       [`(,_ f64) (match sx?
+                    [`signed (lambda (c) (real->double-flonum (to-signed-sized (type-width from-type) c)))]
+                    [`unsigned real->double-flonum])]
        [`(,_ i32) (curry wasm-truncate 32 sx?)]
        [`(,_ i64) (curry wasm-truncate 64 sx?)])]
     [`reinterpret
@@ -134,20 +148,10 @@
 
 (define-metafunction WASMrt
   eval-cvtop : cvtop c t_1 t_2 any -> e
-  [(eval-cvtop convert -inf.f f32 i32 _) (trap)]
-  [(eval-cvtop convert -inf.f f32 i64 _) (trap)]
-  [(eval-cvtop convert -inf.0 f64 i32 _) (trap)]
-  [(eval-cvtop convert -inf.0 f64 i64 _) (trap)]
-  [(eval-cvtop convert +inf.f f32 i32 _) (trap)]
-  [(eval-cvtop convert +inf.f f32 i64 _) (trap)]
-  [(eval-cvtop convert +inf.0 f64 i32 _) (trap)]
-  [(eval-cvtop convert +inf.0 f64 i64 _) (trap)]
-  [(eval-cvtop convert +nan.f f32 i32 _) (trap)]
-  [(eval-cvtop convert +nan.f f32 i64 _) (trap)]
-  [(eval-cvtop convert +nan.0 f64 i32 _) (trap)]
-  [(eval-cvtop convert +nan.0 f64 i64 _) (trap)]
-  [(eval-cvtop cvtop c t_1 t_2 any)
-   (t_2 const ,((wasm_cvtop->racket (term t_1) (term t_2) (term cvtop) (term any)) (term c)))])
+  [(eval-cvtop cvtop c t_1 t_2 (name sx? any))
+   ,(match ((wasm_cvtop->racket (term t_1) (term t_2) (term cvtop) (term sx?)) (term c))
+      [#f (term (trap))]
+      [c-new (term (t_2 const ,c-new))])])
 
 ;; Decompose local contexts
 ; Function to calculate local context depth
@@ -192,22 +196,22 @@
    (do-global-get (inst_2 ...) ,(sub1 (term j)) j_1)
    (side-condition (> (term j) 0))]
   ;; Todo: This is probably slower than calling into racket, but is it significant?
-  [(do-global-get (((cl ...) (v ...)) inst_2 ...) 0 j_1)
+  [(do-global-get (((cl ...) (v ...) _ _) inst_2 ...) 0 j_1)
    (do-get (v ...) j_1)])
 
 (define-metafunction WASMrt
   inst-global-set : inst j v -> (inst)
-  [(inst-global-set ((cl ...) (v ...) (name table any) (name memory any)) j v_2)
+  [(inst-global-set ((cl ...) (v ...) (name table any_1) (name memory any_2)) j v_2)
    (((cl ...) (do-set (v ...) j v_2) table memory))])
 
 (define-metafunction WASMrt
   do-global-set : (inst ...) j j_1 v -> (inst ...)
-  [(do-global-set (inst ...) j j_1)
+  [(do-global-set (inst ...) j j_1 v)
    ,(let* ([head (take (term (inst ...)) (term j))]
            [tail (drop (term (inst ...)) (term j))]
            [to-change (car tail)]
            [rest (cdr tail)])
-      (append head (term (inst-global-set to-change j_1 v)) rest))])
+      (append head (term (inst-global-set ,to-change j_1 v)) rest))])
 
 (define-metafunction WASMrt
   function-lookup : (inst ...) j j_1 -> cl

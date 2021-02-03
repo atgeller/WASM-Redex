@@ -98,11 +98,11 @@
           (side-condition (> (term c) 0)))
 
      (--> (s j (v ...) (in-hole L (v_1 ... (i32 const c) (br-table (j_1 ...)) e ...)))
-          (s j (v ...) (in-hole L (v_1 ... (br (do-get (j_1 ...) (term c))) e ...)))
+          (s j (v ...) (in-hole L (v_1 ... (br (do-get (j_1 ...) c)) e ...)))
           (side-condition (<= (term c) (length (term (j_1 ...))))))
 
      (--> (s j (v ...) (in-hole L (v_1 ... (i32 const c) (br-table (j_1 ... j_2)) e ...)))
-          (s j (v ...) (in-hole L (v_1 ... v_2 (br j_2) e ...)))
+          (s j (v ...) (in-hole L (v_1 ... (br j_2) e ...)))
           (side-condition (> (term c) (length (term (j_1 ...))))))
 
      (--> (s j (v ...) (in-hole L (v_1 ... (label n (e_1 ...) (v_2 ...)) e ...)))
