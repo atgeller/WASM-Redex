@@ -707,6 +707,9 @@
   (define (store-integer mem offset width value)
     (integer->integer-bytes value width #f #f mem offset))
 
+  (define (store-floating mem offset width value)
+    (real->floating-point-bytes value width #f mem offset))
+
   ;; Use a smaller page size for testing
   (parameterize ([memory-page-size 64]
                  [max-memory-pages 2])
@@ -761,7 +764,79 @@
                       ()
                       ((i32 const #xFFFFFFFF)))))
 
-    (test-->>E -> ;; store out-of-bounds than load
+    (test-->>E -> ;; store -1 as i8, load as i32
+               (term ((((() () (table) (memory 0)))
+                       ()
+                       (,(make-memory 1)))
+                      0
+                      ()
+                      ((i32 const 0)
+                       (i32 const #xFFFFFFFF)
+                       (i32 store (i8) 0 4)
+                       (i32 const 0)
+                       (i32 load 0 4))))
+               (term ((((() () (table) (memory 0)))
+                       ()
+                       (,(store-integer (make-memory 1) 4 1 #xFF)))
+                      0
+                      ()
+                      ((i32 const #xFF)))))
+
+    (test-->>E -> ;; store/load f64
+               (term ((((() () (table) (memory 0)))
+                       ()
+                       (,(make-memory 1)))
+                      0
+                      ()
+                      ((i32 const 0)
+                       (f64 const ,pi)
+                       (f64 store 0 8)
+                       (i32 const 0)
+                       (f64 load 0 8))))
+               (term ((((() () (table) (memory 0)))
+                       ()
+                       (,(store-floating (make-memory 1) 8 8 pi)))
+                      0
+                      ()
+                      ((f64 const ,pi)))))
+    
+    (test-->>E -> ;; store/load f32
+               (term ((((() () (table) (memory 0)))
+                       ()
+                       (,(make-memory 1)))
+                      0
+                      ()
+                      ((i32 const 0)
+                       (f32 const ,(real->single-flonum pi))
+                       (f32 store 0 8)
+                       (i32 const 0)
+                       (f32 load 0 8))))
+               (term ((((() () (table) (memory 0)))
+                       ()
+                       (,(store-floating (make-memory 1) 8 4 pi)))
+                      0
+                      ()
+                      ((f32 const ,(real->single-flonum pi))))))
+
+    (test-->>E -> ;; store i64, load f64 (reinterpret equivalent)
+               (term ((((() () (table) (memory 0)))
+                       ()
+                       (,(make-memory 1)))
+                      0
+                      ()
+                      ((i32 const 0)
+                       (i64 const #x400921FB54442D18)
+                       (i64 store 0 8)
+                       (i32 const 0)
+                       (f64 load 0 8))))
+               (term ((((() () (table) (memory 0)))
+                       ()
+                       (,(store-floating (make-memory 1) 8 8 pi)))
+                      0
+                      ()
+                      ((f64 const ,pi)))))
+
+    (test-->>E -> ;; store out-of-bounds then load
                (term ((((() () (table) (memory 0)))
                        ()
                        (,(make-memory 1)))
@@ -775,7 +850,7 @@
                       ()
                       ((trap)))))
 
-    (test-->>E -> ;; store than load out-of-bounds
+    (test-->>E -> ;; store then load out-of-bounds
                (term ((((() () (table) (memory 0)))
                        ()
                        (,(make-memory 1)))
@@ -785,6 +860,37 @@
                (term ((((() () (table) (memory 0)))
                        ()
                        (,(store-integer (make-memory 1) 8 8 65)))
+                      0
+                      ()
+                      ((trap)))))
+
+    (test-->>E -> ;; store i16 out-of-bounds (barely)
+               (term ((((() () (table) (memory 0)))
+                       ()
+                       (,(make-memory 1)))
+                      0
+                      ()
+                      ((i32 const 63)
+                       (i32 const 0)
+                       (i32 store (i16) 0 0))))
+               (term ((((() () (table) (memory 0)))
+                       ()
+                       (,(make-memory 1)))
+                      0
+                      ()
+                      ((trap)))))
+
+    (test-->>E -> ;; load i32 packed out-of-bounds (barely)
+               (term ((((() () (table) (memory 0)))
+                       ()
+                       (,(make-memory 2)))
+                      0
+                      ()
+                      ((i32 const 126)
+                       (i64 load (i32 unsigned) 1 0))))
+               (term ((((() () (table) (memory 0)))
+                       ()
+                       (,(make-memory 2)))
                       0
                       ()
                       ((trap)))))
