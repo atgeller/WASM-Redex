@@ -52,9 +52,9 @@
 ;; C tab -> derivation of ⊢-module-table or #f
 (define (typecheck-table C tab)
   (match tab
-    [`(table ,exs ,n (import ,_ ,_))
+    [`(,exs (table ,n (import ,_ ,_)))
      (derivation `(⊢-module-table ,C ,tab (,exs ,n)))]
-    [`(table ,exs ,n ,indexes)
+    [`(,exs (table ,n ,indexes))
      (if (term (valid-indexes ,C ,indexes ,n))
           (derivation `(⊢-module-table ,C ,tab (,exs ,n)))
           #f)]))
@@ -62,8 +62,8 @@
 ;; C mem -> derivation of ⊢-module-mem
 (define (build-memory-derivation C mem)
   (match mem
-    [`(memory ,exs ,n) (derivation `(⊢-module-memory ,C ,mem (,exs ,n)) #f (list))]
-    [`(memory ,exs ,n ,im) (derivation `(⊢-module-memory ,C ,mem (,exs ,n)) #f (list))]))
+    [`(,exs (memory ,n)) (derivation `(⊢-module-memory ,C ,mem (,exs ,n)) #f (list))]
+    [`(,exs (memory ,n ,im)) (derivation `(⊢-module-memory ,C ,mem (,exs ,n)) #f (list))]))
 
 ;; (listof glob) -> derivation of ⊢-module-global-list or #f
 (define (typecheck-globals globs)
@@ -92,18 +92,15 @@
 ;; C glob -> derivation of ⊢-module-global or #f
 (define (typecheck-global C glob)
   (match glob
-    [`(global ,exs (,mut? ,t) ,es)
-     (if (or (empty? exs) (not mut?))
-         (let ([ins-deriv? (typecheck-ins C es)])
-           (match ins-deriv?
-             [(derivation `(⊢ ,_ ,_ (,_ -> (((,t_1 ,_)) ,_ ,_ ,_))) _ _)
-              (if (equal? t t_1)
-                  (derivation `(⊢-module-global ,C ,glob (,exs (,mut? ,t)))
-                              #f (list ins-deriv?))
-                  #f)]
-             [#f #f]))
+    [`(,exs (global (,mut ,t) ,es))
+     (if (or (empty? exs) (equal? 'const mut))
+         (match (typecheck-ins C es `() `(,t))
+           [#f #f]
+           [ins-deriv
+            (derivation `(⊢-module-global ,C ,glob (,exs (,mut ,t)))
+                        #f (list ins-deriv))])
          #f)]
-    [`(global ,exs (#f ,t) im)
+    [`(,exs (global (const ,t) im))
      (derivation `(⊢-module-global ,C ,glob (,exs (#f ,t))) #f (list))]))
 
 ;; C (listof f) -> derivation of ⊢-module-func-list or #f
@@ -125,7 +122,7 @@
 ;; C f -> derivation of ⊢-module-func or #f
 (define (typecheck-func C func)
   (match func
-    [`(func ,exs (,t_1 -> ,t_2) (local (,tl ...) ,ins))
+    [`(,exs (func (,t_1 -> ,t_2) (local (,tl ...) ,ins)))
      (match-let ([`(,funcs ,globs ,tables ,memories ,_ ,_ ,_) C])
        (let* ([C2 `(,funcs ,globs ,tables ,memories (local (,@t_1 ,@tl)) (label (,t_2)) (return ,t_2))]
               [ins-deriv? (typecheck-ins C2 ins `() t_2)])
@@ -134,7 +131,7 @@
                          #f
                          (list ins-deriv?))
              #f)))]
-    [`(func ,exs ,tf (import ,_ ,_))
+    [`(,exs (func ,tf (import ,_ ,_)))
      (derivation `(⊢-module-func ,C ,func (,exs ,tf)) #f (list))]))
 
 ;; C (listof e) (listof t) (listof t) -> (listof t) or #f

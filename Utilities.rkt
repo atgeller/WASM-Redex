@@ -223,7 +223,7 @@
 
 (define-metafunction WASMrt
   setup-call : (v ...) cl (e ...) -> (e ...)
-  [(setup-call (v ...) (j (func _ ((t ...) -> (t_2 ...)) (local (t_3 ...) (e ...)))) (e_2 ...))
+  [(setup-call (v ...) (j (_ (func ((t ...) -> (t_2 ...)) (local (t_3 ...) (e ...))))) (e_2 ...))
    ; 1. strip arguments from stack
    ,(let-values ([(stack args) (split-at (term (v ...)) (- (length (term (v ...)))
                                                            (length (term (t ...)))))])
@@ -247,9 +247,9 @@
 
 (define-metafunction WASMrt
   check-tf : tf cl -> e
-  [(check-tf tf (j (func (ex ...) tf (local (t ...) (e ...)))))
-   (call (j (func (ex ...) tf (local (t ...) (e ...)))))]
-  [(check-tf tf_!_ (_ (func _ tf_!_ _)))
+  [(check-tf tf (j ((ex ...) (func tf (local (t ...) (e ...))))))
+   (call (j ((ex ...) (func tf (local (t ...) (e ...))))))]
+  [(check-tf tf_!_ (_ (_ (func tf_!_ _))))
    (trap)])
 
 (define-metafunction WASMrt

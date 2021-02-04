@@ -25,12 +25,12 @@
       (() -> (t_2 ...)))
    ---------------------
    (⊢-module-func ((func (tf_1 ...)) (global (tg ...)) (table j_1 ...) (memory j_2 ...) _ _ _)
-                  (func (ex ...) tf (local (t ...) (e ...)))
+                  ((ex ...) (func tf (local (t ...) (e ...))))
                   ((ex ...) tf))]
 
   [--------------------------------------
    (⊢-module-func C
-                  (func (ex ...) tf im)
+                  ((ex ...) (func tf im))
                   ((ex ...) tf))]
   )
 
@@ -52,27 +52,27 @@
 (define-judgment-form WASMTyping
   #:contract (⊢-module-global C glob ((ex ...) tg))
 
-  [(where (#f t) tg)
+  [(where (const t) tg)
    (⊢ C (e ...) (() -> (t)))
    -------------------------
    (⊢-module-global C
-                    (global (ex ...) tg (e ...))
+                    ((ex ...) (global tg (e ...)))
                     ((ex ...) tg))]
 
   ;; Can't have exports if global is mutable
-  [(where (#t t) tg)
+  [(where (var t) tg)
    (where () (ex ...))
    (⊢ C (e ...) (() -> (t)))
    -------------------------
    (⊢-module-global C
-                    (global (ex ...) tg (e ...))
+                    ((ex ...) (global tg (e ...)))
                     ((ex ...) tg))]
 
   ;; Imported globals are immutable
-  [(where (#f t) tg)
+  [(where (const t) tg)
    ------------------
    (⊢-module-global C
-                    (global (ex ...) tg im)
+                    ((ex ...) (global tg im))
                     ((ex ...) tg))]
   )
 
@@ -107,12 +107,12 @@
   [(where #t (valid-indexes C (j ...) i))
    ---------------------------------------------
    (⊢-module-table C
-                   (table (ex ...) i (j ...))
+                   ((ex ...) (table i (j ...)))
                    ((ex ...) i))]
 
   [-----------------
    (⊢-module-table C
-                   (table (ex ...) i im)
+                   ((ex ...) (table i im))
                    ((ex ...) i))]
   )
 
@@ -121,10 +121,10 @@
   #:contract (⊢-module-mem C mem ((ex ...) i))
 
   [----------------------------------------------------
-   (⊢-module-mem C (memory (ex ...) i) ((ex ...) i))]
+   (⊢-module-mem C ((ex ...) (memory i)) ((ex ...) i))]
 
   [------------------------------------------------------
-   (⊢-module-mem C (memory (ex ...) i im) ((ex ...) i))]
+   (⊢-module-mem C ((ex ...) (memory i im)) ((ex ...) i))]
   )
 
 ;; Validates all definitions in the module against the types declared in the module
