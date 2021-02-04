@@ -7,6 +7,8 @@
          "InstructionTyping.rkt"
          "Utilities.rkt")
 
+(provide all-defined-out)
+
 ;; I'm doing this all using Racket's match instead of Redexes term-match
 ;; because I like the syntax of Racket's match better.
 
@@ -394,7 +396,7 @@
            (stack-polyize (derivation `(⊢ ,C (,e) ((,t2) -> (,t1))) #f (list)) e-pre e-post)
            #f)]
 
-      [`(,t1 convert ,t2 _)
+      [`(,t1 convert ,t2 ,_)
        (if (and (not (equal? t1 t2))
                 (nor (and (integer-type? t1) (integer-type? t2) (< (type-width t1) (type-width t2)))
                      (and (floating-type? t1) (floating-type? t2))))

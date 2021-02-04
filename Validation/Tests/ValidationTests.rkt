@@ -122,6 +122,36 @@
                                     (derivation `(⊢ ,empty-context ((f64 const 0.0)) (() -> (f64))) #f (list))
                                     (derivation `(⊢ ,empty-context ((i64 reinterpret f64)) ((f64) -> (i64))) #f (list)))))
 
+  (test-judgment-holds
+   ⊢
+   (derivation
+    `(⊢ ,empty-context ((f64 const 0.0) (f32 convert f64)) (() -> (f32)))
+    #f
+    (list
+     (derivation `(⊢ ,empty-context ((f64 const 0.0)) (() -> (f64))) #f '())
+     (derivation `(⊢ ,empty-context ((f32 convert f64)) ((f64) -> (f32))) #f '()))))
+
+  (test-judgment-holds
+   ⊢
+   (derivation
+    '(⊢ ((func ()) (global ()) (table) (memory) (local ()) (label ()) (return))
+        ((i32 const 4294967295) (f64 convert i32 signed))
+        (() -> (f64)))
+    #f
+    (list
+     (derivation
+      '(⊢ ((func ()) (global ()) (table) (memory) (local ()) (label ()) (return))
+          ((i32 const 4294967295))
+          (() -> (i32)))
+      #f
+      '())
+     (derivation
+      '(⊢ ((func ()) (global ()) (table) (memory) (local ()) (label ()) (return))
+          ((f64 convert i32 signed))
+          ((i32) -> (f64)))
+      #f
+      '()))))
+
   ;; unreachable allows any following
   (test-judgment-holds ⊢
                        (derivation `(⊢ ,empty-context ((unreachable) (i64 gt-u)) (() -> (i32)))
