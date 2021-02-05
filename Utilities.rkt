@@ -172,17 +172,18 @@
 (define-metafunction WASMrt
   context-depth : L -> j
   [(context-depth hole) 0]
-  [(context-depth (v ... (label n (e ...) L_1) e_2 ...)) ,(+ (term 1) (term (context-depth L_1)))])
+  [(context-depth (v ... (label n (e ...) L) e_2 ...)) ,(add1 (term (context-depth L)))])
 
 ; Second function to extract jth outer-layer
 (define-metafunction WASMrt
   decompose : L j (v ...) -> (e ...)
-  [(decompose (v ... (label n (e ...) L_1) e_2 ...) j (v_2 ...))
-   (v ... v_2 ... e ... e_2 ...)
-   (side-condition (= (term j) (term (context-depth L_1))))]
-  [(decompose (v ... (label n (e ...) L_1) e_2 ...) j (v_2 ...))
-   (v ... (label n (e ...) (decompose L_1 j (v_2 ...))) e_2 ...)
-   (side-condition (< (term j) (term (context-depth L_1))))])
+  [(decompose (v_j ... (label n (e_l ...) L) e_j ...) j (v ...))
+   (v_j ... v_n ... e_l ... e_j ...)
+   (side-condition (= (term j) (term (context-depth L))))
+   (where (v_n ...) ,(take-right (term (v ...)) (term n)))]
+  [(decompose (v_j ... (label n (e_l ...) L) e_j ...) j (v ...))
+   (v_j ... (label n (e_l ...) (decompose L j (v ...))) e_j ...)
+   (side-condition (< (term j) (term (context-depth L))))])
 
 ;; TODO: Pretty much all the utils below here are kind of awkward and unwieldy in combination.
 ;; I'm certain the solution is either calling into Racket more often or less often,
