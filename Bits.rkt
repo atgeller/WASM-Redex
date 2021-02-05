@@ -7,6 +7,11 @@
 (define memory-page-size (make-parameter 65536))
 (define max-memory-pages (make-parameter 32))
 
+(define (memory? mem)
+  (if (and (bytes? mem) (= (remainder (memory-size mem) (memory-page-size)) 0))
+      #t
+      #f))
+
 (define memory-size bytes-length)
 (define (memory-pages mem)
   (/ (memory-size mem) (memory-page-size)))

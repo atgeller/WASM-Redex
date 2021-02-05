@@ -2,7 +2,7 @@
 
 (require redex/reduction-semantics)
 
-(require "MachineOps.rkt")
+(require "Bits.rkt" "MachineOps.rkt")
 
 (provide WASM WASMrt)
 
@@ -90,4 +90,6 @@
         ((cl ...) (v ...) (table) (memory)))
 
   (tabinst ::= (cl ...))
-  (meminst ::= (side-condition any_1 (bytes? (term any_1)))))
+  (meminst ::= (side-condition bstr_1 (memory? (term bstr_1))))
+
+  (bstr ::= (side-condition any_1 (bytes? (term any_1)))))

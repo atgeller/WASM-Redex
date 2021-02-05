@@ -2,156 +2,170 @@
 
 (require racket/flonum redex/reduction-semantics "Syntax.rkt" "Bits.rkt" "MachineOps.rkt")
 
-(provide (except-out (all-defined-out) wasm_binop->racket wasm_testop->racket wasm_relop->racket))
-
-(define (wasm_unop->racket type unop)
-  (match unop
-    [`clz (curry sized-clz (type-width type))]
-    [`ctz (curry sized-ctz (type-width type))]
-    [`popcnt (curry sized-popcnt (type-width type))]
-    [`abs abs]
-    [`neg -]
-    [`sqrt (lambda (c)
-             (if (negative? c)
-                 (match type
-                   [`f32 (real->single-flonum +nan.f)]
-                   [`f64 +nan.0])
-                 (sqrt c)))]
-    [`ceil ceiling]
-    [`floor floor]
-    [`nearest round]))
-
-(define (wasm_binop->racket type binop)
-  (match binop
-    [`add (if (integer-type? type)
-              (curry sized-add (type-width type))
-              +)]
-    [`sub (if (integer-type? type)
-              (curry sized-sub (type-width type))
-              -)]
-    [`mul (if (integer-type? type)
-              (curry sized-mul (type-width type))
-              *)]
-    [`div-s (curry sized-signed-div (type-width type))]
-    [`div-u (curry sized-unsigned-div (type-width type))]
-    [`rem-s (curry sized-signed-rem (type-width type))]
-    [`rem-u (curry sized-unsigned-rem (type-width type))]
-    [`and bitwise-and]
-    [`or bitwise-ior]
-    [`xor bitwise-xor]
-    [`shl (curry sized-shl (type-width type))]
-    [`shr-s (curry sized-signed-shr (type-width type))]
-    [`shr-u (curry sized-unsigned-shr (type-width type))]
-    [`rotl (curry sized-rotl (type-width type))]
-    [`rotr (curry sized-rotr (type-width type))]
-    [`div /]
-    [`min min]
-    [`max max]
-    [`copysign
-     (lambda (a b)
-       (if (or (eq? b -0.0) (eq? b -inf.0) (equal? (sgn b) -1.0)
-               (eq? b -0.0f0) (eq? b -inf.f) (equal? (sgn b) -1.0f0))
-           (- (abs a))
-           (abs a)))]))
-
-(define (wasm_testop->racket type testop)
-  (match testop
-    [`eqz (lambda (n) (if (= n 0) 1 0))]))
-
-(define (wasm_relop->racket type relop)
-  (match relop
-    [`eq =]
-    [`ne (compose not =)]
-    [`lt-u <]
-    [`gt-u >]
-    [`le-u <=]
-    [`ge-u >=]
-    [`lt-s (lambda (a b) (< (to-signed-sized (type-width type) a) (to-signed-sized (type-width type) b)))]
-    [`gt-s (lambda (a b) (> (to-signed-sized (type-width type) a) (to-signed-sized (type-width type) b)))]
-    [`le-s (lambda (a b) (<= (to-signed-sized (type-width type) a) (to-signed-sized (type-width type) b)))]
-    [`ge-s (lambda (a b) (>= (to-signed-sized (type-width type) a) (to-signed-sized (type-width type) b)))]
-    ; floating point relops don't have a sign
-    [`lt <]
-    [`gt >]
-    [`le <=]
-    [`ge >=]))
-
-(define (wasm-truncate to-size sx c)
-  (cond
-    [(nan? c) #f]
-    [(infinite? c) #f]
-    [else
-     (let ([val (inexact->exact (truncate c))])
-       (match sx
-         [`signed (if (< (sub1 (- (expt 2 (sub1 to-size)))) val (expt 2 (sub1 to-size)))
-                      (to-unsigned-sized to-size val)
-                      #f)]
-         [`unsigned (if (< -1 val (expt 2 to-size))
-                        val
-                        #f)]))]))
-
-(define (wasm_cvtop->racket from-type to-type cvtop sx?)
-  (match cvtop
-    [`convert
-     (match `(,from-type ,to-type)
-       [`(i64 i32) (curry to-unsigned-sized 32)]
-       [`(i32 i64) (match sx?
-                     [`signed (lambda (c) (to-unsigned-sized 64 (to-signed-sized 32 c)))]
-                     [`unsigned identity])]
-       [`(f64 f32) real->single-flonum]
-       [`(f32 f64) real->double-flonum]
-       [`(,_ f32) (match sx?
-                    [`signed (lambda (c) (real->single-flonum (to-signed-sized (type-width from-type) c)))]
-                    [`unsigned real->single-flonum])]
-       [`(,_ f64) (match sx?
-                    [`signed (lambda (c) (real->double-flonum (to-signed-sized (type-width from-type) c)))]
-                    [`unsigned real->double-flonum])]
-       [`(,_ i32) (curry wasm-truncate 32 sx?)]
-       [`(,_ i64) (curry wasm-truncate 64 sx?)])]
-    [`reinterpret
-     (match from-type
-       [`i32 (lambda (c) (real->single-flonum (floating-point-bytes->real (integer->integer-bytes c 4 #f #f) #f)))]
-       [`i64 (lambda (c) (floating-point-bytes->real (integer->integer-bytes c 8 #f #f) #f))]
-       [`f32 (lambda (c) (integer-bytes->integer (real->floating-point-bytes c 4 #f) #f #f))]
-       [`f64 (lambda (c) (integer-bytes->integer (real->floating-point-bytes c 8 #f) #f #f))])]))
+(provide (all-defined-out))
 
 (define-metafunction WASMrt
-  eval-unop : unop c t -> e
-  [(eval-unop unop c t)
-   (t const ,((wasm_unop->racket (term t) (term unop)) (term c)))])
+  bool : boolean -> c
+  [(bool #f) 0]
+  [(bool #t) 1])
 
 (define-metafunction WASMrt
-  eval-binop : binop c c t -> e
-  [(eval-binop div-s c 0 t)
-   (trap)]
-  [(eval-binop div-u c 0 t)
-   (trap)]
-  [(eval-binop rem-s c 0 t)
-   (trap)]
-  [(eval-binop rem-u c 0 t)
-   (trap)]
-  [(eval-binop binop c_1 c_2 t)
-   (t const ,((wasm_binop->racket (term t) (term binop)) (term c_1) (term c_2)))
-   (side-condition (not (and (eq? (term c_2) 0)
-                             (or (eq? (term binop) 'div-s) (eq? (term binop) 'div-u)
-                                 (eq? (term binop) 'rem-s) (eq? (term binop) 'rem-u)))))])
+  signed : t n -> integer
+  [(signed i32 n) ,(to-signed-sized 32 (term n))]
+  [(signed i64 n) ,(to-signed-sized 64 (term n))])
 
 (define-metafunction WASMrt
-  eval-testop : testop c t -> e
-  [(eval-testop testop c t)
-   (i32 const ,((wasm_testop->racket (term t) (term testop)) (term c)))])
+  const->bstr : t c -> bstr
+  [(const->bstr i32 c) ,(integer->integer-bytes (term c) 4 #f #f)]
+  [(const->bstr i64 c) ,(integer->integer-bytes (term c) 8 #f #f)]
+  [(const->bstr f32 c) ,(real->floating-point-bytes (term c) 4 #f)]
+  [(const->bstr f64 c) ,(real->floating-point-bytes (term c) 8 #f)])
 
 (define-metafunction WASMrt
-  eval-relop : relop c c t -> e
-  [(eval-relop relop c_1 c_2 t)
-   (i32 const ,(if ((wasm_relop->racket (term t) (term relop)) (term c_1) (term c_2)) 1 0))])
+  bstr->const : t bstr -> c
+  [(bstr->const inn bstr) ,(integer-bytes->integer (term bstr) #f #f)]
+  [(bstr->const f32 bstr) ,(real->single-flonum (floating-point-bytes->real (term bstr) #f))]
+  [(bstr->const f64 bstr) ,(real->double-flonum (floating-point-bytes->real (term bstr) #f))])
+
 
 (define-metafunction WASMrt
-  eval-cvtop : cvtop c t_1 t_2 any -> e
-  [(eval-cvtop cvtop c t_1 t_2 (name sx? any))
-   ,(match ((wasm_cvtop->racket (term t_1) (term t_2) (term cvtop) (term sx?)) (term c))
-      [#f (term (trap))]
-      [c-new (term (t_2 const ,c-new))])])
+  eval-unop : unop t c -> c
+  
+  [(eval-unop clz t c) ,(sized-clz (type-width (term t)) (term c))]
+  [(eval-unop ctz t c) ,(sized-ctz (type-width (term t)) (term c))]
+  [(eval-unop popcnt t c) ,(sized-popcnt (type-width (term t)) (term c))]
+  [(eval-unop abs t c) ,(abs (term c))]
+  [(eval-unop neg t c) ,(- (term c))]
+  
+  [(eval-unop sqrt t c)
+   ,(if (negative? (term c))
+        (match (term t)
+          [`f32 (real->single-flonum +nan.f)]
+          [`f64 +nan.0])
+        (sqrt (term c)))]
+  
+  [(eval-unop ceil t c) ,(ceiling (term c))]
+  [(eval-unop floor t c) ,(floor (term c))]
+  [(eval-unop nearest t c) ,(round (term c))])
+
+
+(define-metafunction WASMrt
+  eval-binop : binop t c c -> (c ...)
+  
+  [(eval-binop add inn c_1 c_2) (,(sized-add (type-width (term inn)) (term c_1) (term c_2)))]
+  [(eval-binop sub inn c_1 c_2) (,(sized-sub (type-width (term inn)) (term c_1) (term c_2)))]
+  [(eval-binop mul inn c_1 c_2) (,(sized-mul (type-width (term inn)) (term c_1) (term c_2)))]
+  
+  [(eval-binop div-s inn c_1 c_2)
+   (,(sized-signed-div (type-width (term inn)) (term c_1) (term c_2)))
+   (side-condition (not (equal? (term c_2) 0)))
+   or
+   ()]
+  
+  [(eval-binop div-u inn c_1 c_2)
+   (,(sized-unsigned-div (type-width (term inn)) (term c_1) (term c_2)))
+   (side-condition (not (equal? (term c_2) 0)))
+   or
+   ()]
+  
+  [(eval-binop rem-s inn c_1 c_2)
+   (,(sized-signed-rem (type-width (term inn)) (term c_1) (term c_2)))
+   (side-condition (not (equal? (term c_2) 0)))
+   or
+   ()]
+  
+  [(eval-binop rem-u inn c_1 c_2)
+   (,(sized-unsigned-rem (type-width (term inn)) (term c_1) (term c_2)))
+   (side-condition (not (equal? (term c_2) 0)))
+   or
+   ()]
+  
+  [(eval-binop and inn c_1 c_2) (,(bitwise-and (term c_1) (term c_2)))]
+  [(eval-binop or inn c_1 c_2) (,(bitwise-ior (term c_1) (term c_2)))]
+  [(eval-binop xor inn c_1 c_2) (,(bitwise-xor (term c_1) (term c_2)))]
+  [(eval-binop shl inn c_1 c_2) (,(sized-shl (type-width (term inn)) (term c_1) (term c_2)))]
+  [(eval-binop shr-s inn c_1 c_2) (,(sized-signed-shr (type-width (term inn)) (term c_1) (term c_2)))]
+  [(eval-binop shr-u inn c_1 c_2) (,(sized-unsigned-shr (type-width (term inn)) (term c_1) (term c_2)))]
+  [(eval-binop rotl inn c_1 c_2) (,(sized-rotl (type-width (term inn)) (term c_1) (term c_2)))]
+  [(eval-binop rotr inn c_1 c_2) (,(sized-rotr (type-width (term inn)) (term c_1) (term c_2)))]
+  
+  [(eval-binop add fnn c_1 c_2) (,(+ (term c_1) (term c_2)))]
+  [(eval-binop sub fnn c_1 c_2) (,(- (term c_1) (term c_2)))]
+  [(eval-binop mul fnn c_1 c_2) (,(* (term c_1) (term c_2)))]
+  [(eval-binop div fnn c_1 c_2) (,(/ (term c_1) (term c_2)))]
+  [(eval-binop min fnn c_1 c_2) (,(min (term c_1) (term c_2)))]
+  [(eval-binop max fnn c_1 c_2) (,(max (term c_1) (term c_2)))]
+  
+  [(eval-binop copysign fnn c_1 c_2)
+   (,(if (or (negative? (term c_2))
+             (equal? (term c_2) -0.0)
+             (equal? (term c_2) (real->single-flonum -0.0f0)))
+         (- (abs (term c_1)))
+         (abs (term c_1))))])
+
+
+(define-metafunction WASMrt
+  eval-testop : testop t c -> c
+  [(eval-testop eqz t c)
+   ,(if (= (term c) 0) 1 0)])
+
+
+(define-metafunction WASMrt
+  eval-relop : relop t c c -> c
+  
+  [(eval-relop eq t c_1 c_2) (bool ,(= (term c_1) (term c_2)))]
+  [(eval-relop ne t c_1 c_2) (bool ,(not (= (term c_1) (term c_2))))]
+
+  [(eval-relop lt-u t c_1 c_2) (bool ,(< (term c_1) (term c_2)))]
+  [(eval-relop gt-u t c_1 c_2) (bool ,(> (term c_1) (term c_2)))]
+  [(eval-relop le-u t c_1 c_2) (bool ,(<= (term c_1) (term c_2)))]
+  [(eval-relop ge-u t c_1 c_2) (bool ,(>= (term c_1) (term c_2)))]
+  
+  [(eval-relop lt-s t c_1 c_2) (bool ,(< (term (signed t c_1)) (term (signed t c_2))))]
+  [(eval-relop gt-s t c_1 c_2) (bool ,(> (term (signed t c_1)) (term (signed t c_2))))]
+  [(eval-relop le-s t c_1 c_2) (bool ,(<= (term (signed t c_1)) (term (signed t c_2))))]
+  [(eval-relop ge-s t c_1 c_2) (bool ,(>= (term (signed t c_1)) (term (signed t c_2))))]
+  
+  [(eval-relop lt t c_1 c_2) (bool ,(< (term c_1) (term c_2)))]
+  [(eval-relop gt t c_1 c_2) (bool ,(> (term c_1) (term c_2)))]
+  [(eval-relop le t c_1 c_2) (bool ,(<= (term c_1) (term c_2)))]
+  [(eval-relop ge t c_1 c_2) (bool ,(>= (term c_1) (term c_2)))])
+
+
+(define-metafunction WASMrt
+  do-convert : t_1 t_2 any c -> (c ...)
+
+  [(do-convert i64 i32 #f c) (,(to-unsigned-sized 32 (term c)))]
+  [(do-convert i32 i64 signed c) (,(to-unsigned-sized 64 (to-signed-sized 32 (term c))))]
+  [(do-convert i32 i64 unsigned c) (c)]
+  
+  [(do-convert f64 f32 #f c) (,(real->single-flonum (term c)))]
+  [(do-convert f32 f64 #f c) (,(real->double-flonum (term c)))]
+
+  [(do-convert inn f32 signed c) (,(real->single-flonum (to-signed-sized (type-width (term inn)) (term c))))]
+  [(do-convert inn f32 unsigned c) (,(real->single-flonum (term c)))]
+  
+  [(do-convert inn f64 signed c) (,(real->double-flonum (to-signed-sized (type-width (term inn)) (term c))))]
+  [(do-convert inn f64 unsigned c) (,(real->double-flonum (term c)))]
+
+  [(do-convert fnn inn sx c)
+   ()
+   (side-condition (or (nan? (term c)) (infinite? (term c))))]
+
+  [(do-convert fnn inn signed c)
+   (,(to-unsigned-sized (type-width (term inn)) (inexact->exact (truncate (term c)))))
+   (side-condition (< (sub1 (- (expt 2 (sub1 (type-width (term inn))))))
+                      (truncate (term c))
+                      (expt 2 (sub1 (type-width (term inn))))))
+   or
+   ()]
+  
+  [(do-convert fnn inn unsigned c)
+   (,(inexact->exact (truncate (term c))))
+   (side-condition (< -1 (truncate (term c)) (expt 2 (type-width (term inn)))))
+   or
+   ()])
+
 
 ;; Decompose local contexts
 ; Function to calculate local context depth
