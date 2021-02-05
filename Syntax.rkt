@@ -61,7 +61,7 @@
   (a o ::= (side-condition natural_1 (u32? (term natural_1))))
   
   ; real is a superset of all constant types
-  (c ::= real)
+  (c k ::= real)
 
   (f ::= ((ex ...) (func tf (local (t ...) (e ...))))
      ((ex ...) (func tf im)))
