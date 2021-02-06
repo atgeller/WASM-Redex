@@ -197,7 +197,7 @@
                  [sub (cdr sub)])))
          lst))
 
-  (define (stack-subs subs stack)
+  (define (apply-subs-stack subs stack)
     (cons (first stack) (apply-subs subs (rest stack))))
 
   (define (consume stacks ts)
@@ -205,17 +205,17 @@
       (if (>= (length (rest pre-stack)) (length ts))
           (match (find-unify (take-right pre-stack (length ts)) ts)
             [#f (values #f (void) (void))]
-            [subs (values (stack-subs subs (drop-right pre-stack (length ts)))
-                          (map (curry stack-subs subs) stacks)
+            [subs (values (apply-subs-stack subs (drop-right pre-stack (length ts)))
+                          (map (curry apply-subs-stack subs) stacks)
                           subs)])
           (match (first pre-stack)
             [#f (values #f (void) (void))]
             [(? natural? n)
              (match (find-unify (rest pre-stack) (take-right ts (length (rest pre-stack))))
                [#f (values #f (void) (void))]
-               [subs (let ([new-stacks (map (curry stack-subs subs) stacks)])
-                       (let-values ([(start end) (split-at-right new-stacks n)]
-                                    [(from-ellipses) (apply-subs subs (drop-right ts (length (rest (first new-stacks)))))])
+               [subs (let* ([new-stacks (map (curry apply-subs-stack subs) stacks)]
+                            [from-ellipses (apply-subs subs (drop-right ts (length (rest (first new-stacks)))))])
+                       (let-values ([(start end) (split-at-right new-stacks n)])
                          (values (list n)
                                  (append (map (λ (stack)
                                                 (cons n (append from-ellipses (rest stack))))
@@ -386,7 +386,7 @@
 
   ;; TODO: not a good name
   ;; assumes that e fits e-pre and e-post since output comes from synthesize-stacks
-  ;; premises of the instructions are checked here
+  ;; premises of the instructions not required for stack validity are checked here
   (define (build-e-deriv e e-pre e-post)
     (match e
       [`(,t const ,_)
