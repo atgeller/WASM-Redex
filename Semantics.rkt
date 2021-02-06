@@ -2,7 +2,8 @@
 
 (require redex/reduction-semantics
          "Syntax.rkt"
-         "Utilities.rkt")
+         "Utilities.rkt"
+         "Bits.rkt")
 
 (provide ->)
 
@@ -105,7 +106,6 @@
           (s i (v_l ...) (in-hole L ((trap)))))
 
      ; Knowing about contexts is necessary for this (so can't shortcut the rest :/)!
-     ; TODO: get number of args from the label
      (--> (s i (v_l ...) (in-hole L (v_0 ... (br j) e_0 ...)))
           (s i (v_l ...) (decompose L j (v_0 ...))))
 
@@ -187,8 +187,11 @@
           (where (s_new (e_new ...)) (do-store-packed s i t a ,(+ (term o) (term k)) c tp)))
 
      (--> (s i (v_l ...) (in-hole L (v_0 ... (current-memory) e_0 ...)))
-          (s i (v_l ...) (in-hole L (v_0 ... (mem-size s i) e_0 ...))))
+          (s i (v_l ...) (in-hole L (v_0 ... (i32 const ,(/ (bytes-length (term (store-mem s i))) (memory-page-size))) e_0 ...))))
 
      (--> (s i (v_l ...) (in-hole L (v_0 ... (i32 const k) (grow-memory) e_0 ...)))
-          (s_new i (v_l ...) (in-hole L (v_0 ... e_new ... e_0 ...)))
-          (where (s_new (e_new ...)) (grow-mem s i k)))))
+          (s_new i (v_l ...) (in-hole L (v_0 ... (i32 const ,(/ (bytes-length (term (store-mem s i))) (memory-page-size))) e_0 ...)))
+          (where s_new (with-mem s i ,(bytes-append (term (store-mem s i)) (make-bytes (* (memory-page-size) (term k)) 0)))))
+
+     (--> (s i (v_l ...) (in-hole L (v_0 ... (i32 const k) (grow-memory) e_0 ...)))
+          (s i (v_l ...) (in-hole L (v_0 ... (i32 const #xFFFFFFFF) e_0 ...))))))

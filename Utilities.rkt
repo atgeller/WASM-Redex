@@ -192,10 +192,8 @@
 ;; NOTE: Useful for the very popular myriad index-based lookups
 (define-metafunction WASMrt
   do-get : (any ...) j -> any
-  [(do-get () j)
-   (error "do-get index out of bounds!")]
   [(do-get (any ...) j)
-   ,(car (drop (term (any ...)) (term j)))])
+   ,(list-ref (term (any ...)) (term j))])
 
 ;; NOTE: Useful for the very popular myriad index-based lookups
 (define-metafunction WASMrt
@@ -322,17 +320,15 @@
                        ()))]))])
 
 (define-metafunction WASMrt
-  mem-size : s j -> v
-  [(mem-size ((inst ...) _ (meminst ...)) j)
-   (i32 const ,(let-values ([(mem _) (get-mem (term (inst ...)) (term (meminst ...)) (term j))])
-                 (memory-pages mem)))])
+  inst-mem-index : inst -> i
+  [(inst-mem-index (_ _ _ (memory i))) i])
 
 (define-metafunction WASMrt
-  grow-mem : s j c -> (s (e ...))
-  [(grow-mem ((inst ...) (tabinst ...) (meminst ...)) j c)
-   ,(let*-values ([(mem memindex) (get-mem (term (inst ...)) (term (meminst ...)) (term j))]
-                  [(newmem res) (grow-memory mem (term c))])
-      (term (((inst ...)
-              (tabinst ...)
-              (do-set (meminst ...) ,memindex ,newmem))
-             ((i32 const ,res)))))])
+  store-mem : s i -> meminst
+  [(store-mem ((inst ...) _ (meminst ...)) i)
+   (do-get (meminst ...) (inst-mem-index (do-get (inst ...) i)))])
+
+(define-metafunction WASMrt
+  with-mem : s i meminst -> s
+  [(with-mem ((inst ...) (tabinst ...) (meminst ...)) i meminst_new)
+   ((inst ...) (tabinst ...) (do-set (meminst ...) (inst-mem-index (do-get (inst ...) i)) meminst_new))])

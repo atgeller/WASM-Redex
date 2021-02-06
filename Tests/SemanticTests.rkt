@@ -716,8 +716,7 @@
     (real->floating-point-bytes value width #f mem offset))
 
   ;; Use a smaller page size for testing
-  (parameterize ([memory-page-size 64]
-                 [max-memory-pages 2])
+  (parameterize ([memory-page-size 64])
 
     (test-->>E -> ;; store then load
                (term ((((() () (table) (memory 0)))
@@ -926,7 +925,7 @@
                        (,(make-memory 2)))
                       0
                       ()
-                      ((i32 const 2)))))
+                      ((i32 const 1)))))
 
     (test-->>E -> ;; grow-memory failure
                (term ((((() () (table) (memory 0)))

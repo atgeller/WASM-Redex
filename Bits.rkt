@@ -5,25 +5,15 @@
 (provide (all-defined-out))
 
 (define memory-page-size (make-parameter 65536))
-(define max-memory-pages (make-parameter 32))
 
 (define (memory? mem)
-  (if (and (bytes? mem) (= (remainder (memory-size mem) (memory-page-size)) 0))
+  (if (and (bytes? mem) (= (remainder (bytes-length mem) (memory-page-size)) 0))
       #t
       #f))
-
-(define memory-size bytes-length)
-(define (memory-pages mem)
-  (/ (memory-size mem) (memory-page-size)))
 
 (define (make-memory size)
   (make-bytes (* (memory-page-size) size) 0))
 
-(define (grow-memory mem newsize)
-  (if (<= (+ (memory-pages mem) newsize) (max-memory-pages))
-      (values (bytes-append mem (make-memory newsize))
-              (+ (memory-pages mem) newsize))
-      (values mem #xFFFFFFFF)))
 
 (define (type-width type)
   (match type
