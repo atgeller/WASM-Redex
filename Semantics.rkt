@@ -165,7 +165,7 @@
 
      (--> (s i (v_l ...) (in-hole L (v_0 ... (local n (j (v ...)) (e ...)) e_0 ...)))
           (s_new i (v_l ...) (in-hole L (v_0 ... (local n (j (v_new ...)) (e_new ...)) e_0 ...)))
-          (where ((s_new j (v_new ...) (e_new ...)))
+          (where (_ ... (s_new j (v_new ...) (e_new ...)) _ ...)
                  ,(apply-reduction-relation -> (term (s j (v ...) (e ...))))))
 
      (--> (s i (v_l ...) (in-hole L (v_0 ... (i32 const j) (call-indirect tf) e_0 ...)))
