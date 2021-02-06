@@ -7,7 +7,7 @@
          "InstructionTyping.rkt"
          "Utilities.rkt")
 
-(provide all-defined-out)
+(provide (all-defined-out))
 
 ;; I'm doing this all using Racket's match instead of Redexes term-match
 ;; because I like the syntax of Racket's match better.
@@ -142,59 +142,92 @@
 ;; it doesn't check the premises of the instructions.
 (define (synthesize-stacks C ins pre post)
 
+  ;; stack is (cons (or/c false? natural?) (listof t))
+
+  ;; TODO: deal with a duplicated type variable to simplify select/drop
+
   (define (find-unify stack ts)
     (foldl (λ (s t subs)
-             (if (redex-match? WASM t s)
-                 (if (equal? s t)
-                     subs
-                     #f)
-                 ;; Note: assumes that a type variable cannot be duplicated on the stack getting consumed
-                 (cons (cons s t) subs)))
+             (cond
+               ;; s and t are both types
+               [(and (redex-match? WASM t s) (redex-match? WASM t t))
+                (if (equal? s t)
+                    subs
+                    #f)]
+
+               ;; s is a type, t is a type variable
+               [(and (redex-match? WASM t s) (not (redex-match? WASM t t)))
+                (match (assoc t subs)
+                  [#f (cons (cons t s) subs)]
+                  [sub (if (equal? (cdr sub) s)
+                           subs
+                           #f)])]
+
+               ;; s is a type variable, t is a type
+               [(and (not (redex-match? WASM t s)) (redex-match? WASM t t))
+                (match (assoc t subs)
+                  [#f (cons (cons s t) subs)]
+                  [sub (if (equal? (cdr sub) t)
+                           subs
+                           #f)])]
+
+               ;; s and t are both type variables
+               [(nor (redex-match? WASM t s) (redex-match? WASM t t))
+                (match/values (values (assoc t subs) (assoc s subs))
+                  [(#f #f) (cons (cons s t) subs)]
+                  [(#f t-sub) (if (equal? s (cdr t-sub))
+                                  subs
+                                  #f)]
+                  [(s-sub #f) (if (equal? t (cdr s-sub))
+                                  subs
+                                  #f)]
+                  [(s-sub t-sub) (if (equal? (cdr s-sub) (cdr t-sub))
+                                     subs
+                                     #f)])]))
            '()
            stack
            ts))
 
-  (define (apply-subs subs stacks)
-    (map (λ (stack)
-           (cons (first stack)
-                 (map (λ (s)
-                        (if (redex-match? WASM t s)
-                            s
-                            (let ([sub (assoc s subs)])
-                              (if sub
-                                  (cdr sub)
-                                  s))))
-                      (rest stack))))
-         stacks))
+  (define (apply-subs subs lst)
+    (map (λ (s)
+           (if (redex-match? WASM t s)
+               s
+               (match (assoc s subs)
+                 [#f s]
+                 [sub (cdr sub)])))
+         lst))
+
+  (define (stack-subs subs stack)
+    (cons (first stack) (apply-subs subs (rest stack))))
 
   (define (consume stacks ts)
     (let ([pre-stack (first stacks)])
       (if (>= (length (rest pre-stack)) (length ts))
-          (let ([subs (find-unify (take-right pre-stack (length ts)) ts)])
-            (if subs
-                ;; Note: also assumes type variables are not duplicated on the stack
-                (values (drop-right pre-stack (length ts)) (apply-subs subs stacks))
-                (values #f stacks)))
+          (match (find-unify (take-right pre-stack (length ts)) ts)
+            [#f (values #f (void) (void))]
+            [subs (values (stack-subs subs (drop-right pre-stack (length ts)))
+                          (map (curry stack-subs subs) stacks)
+                          subs)])
           (match (first pre-stack)
-            [#f (values #f stacks)]
+            [#f (values #f (void) (void))]
             [(? natural? n)
-             (let ([subs (find-unify (rest pre-stack) (take-right ts (length (rest pre-stack))))])
-               (if subs
-                   (let ([new-stacks (apply-subs subs stacks)])
-                     (let-values ([(start end) (split-at-right new-stacks n)]
-                                  [(from-ellipses) (drop-right ts (length (rest (first new-stacks))))])
-                       (values (list n)
-                               (append (map (λ (stack)
-                                              (cons n (append from-ellipses (rest stack))))
-                                            start)
-                                       end))))
-                   (values #f stacks)))]))))
+             (match (find-unify (rest pre-stack) (take-right ts (length (rest pre-stack))))
+               [#f (values #f (void) (void))]
+               [subs (let ([new-stacks (map (curry stack-subs subs) stacks)])
+                       (let-values ([(start end) (split-at-right new-stacks n)]
+                                    [(from-ellipses) (apply-subs subs (drop-right ts (length (rest (first new-stacks)))))])
+                         (values (list n)
+                                 (append (map (λ (stack)
+                                                (cons n (append from-ellipses (rest stack))))
+                                              start)
+                                         end)
+                                 subs)))])]))))
 
   (define (apply-pre-post stacks pre post)
     (match/values (consume stacks pre)
-      [(#f _) #f]
-      [(mid new-stacks)
-       (cons (append mid post) new-stacks)]))
+      [(#f _ _) #f]
+      [(mid new-stacks subs)
+       (cons (append mid (apply-subs subs post)) new-stacks)]))
 
   (define (apply-e stacks e)
     (match e
@@ -226,26 +259,11 @@
        (cons (first stacks) stacks)]
 
       [`(drop)
-       (if (>= (length (rest (first stacks))) 1)
-           (cons (drop-right (first stacks) 1) stacks)
-           (if (false? (first (first stacks)))
-               #f
-               (apply-pre-post stacks (list 'i32) (list))))]
+       (apply-pre-post stacks (list (gensym)) (list))]
 
       [`(select)
-       (if (>= (length (rest (first stacks))) 3)
-           (let ([t (last (drop-right (first stacks) 1))])
-             (if (and (equal? (last (first stacks)) 'i32)
-                      (equal? (last (drop-right (first stacks) 2)) t))
-                 (apply-pre-post stacks (list t t 'i32) (list t))
-                 #f))
-           (if (false? (first (first stacks)))
-               #f
-               (if (< (length (rest (first stacks))) 2)
-                   (let ([tv (gensym)])
-                     (apply-pre-post stacks (list tv tv 'i32) (list tv)))
-                   (let ([t (last (drop-right (first stacks) 1))])
-                     (apply-pre-post stacks (list t t 'i32) (list t))))))]
+       (let ([tv (gensym)])
+         (apply-pre-post stacks (list tv tv 'i32) (list tv)))]
 
       [`(block (,b-pre -> ,b-post) ,_)
        (apply-pre-post stacks b-pre b-post)]
@@ -258,8 +276,8 @@
 
       [`(br ,i)
        (match/values (consume stacks (term (get-label ,C ,i)))
-         [(#f _) #f]
-         [(_ new-stacks) (cons (list (length new-stacks)) new-stacks)])]
+         [(#f _ _) #f]
+         [(_ new-stacks _) (cons (list (length new-stacks)) new-stacks)])]
 
       [`(br-if ,i)
        (let ([ts (term (get-label ,C ,i))])
@@ -268,8 +286,8 @@
       [`(br-table ,i ...)
        (if (judgment-holds (label-types (get-labels ,C) ,i (t ...)))
            (match/values (consume stacks (term (get-label ,C ,(first i))))
-             [(#f _) #f]
-             [(_ new-stacks) (cons (list (length new-stacks)) new-stacks)])
+             [(#f _ _) #f]
+             [(_ new-stacks _) (cons (list (length new-stacks)) new-stacks)])
            #f)]
 
       [`(return)
@@ -277,8 +295,8 @@
          [`(,_ ,_ ,_ ,_ ,_ ,_ (return)) #f]
          [`(,_ ,_ ,_ ,_ ,_ ,_ (return ,ts))
           (match/values (consume stacks ts)
-            [(#f _) #f]
-            [(_ new-stacks) (cons (list (length new-stacks)) new-stacks)])])]
+            [(#f _ _) #f]
+            [(_ new-stacks _) (cons (list (length new-stacks)) new-stacks)])])]
 
       [`(call ,i)
        (match-let ([`((func ,tfs) ,_ ,_ ,_ ,_ ,_ ,_) C])
@@ -338,8 +356,8 @@
   (define (synthesize-stacks-rec stacks ins)
     (if (empty? ins)
         (match/values (consume stacks post)
-          [(#f _) #f]
-          [(_ new-stacks) new-stacks])
+          [(#f _ _) #f]
+          [(_ new-stacks _) new-stacks])
         (match (apply-e stacks (first ins))
           [#f #f]
           [new-stacks (synthesize-stacks-rec new-stacks (rest ins))])))
