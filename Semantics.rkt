@@ -2,10 +2,11 @@
 
 (require redex/reduction-semantics
          "Syntax.rkt"
-         "Utilities.rkt"
-         "Bits.rkt")
+         "Utilities.rkt")
 
-(provide ->)
+(provide -> memory-page-size)
+
+(define memory-page-size (make-parameter 65536))
 
 ;; TL;DR about stack: the stack is implicit in the stream of instructions being processed.
 ;; This is because v \subset e, so although we say (e ...) it ends up looking like (v ... e ...).
@@ -175,18 +176,38 @@
 
      ; Memory instructions
      (--> (s i (v_l ...) (in-hole L (v_0 ... (i32 const k) (t load a o) e_0 ...)))
-          (s i (v_l ...) (in-hole L (v_0 ... (do-load s i t a ,(+ (term o) (term k))) e_0 ...))))
-
+          (s i (v_l ...) (in-hole L (v_0 ... (t const (bstr->const t bstr)) e_0 ...)))
+          (where (bstr) (mem-bytes (store-mem s i) ,(+ (term k) (term o)) (bit-width t))))
+     
+     (--> (s i (v_l ...) (in-hole L (v_0 ... (i32 const k) (t load a o) e_0 ...)))
+          (s i (v_l ...) (in-hole L (v_0 ... trap e_0 ...)))
+          (where () (mem-bytes (store-mem s i) ,(+ (term k) (term o)) (bit-width t))))
+     
      (--> (s i (v_l ...) (in-hole L (v_0 ... (i32 const k) (t load (tp sx) a o) e_0 ...)))
-          (s i (v_l ...) (in-hole L (v_0 ... (do-load-packed s i t a ,(+ (term o) (term k)) tp sx) e_0 ...))))
+          (s i (v_l ...) (in-hole L (v_0 ... (t const (packed-bstr->const t sx bstr)) e_0 ...)))
+          (where (bstr) (mem-bytes (store-mem s i) ,(+ (term k) (term o)) (packed-bit-width tp))))
+     
+     (--> (s i (v_l ...) (in-hole L (v_0 ... (i32 const k) (t load (tp sx) a o) e_0 ...)))
+          (s i (v_l ...) (in-hole L (v_0 ... trap e_0 ...)))
+          (where () (mem-bytes (store-mem s i) ,(+ (term k) (term o)) (packed-bit-width tp))))
 
      (--> (s i (v_l ...) (in-hole L (v_0 ... (i32 const k) (t const c) (t store a o) e_0 ...)))
-          (s_new i (v_l ...) (in-hole L (v_0 ... e_new ... e_0 ...)))
-          (where (s_new (e_new ...)) (do-store s i t a ,(+ (term o) (term k)) c)))
+          (s_new i (v_l ...) (in-hole L (v_0 ... e_0 ...)))
+          (where (meminst) (mem-with-bytes (store-mem s i) ,(+ (term k) (term o)) (const->bstr t c)))
+          (where s_new (store-with-mem s i meminst)))
+
+     (--> (s i (v_l ...) (in-hole L (v_0 ... (i32 const k) (t const c) (t store a o) e_0 ...)))
+          (s i (v_l ...) (in-hole L (v_0 ... trap e_0 ...)))
+          (where () (mem-with-bytes (store-mem s i) ,(+ (term k) (term o)) (const->bstr t c))))
 
      (--> (s i (v_l ...) (in-hole L (v_0 ... (i32 const k) (t const c) (t store tp a o) e_0 ...)))
-          (s_new i (v_l ...) (in-hole L (v_0 ... e_new ... e_0 ...)))
-          (where (s_new (e_new ...)) (do-store-packed s i t a ,(+ (term o) (term k)) c tp)))
+          (s_new i (v_l ...) (in-hole L (v_0 ... e_0 ...)))
+          (where (meminst) (mem-with-bytes (store-mem s i) ,(+ (term k) (term o)) (const->packed-bstr t (packed-bit-width tp) c)))
+          (where s_new (store-with-mem s i meminst)))
+
+     (--> (s i (v_l ...) (in-hole L (v_0 ... (i32 const k) (t const c) (t store tp a o) e_0 ...)))
+          (s i (v_l ...) (in-hole L (v_0 ... trap e_0 ...)))
+          (where () (mem-with-bytes (store-mem s i) ,(+ (term k) (term o)) (const->packed-bstr t (packed-bit-width tp) c))))
 
      (--> (s i (v_l ...) (in-hole L (v_0 ... current-memory e_0 ...)))
           (s i (v_l ...) (in-hole L (v_0 ... (i32 const ,(/ (bytes-length (term (store-mem s i))) (memory-page-size))) e_0 ...))))

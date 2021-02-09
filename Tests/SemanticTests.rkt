@@ -3,7 +3,6 @@
 (module+ test
   (require redex/reduction-semantics
            "../Semantics.rkt"
-           "../Bits.rkt"
            rackunit)
 
   ;; Tests of unops
@@ -718,6 +717,9 @@
                     (trap))))
 
   ;; Helper function for testing stores
+(define (make-memory size)
+  (make-bytes (* (memory-page-size) size) 0))
+  
   (define (store-integer mem offset width value)
     (integer->integer-bytes value width #f #f mem offset))
 
