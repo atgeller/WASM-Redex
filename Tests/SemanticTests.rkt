@@ -94,7 +94,7 @@
              (term ((() () ()) 0 () ((i32 const #xFFFFFFFE)))))
   (test-->>E -> ;; div-s 0
              (term ((() () ()) 0 () ((i32 const 1) (i32 const 0) (i32 div-s))))
-             (term ((() () ()) 0 () ((trap)))))
+             (term ((() () ()) 0 () (trap))))
   (test-->>E -> ;; div-u
              (term ((() () ()) 0 () ((i32 const 2) (i32 const 1) (i32 div-u))))
              (term ((() () ()) 0 () ((i32 const 2)))))
@@ -103,7 +103,7 @@
              (term ((() () ()) 0 () ((i32 const 0)))))
   (test-->>E -> ;; div-u 0
              (term ((() () ()) 0 () ((i32 const 1) (i32 const 0) (i32 div-u))))
-             (term ((() () ()) 0 () ((trap)))))
+             (term ((() () ()) 0 () (trap))))
   (test-->>E -> ;; rem-s
              (term ((() () ()) 0 () ((i32 const 3) (i32 const 2) (i32 rem-s))))
              (term ((() () ()) 0 () ((i32 const 1)))))
@@ -112,7 +112,7 @@
              (term ((() () ()) 0 () ((i32 const #xFFFFFFFF)))))
   (test-->>E -> ;; rem-s 0
              (term ((() () ()) 0 () ((i32 const 1) (i32 const 0) (i32 rem-s))))
-             (term ((() () ()) 0 () ((trap)))))
+             (term ((() () ()) 0 () (trap))))
   (test-->>E -> ;; rem-u
              (term ((() () ()) 0 () ((i32 const 3) (i32 const 2) (i32 rem-u))))
              (term ((() () ()) 0 () ((i32 const 1)))))
@@ -121,7 +121,7 @@
              (term ((() () ()) 0 () ((i32 const 3)))))
   (test-->>E -> ;; rem-u 0
              (term ((() () ()) 0 () ((i32 const 1) (i32 const 0) (i32 rem-u))))
-             (term ((() () ()) 0 () ((trap)))))
+             (term ((() () ()) 0 () (trap))))
   (test-->>E -> ;; and
              (term ((() () ()) 0 () ((i32 const 5) (i32 const 3) (i32 and))))
              (term ((() () ()) 0 () ((i32 const 1)))))
@@ -443,34 +443,34 @@
              (term ((() () ()) 0 () ((i64 const 3)))))
   (test-->>E -> ;; f64 -> unsigned i64 inf
              (term ((() () ()) 0 () ((f64 const +inf.0) (i64 convert f64 unsigned))))
-             (term ((() () ()) 0 () ((trap)))))
+             (term ((() () ()) 0 () (trap))))
   (test-->>E -> ;; f64 -> unsigned i64 nan
              (term ((() () ()) 0 () ((f64 const +nan.0) (i64 convert f64 unsigned))))
-             (term ((() () ()) 0 () ((trap)))))
+             (term ((() () ()) 0 () (trap))))
   (test-->>E -> ;; f64 -> unsigned i32 overflow
              (term ((() () ()) 0 () ((f64 const ,(expt 2.0 32)) (i32 convert f64 unsigned))))
-             (term ((() () ()) 0 () ((trap)))))
+             (term ((() () ()) 0 () (trap))))
   (test-->>E -> ;; f64 -> unsigned i32 underflow
              (term ((() () ()) 0 () ((f64 const -1.0) (i32 convert f64 unsigned))))
-             (term ((() () ()) 0 () ((trap)))))
+             (term ((() () ()) 0 () (trap))))
   (test-->>E -> ;; f64 -> signed i64
              (term ((() () ()) 0 () ((f64 const ,pi) (i64 convert f64 signed))))
              (term ((() () ()) 0 () ((i64 const 3)))))
   (test-->>E -> ;; f64 -> signed i64 inf
              (term ((() () ()) 0 () ((f64 const +inf.0) (i64 convert f64 signed))))
-             (term ((() () ()) 0 () ((trap)))))
+             (term ((() () ()) 0 () (trap))))
   (test-->>E -> ;; f64 -> signed i64 nan
              (term ((() () ()) 0 () ((f64 const +nan.0) (i64 convert f64 signed))))
-             (term ((() () ()) 0 () ((trap)))))
+             (term ((() () ()) 0 () (trap))))
   (test-->>E -> ;; f64 -> signed i32 overflow
              (term ((() () ()) 0 () ((f64 const ,(expt 2.0 32)) (i32 convert f64 signed))))
-             (term ((() () ()) 0 () ((trap)))))
+             (term ((() () ()) 0 () (trap))))
   (test-->>E -> ;; f64 -> signed i32 negative
              (term ((() () ()) 0 () ((f64 const -1.0) (i32 convert f64 signed))))
              (term ((() () ()) 0 () ((i32 const #xFFFFFFFF)))))
   (test-->>E -> ;; f64 -> signed i32 underflow
              (term ((() () ()) 0 () ((f64 const ,(sub1 (- (expt 2.0 31)))) (i32 convert f64 signed))))
-             (term ((() () ()) 0 () ((trap)))))
+             (term ((() () ()) 0 () (trap))))
 
   (test-->>E -> ;; unsigned i64 -> f64
              (term ((() () ()) 0 () ((i64 const #xFFFFFFFFFFFFFFFF) (f64 convert i64 unsigned))))
@@ -502,32 +502,32 @@
              (term ((() () ()) 0 () ((i64 const #xBFF0000000000000)))))
 
   (test-->>E -> ;; select false
-             (term ((() () ()) 0 () ((i64 const 0) (i64 const 1) (i32 const 0) (select))))
+             (term ((() () ()) 0 () ((i64 const 0) (i64 const 1) (i32 const 0) select)))
              (term ((() () ()) 0 () ((i64 const 1)))))
   (test-->>E -> ;; select true
-             (term ((() () ()) 0 () ((i64 const 0) (i64 const 1) (i32 const 1) (select))))
+             (term ((() () ()) 0 () ((i64 const 0) (i64 const 1) (i32 const 1) select)))
              (term ((() () ()) 0 () ((i64 const 0)))))
   (test-->>E -> ;; select false
-             (term ((() () ()) 0 () ((f64 const 0.0) (f64 const 1.0) (i32 const 0) (select))))
+             (term ((() () ()) 0 () ((f64 const 0.0) (f64 const 1.0) (i32 const 0) select)))
              (term ((() () ()) 0 () ((f64 const 1.0)))))
   (test-->>E -> ;; select true
-             (term ((() () ()) 0 () ((f64 const 0.0) (f64 const 1.0) (i32 const 1234) (select))))
+             (term ((() () ()) 0 () ((f64 const 0.0) (f64 const 1.0) (i32 const 1234) select)))
              (term ((() () ()) 0 () ((f64 const 0.0)))))
 
   ;; nop, drop
   (test-->>E -> ;; nop
-             (term ((() () ()) 0 () ((i32 const 0) (nop))))
+             (term ((() () ()) 0 () ((i32 const 0) nop)))
              (term ((() () ()) 0 () ((i32 const 0)))))
   (test-->>E -> ;; drop
-             (term ((() () ()) 0 () ((i32 const 0) (i32 const 1) (drop))))
+             (term ((() () ()) 0 () ((i32 const 0) (i32 const 1) drop)))
              (term ((() () ()) 0 () ((i32 const 0)))))
 
   ;; Tests of br (and unreachable)
   (test-->>E -> ;; jump out
-             (term ((() () ()) 0 () ((block (() -> ()) ((block (() -> ()) ((br 0))) (unreachable))))))
-             (term ((() () ()) 0 () ((trap)))))
+             (term ((() () ()) 0 () ((block (() -> ()) ((block (() -> ()) ((br 0))) unreachable)))))
+             (term ((() () ()) 0 () (trap))))
   (test-->>E -> ;; jump over
-             (term ((() () ()) 0 () ((block (() -> ()) ((block (() -> ()) ((br 1))) (unreachable))))))
+             (term ((() () ()) 0 () ((block (() -> ()) ((block (() -> ()) ((br 1))) unreachable)))))
              (term ((() () ()) 0 () ())))
   (test-->>E -> ;; br return values
              (term ((() () ()) 0 () ((block (() -> (i32))
@@ -535,20 +535,20 @@
                                                     ((i32 const 0)
                                                      (i32 const 1)
                                                      (br 1)))
-                                             (unreachable))))))
+                                             unreachable)))))
              (term ((() () ()) 0 () ((i32 const 1)))))
   (test-->>E -> ;; br-if true
-             (term ((() () ()) 0 () ((block (() -> ()) ((i32 const 1) (br-if 0) (unreachable))))))
+             (term ((() () ()) 0 () ((block (() -> ()) ((i32 const 1) (br-if 0) unreachable)))))
              (term ((() () ()) 0 () ())))
   (test-->>E -> ;; br-if false
-             (term ((() () ()) 0 () ((block (() -> ()) ((i32 const 0) (br-if 0) (unreachable))))))
-             (term ((() () ()) 0 () ((trap)))))
+             (term ((() () ()) 0 () ((block (() -> ()) ((i32 const 0) (br-if 0) unreachable)))))
+             (term ((() () ()) 0 () (trap))))
   (test-->>E -> ;; br-table
              (term ((() () ()) 0 () ((i32 const 0)
                                      (block ((i32) -> (i32))
                                             ((block ((i32) -> ())
                                                     ((block ((i32) -> ())
-                                                            ((br-table (0 1 0 1))))
+                                                            ((br-table 0 1 0 1)))
                                                      (i32 const 0)
                                                      (br 1)))
                                              (i32 const 1))))))
@@ -558,7 +558,7 @@
                                      (block ((i32) -> (i32))
                                             ((block ((i32) -> ())
                                                     ((block ((i32) -> ())
-                                                            ((br-table (0 1 0 1))))
+                                                            ((br-table 0 1 0 1)))
                                                      (i32 const 0)
                                                      (br 1)))
                                              (i32 const 1))))))
@@ -568,7 +568,7 @@
                                      (block ((i32) -> (i32))
                                             ((block ((i32) -> ())
                                                     ((block ((i32) -> ())
-                                                            ((br-table (0 1 0 1))))
+                                                            ((br-table 0 1 0 1)))
                                                      (i32 const 0)
                                                      (br 1)))
                                              (i32 const 1))))))
@@ -587,43 +587,43 @@
 
   ;; Globals
   (test-->>E -> ;; get-global
-             (term ((((() ((f64 const ,pi)) (table) (memory))) () ())
+             (term ((((() ((f64 const ,pi)) () ())) () ())
                     0
                     ()
                     ((get-global 0))))
-             (term ((((() ((f64 const ,pi)) (table) (memory))) () ())
+             (term ((((() ((f64 const ,pi)) () ())) () ())
                     0
                     ()
                     ((f64 const ,pi)))))
   (test-->>E -> ;; set-global
-             (term ((((() ((i32 const 0)) (table) (memory))) () ())
+             (term ((((() ((i32 const 0)) () ())) () ())
                     0
                     ()
                     ((i32 const 1) (set-global 0))))
-             (term ((((() ((i32 const 1)) (table) (memory))) () ())
+             (term ((((() ((i32 const 1)) () ())) () ())
                     0
                     ()
                     ())))
 
   ;; Tests of function calls
   (test-->>E -> ;; call j, call cl, get-local, return
-             (term ((((() () (table) (memory))
-                      (((0 (() (func ((i32) -> (i32)) (local () ((get-local 0))))))
-                        (1 (() (func ((i32 i32) -> (i32)) (local () ((get-local 1))))))
-                        (2 (() (func ((i32 i32 i32) -> (i32)) (local () ((get-local 2)))))))
-                       () (table) (memory))
-                      (() ()  (table) (memory)))
+             (term ((((() () () ())
+                      (((0 (func ((i32) -> (i32)) (local () ((get-local 0)))))
+                        (1 (func ((i32 i32) -> (i32)) (local () ((get-local 1)))))
+                        (2 (func ((i32 i32 i32) -> (i32)) (local () ((get-local 2))))))
+                       () () ())
+                      (() () () ()))
                      ()
                      ()) ; store
                     1 ; inst
                     () ; locals
                     ((i32 const 0) (i32 const 1) (i32 const 2) (call 1)))) ; e stream
-             (term ((((() () (table) (memory))
-                      (((0 (() (func ((i32) -> (i32)) (local () ((get-local 0))))))
-                        (1 (() (func ((i32 i32) -> (i32)) (local () ((get-local 1))))))
-                        (2 (() (func ((i32 i32 i32) -> (i32)) (local () ((get-local 2)))))))
-                       () (table) (memory))
-                      (() ()  (table) (memory)))
+             (term ((((() () () ())
+                      (((0 (func ((i32) -> (i32)) (local () ((get-local 0)))))
+                        (1 (func ((i32 i32) -> (i32)) (local () ((get-local 1)))))
+                        (2 (func ((i32 i32 i32) -> (i32)) (local () ((get-local 2))))))
+                       () () ())
+                      (() () () ()))
                      ()
                      ()) ; store
                     1 ; inst
@@ -634,17 +634,20 @@
              (term ((() () ()) ; store
                     0 ; inst
                     () ; locals
-                    ((local 0 (0 ()) ((unreachable)))))) ; e stream
+                    ((local 0 (0 ()) (unreachable))))) ; e stream
              (term ((() () ()) ; store
                     0 ; inst
                     () ; locals
-                    ((trap)))))
+                    (trap))))
 
   (test-->>E -> ;; call cl, br
              (term ((() () ()) ; store
                     0 ; inst
                     () ; locals
-                    ((call (0 (() (func (() -> ()) (local () ((br 0) (unreachable)))))))))) ; e stream
+                    ((call (0 (func (() -> ())
+                                    (local ()
+                                      ((br 0)
+                                       unreachable)))))))) ; e stream
              (term ((() () ()) ; store
                     0 ; inst
                     () ; locals
@@ -654,59 +657,65 @@
              (term ((() () ()) ; store
                     0 ; inst
                     () ; locals
-                    ((call (0 (() (func (() -> (i32)) (local () ((i32 const 42) (return) (unreachable))))))) (i32 const 2) (i32 add))))
+                    ((call (0 (func (() -> (i32))
+                                    (local ()
+                                      ((i32 const 42)
+                                       return
+                                       unreachable)))))
+                     (i32 const 2)
+                     (i32 add))))
              (term ((() () ()) ; store
                     0 ; inst
                     () ; locals
                     ((i32 const 44)))))
 
   (test-->>E -> ;; call_indirect
-             (term ((((() () (table 1) (memory)))
-                    (((0 (() (func ((i32) -> (i32)) (local () ((get-local 0) (return))))))
-                      (1 (() (func ((i32 i32) -> (i32)) (local () ((get-local 1) (return))))))
-                      (2 (() (func ((i32 i32 i32) -> (i32)) (local () ((get-local 2) (return)))))))
-                     ((3 (() (func ((i32) -> (i32)) (local () ((get-local 0) (return))))))
-                      (4 (() (func ((i32 i32) -> (i32)) (local () ((get-local 1) (return))))))
-                      (5 (() (func ((i32 i32 i32) -> (i32)) (local () ((get-local 2) (return))))))))
+             (term ((((() () (1) ()))
+                    (((0 (func ((i32) -> (i32)) (local () ((get-local 0) return))))
+                      (1 (func ((i32 i32) -> (i32)) (local () ((get-local 1) return))))
+                      (2 (func ((i32 i32 i32) -> (i32)) (local () ((get-local 2) return)))))
+                     ((3 (func ((i32) -> (i32)) (local () ((get-local 0) return))))
+                      (4 (func ((i32 i32) -> (i32)) (local () ((get-local 1) return))))
+                      (5 (func ((i32 i32 i32) -> (i32)) (local () ((get-local 2) return))))))
                     ())
                     0
                     ()
                     ((i32 const 2) (i32 const 3) (i32 const 1) (call-indirect ((i32 i32) -> (i32))))))
-             (term ((((() () (table 1) (memory)))
-                    (((0 (() (func ((i32) -> (i32)) (local () ((get-local 0) (return))))))
-                      (1 (() (func ((i32 i32) -> (i32)) (local () ((get-local 1) (return))))))
-                      (2 (() (func ((i32 i32 i32) -> (i32)) (local () ((get-local 2) (return)))))))
-                     ((3 (() (func ((i32) -> (i32)) (local () ((get-local 0) (return))))))
-                      (4 (() (func ((i32 i32) -> (i32)) (local () ((get-local 1) (return))))))
-                      (5 (() (func ((i32 i32 i32) -> (i32)) (local () ((get-local 2) (return))))))))
+             (term ((((() () (1) ()))
+                    (((0 (func ((i32) -> (i32)) (local () ((get-local 0) return))))
+                      (1 (func ((i32 i32) -> (i32)) (local () ((get-local 1) return))))
+                      (2 (func ((i32 i32 i32) -> (i32)) (local () ((get-local 2) return)))))
+                     ((3 (func ((i32) -> (i32)) (local () ((get-local 0) return))))
+                      (4 (func ((i32 i32) -> (i32)) (local () ((get-local 1) return))))
+                      (5 (func ((i32 i32 i32) -> (i32)) (local () ((get-local 2) return))))))
                     ())
                     0
                     ()
                     ((i32 const 3)))))
 
   (test-->>E -> ;; call_indirect wrong type
-             (term ((((() () (table 1) (memory)))
-                    (((0 (() (func ((i32) -> (i32)) (local () ((get-local 0) (return))))))
-                      (1 (() (func ((i32 i32) -> (i32)) (local () ((get-local 1) (return))))))
-                      (2 (() (func ((i32 i32 i32) -> (i32)) (local () ((get-local 2) (return)))))))
-                     ((3 (() (func ((i32) -> (i32)) (local () ((get-local 0) (return))))))
-                      (4 (() (func ((i32 i32) -> (i32)) (local () ((get-local 1) (return))))))
-                      (5 (() (func ((i32 i32 i32) -> (i32)) (local () ((get-local 2) (return))))))))
+             (term ((((() () (1) ()))
+                    (((0 (func ((i32) -> (i32)) (local () ((get-local 0) return))))
+                      (1 (func ((i32 i32) -> (i32)) (local () ((get-local 1) return))))
+                      (2 (func ((i32 i32 i32) -> (i32)) (local () ((get-local 2) return)))))
+                     ((3 (func ((i32) -> (i32)) (local () ((get-local 0) return))))
+                      (4 (func ((i32 i32) -> (i32)) (local () ((get-local 1) return))))
+                      (5 (func ((i32 i32 i32) -> (i32)) (local () ((get-local 2) return))))))
                     ())
                     0
                     ()
-                    ((i32 const 2) (i32 const 3) (i32 const 1) (call-indirect ((i64) -> (i64))))))
-             (term ((((() () (table 1) (memory)))
-                    (((0 (() (func ((i32) -> (i32)) (local () ((get-local 0) (return))))))
-                      (1 (() (func ((i32 i32) -> (i32)) (local () ((get-local 1) (return))))))
-                      (2 (() (func ((i32 i32 i32) -> (i32)) (local () ((get-local 2) (return)))))))
-                     ((3 (() (func ((i32) -> (i32)) (local () ((get-local 0) (return))))))
-                      (4 (() (func ((i32 i32) -> (i32)) (local () ((get-local 1) (return))))))
-                      (5 (() (func ((i32 i32 i32) -> (i32)) (local () ((get-local 2) (return))))))))
+                    ((i64 const 2) (i32 const 1) (call-indirect ((i64) -> (i64))))))
+             (term ((((() () (1) ()))
+                    (((0 (func ((i32) -> (i32)) (local () ((get-local 0) return))))
+                      (1 (func ((i32 i32) -> (i32)) (local () ((get-local 1) return))))
+                      (2 (func ((i32 i32 i32) -> (i32)) (local () ((get-local 2) return)))))
+                     ((3 (func ((i32) -> (i32)) (local () ((get-local 0) return))))
+                      (4 (func ((i32 i32) -> (i32)) (local () ((get-local 1) return))))
+                      (5 (func ((i32 i32 i32) -> (i32)) (local () ((get-local 2) return))))))
                     ())
                     0
                     ()
-                    ((trap)))))
+                    (trap))))
 
   ;; Helper function for testing stores
   (define (store-integer mem offset width value)
@@ -719,13 +728,13 @@
   (parameterize ([memory-page-size 64])
 
     (test-->>E -> ;; store then load
-               (term ((((() () (table) (memory 0)))
+               (term ((((() () () (0)))
                        ()
                        (,(make-memory 1)))
                       0
                       ()
                       ((i32 const 0) (i32 const 0) (i64 const 65) (i64 store 0 8) (i64 load 0 8))))
-               (term ((((() () (table) (memory 0)))
+               (term ((((() () () (0)))
                        ()
                        (,(store-integer (make-memory 1) 8 8 65)))
                       0
@@ -733,7 +742,7 @@
                       ((i64 const 65)))))
 
     (test-->>E -> ;; store i32, load i8 (test of endianness)
-               (term ((((() () (table) (memory 0)))
+               (term ((((() () () (0)))
                        ()
                        (,(make-memory 1)))
                       0
@@ -743,7 +752,7 @@
                        (i32 store 0 4)
                        (i32 const 0)
                        (i32 load (i8 unsigned) 0 4))))
-               (term ((((() () (table) (memory 0)))
+               (term ((((() () () (0)))
                        ()
                        (,(store-integer (make-memory 1) 4 4 #x12345678)))
                       0
@@ -751,7 +760,7 @@
                       ((i32 const #x78))))) ; would be #x12 if big-endian
 
     (test-->>E -> ;; store 255, load signed i8
-               (term ((((() () (table) (memory 0)))
+               (term ((((() () () (0)))
                        ()
                        (,(make-memory 1)))
                       0
@@ -761,7 +770,7 @@
                        (i32 store 0 4)
                        (i32 const 0)
                        (i32 load (i8 signed) 0 4))))
-               (term ((((() () (table) (memory 0)))
+               (term ((((() () () (0)))
                        ()
                        (,(store-integer (make-memory 1) 4 4 #xFF)))
                       0
@@ -769,17 +778,17 @@
                       ((i32 const #xFFFFFFFF)))))
 
     (test-->>E -> ;; store -1 as i8, load as i32
-               (term ((((() () (table) (memory 0)))
+               (term ((((() () () (0)))
                        ()
                        (,(make-memory 1)))
                       0
                       ()
                       ((i32 const 0)
                        (i32 const #xFFFFFFFF)
-                       (i32 store (i8) 0 4)
+                       (i32 store i8 0 4)
                        (i32 const 0)
                        (i32 load 0 4))))
-               (term ((((() () (table) (memory 0)))
+               (term ((((() () () (0)))
                        ()
                        (,(store-integer (make-memory 1) 4 1 #xFF)))
                       0
@@ -787,7 +796,7 @@
                       ((i32 const #xFF)))))
 
     (test-->>E -> ;; store/load f64
-               (term ((((() () (table) (memory 0)))
+               (term ((((() () () (0)))
                        ()
                        (,(make-memory 1)))
                       0
@@ -797,7 +806,7 @@
                        (f64 store 0 8)
                        (i32 const 0)
                        (f64 load 0 8))))
-               (term ((((() () (table) (memory 0)))
+               (term ((((() () () (0)))
                        ()
                        (,(store-floating (make-memory 1) 8 8 pi)))
                       0
@@ -805,7 +814,7 @@
                       ((f64 const ,pi)))))
     
     (test-->>E -> ;; store/load f32
-               (term ((((() () (table) (memory 0)))
+               (term ((((() () () (0)))
                        ()
                        (,(make-memory 1)))
                       0
@@ -815,7 +824,7 @@
                        (f32 store 0 8)
                        (i32 const 0)
                        (f32 load 0 8))))
-               (term ((((() () (table) (memory 0)))
+               (term ((((() () () (0)))
                        ()
                        (,(store-floating (make-memory 1) 8 4 pi)))
                       0
@@ -823,7 +832,7 @@
                       ((f32 const ,(real->single-flonum pi))))))
 
     (test-->>E -> ;; store i64, load f64 (reinterpret equivalent)
-               (term ((((() () (table) (memory 0)))
+               (term ((((() () () (0)))
                        ()
                        (,(make-memory 1)))
                       0
@@ -833,7 +842,7 @@
                        (i64 store 0 8)
                        (i32 const 0)
                        (f64 load 0 8))))
-               (term ((((() () (table) (memory 0)))
+               (term ((((() () () (0)))
                        ()
                        (,(store-floating (make-memory 1) 8 8 pi)))
                       0
@@ -841,72 +850,72 @@
                       ((f64 const ,pi)))))
 
     (test-->>E -> ;; store out-of-bounds then load
-               (term ((((() () (table) (memory 0)))
+               (term ((((() () () (0)))
                        ()
                        (,(make-memory 1)))
                       0
                       ()
                       ((i32 const 0) (i32 const 0) (i64 const 65) (i64 store 0 200) (i64 load 0 8))))
-               (term ((((() () (table) (memory 0)))
+               (term ((((() () () (0)))
                        ()
                        (,(make-memory 1)))
                       0
                       ()
-                      ((trap)))))
+                      (trap))))
 
     (test-->>E -> ;; store then load out-of-bounds
-               (term ((((() () (table) (memory 0)))
+               (term ((((() () () (0)))
                        ()
                        (,(make-memory 1)))
                       0
                       ()
                       ((i32 const 0) (i32 const 0) (i64 const 65) (i64 store 0 8) (i64 load 0 200))))
-               (term ((((() () (table) (memory 0)))
+               (term ((((() () () (0)))
                        ()
                        (,(store-integer (make-memory 1) 8 8 65)))
                       0
                       ()
-                      ((trap)))))
+                      (trap))))
 
     (test-->>E -> ;; store i16 out-of-bounds (barely)
-               (term ((((() () (table) (memory 0)))
+               (term ((((() () () (0)))
                        ()
                        (,(make-memory 1)))
                       0
                       ()
                       ((i32 const 63)
                        (i32 const 0)
-                       (i32 store (i16) 0 0))))
-               (term ((((() () (table) (memory 0)))
+                       (i32 store i16 0 0))))
+               (term ((((() () () (0)))
                        ()
                        (,(make-memory 1)))
                       0
                       ()
-                      ((trap)))))
+                      (trap))))
 
     (test-->>E -> ;; load i32 packed out-of-bounds (barely)
-               (term ((((() () (table) (memory 0)))
+               (term ((((() () () (0)))
                        ()
                        (,(make-memory 2)))
                       0
                       ()
                       ((i32 const 126)
                        (i64 load (i32 unsigned) 1 0))))
-               (term ((((() () (table) (memory 0)))
+               (term ((((() () () (0)))
                        ()
                        (,(make-memory 2)))
                       0
                       ()
-                      ((trap)))))
+                      (trap))))
 
     (test-->>E -> ;; current-memory
-               (term ((((() () (table) (memory 0)))
+               (term ((((() () () (0)))
                        ()
                        (,(make-memory 1)))
                       0
                       ()
-                      ((current-memory))))
-               (term ((((() () (table) (memory 0)))
+                      (current-memory)))
+               (term ((((() () () (0)))
                        ()
                        (,(make-memory 1)))
                       0
@@ -914,13 +923,13 @@
                       ((i32 const 1)))))
 
     (test-->>E -> ;; grow-memory
-               (term ((((() () (table) (memory 0)))
+               (term ((((() () () (0)))
                        ()
                        (,(make-memory 1)))
                       0
                       ()
-                      ((i32 const 1) (grow-memory))))
-               (term ((((() () (table) (memory 0)))
+                      ((i32 const 1) grow-memory)))
+               (term ((((() () () (0)))
                        ()
                        (,(make-memory 2)))
                       0
@@ -928,13 +937,13 @@
                       ((i32 const 1)))))
 
     (test-->>E -> ;; grow-memory failure
-               (term ((((() () (table) (memory 0)))
+               (term ((((() () () (0)))
                        ()
                        (,(make-memory 1)))
                       0
                       ()
-                      ((i32 const 2) (grow-memory))))
-               (term ((((() () (table) (memory 0)))
+                      ((i32 const 2) grow-memory)))
+               (term ((((() () () (0)))
                        ()
                        (,(make-memory 1)))
                       0
@@ -975,51 +984,52 @@
                     0
                     ()
                     ((loop (() -> ())
-                           ((unreachable))))))
+                           (unreachable)))))
              (term ((() () ())
                     0
                     ()
-                    ((trap)))))
+                    (trap))))
 
   (test-->>E -> ;; loop, if
-             (term ((((((0 (() (func ((i32) -> (i32))
-                                     (local (i32)
-                                       ((loop (() -> (i32))
-                                              ((get-local 0)
-                                               (if (() -> (i32))
-                                                   ((get-local 0)
-                                                    (get-local 1)
-                                                    (i32 add)
-                                                    (set-local 1)
-                                                    (get-local 0)
-                                                    (i32 const 1)
-                                                    (i32 sub)
-                                                    (set-local 0)
-                                                    (br 1))
-                                                   else
-                                                   ((get-local 1)))))))))))
-                       () (table) (memory))) ; store
+             (term ((((((0 (func ((i32) -> (i32))
+                                 (local (i32)
+                                   ((loop (() -> (i32))
+                                          ((get-local 0)
+                                           (if (() -> (i32))
+                                               ((get-local 0)
+                                                (get-local 1)
+                                                (i32 add)
+                                                (set-local 1)
+                                                (get-local 0)
+                                                (i32 const 1)
+                                                (i32 sub)
+                                                (set-local 0)
+                                                (br 1))
+                                               else
+                                               ((get-local 1))))))))))
+                       () () ())) ; store
                      () ())
                     0
                     ()
-                    ((i32 const 5) (call 0))))
-             (term ((((((0 (() (func ((i32) -> (i32))
-                                     (local (i32)
-                                       ((loop (() -> (i32))
-                                              ((get-local 0)
-                                               (if (() -> (i32))
-                                                   ((get-local 0)
-                                                    (get-local 1)
-                                                    (i32 add)
-                                                    (set-local 1)
-                                                    (get-local 0)
-                                                    (i32 const 1)
-                                                    (i32 sub)
-                                                    (set-local 0)
-                                                    (br 1))
-                                                   else
-                                                   ((get-local 1)))))))))))
-                       () (table) (memory))) ; store
+                    ((i32 const 5)
+                     (call 0))))
+             (term ((((((0 (func ((i32) -> (i32))
+                                 (local (i32)
+                                   ((loop (() -> (i32))
+                                          ((get-local 0)
+                                           (if (() -> (i32))
+                                               ((get-local 0)
+                                                (get-local 1)
+                                                (i32 add)
+                                                (set-local 1)
+                                                (get-local 0)
+                                                (i32 const 1)
+                                                (i32 sub)
+                                                (set-local 0)
+                                                (br 1))
+                                               else
+                                               ((get-local 1))))))))))
+                       () () ())) ; store
                      () ())
                     0
                     ()

@@ -10,14 +10,14 @@
 (read-single-flonum #t)
 
 (define-language WASM
-  (e ::= (unreachable) (nop) (drop) (select)
+  (e ::= unreachable nop drop select
      (block tf (e ...)) (loop tf (e ...))
      (if tf (e ...) else (e ...)) (br i) (br-if i)
-     (br-table (i ...)) (return) (call i)
+     (br-table i i ...) return (call i)
      (call-indirect tf) (get-local i) (set-local i)
      (tee-local i) (get-global i) (set-global i)
      (t load a o) (t load (tp sx) a o) (t store a o)
-     (t store (tp) a o) (current-memory) (grow-memory)
+     (t store tp a o) current-memory grow-memory
 
      (inn iunop) (fnn funop)
      (inn ibinop) (fnn fbinop)
@@ -67,7 +67,7 @@
      ((ex ...) (func tf im)))
   (glob ::= ((ex ...) (global tg (e ...)))
         ((ex ...) (global tg im)))
-  (tab ::= ((ex ...) (table n (i ...)))
+  (tab ::= ((ex ...) (table n i ...))
        ((ex ...) (table n im)))
   (mem ::= ((ex ...) (memory n))
        ((ex ...) (memory n im)))
@@ -78,16 +78,13 @@
 (define-extended-language WASMrt WASM
   (v ::= (t const c))
 
-  (e ::= .... (trap) (call cl) (label n (e ...) (e ...))
+  (e ::= .... trap (call cl) (label n (e ...) (e ...))
      (local n (i (v ...)) (e ...)))
   (L ::= hole (v ... (label n (e ...) L) e ...))
 
   (s ::= ((inst ...) (tabinst ...) (meminst ...)))
-  (cl ::= (i f))
-  (inst ::= ((cl ...) (v ...) (table i) (memory i))
-        ((cl ...) (v ...) (table i) (memory))
-        ((cl ...) (v ...) (table) (memory i))
-        ((cl ...) (v ...) (table) (memory)))
+  (cl ::= (i (func tf (local (t ...) (e ...)))))
+  (inst ::= ((cl ...) (v ...) (i ...) (i ...)))
 
   (tabinst ::= (cl ...))
   (meminst ::= (side-condition bstr_1 (memory? (term bstr_1))))

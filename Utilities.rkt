@@ -214,8 +214,8 @@
 
 (define-metafunction WASMrt
   inst-global-set : inst j v -> (inst)
-  [(inst-global-set ((cl ...) (v ...) (name table any_1) (name memory any_2)) j v_2)
-   (((cl ...) (do-set (v ...) j v_2) table memory))])
+  [(inst-global-set ((cl ...) (v ...) (i_t ...) (i_m ...)) j v_2)
+   (((cl ...) (do-set (v ...) j v_2) (i_t ...) (i_m ...)))])
 
 (define-metafunction WASMrt
   do-global-set : (inst ...) j j_1 v -> (inst ...)
@@ -236,7 +236,7 @@
 
 (define-metafunction WASMrt
   setup-call : (v ...) cl (e ...) -> (e ...)
-  [(setup-call (v ...) (j (_ (func ((t ...) -> (t_2 ...)) (local (t_3 ...) (e ...))))) (e_2 ...))
+  [(setup-call (v ...) (j (func ((t ...) -> (t_2 ...)) (local (t_3 ...) (e ...)))) (e_2 ...))
    ; 1. strip arguments from stack
    ,(let-values ([(stack args) (split-at (term (v ...)) (- (length (term (v ...)))
                                                            (length (term (t ...)))))])
@@ -251,19 +251,19 @@
    ])
 
 (define-metafunction WASMrt
-  inst-table : inst -> j
-  [(inst-table (_ _ (table j) _)) j])
+  inst-table : inst -> i
+  [(inst-table (_ _ (i) _)) i])
 
 (define-metafunction WASMrt
-  inst-memory : inst -> j
-  [(inst-memory (_ _ _ (memory j))) j])
+  inst-memory : inst -> i
+  [(inst-memory (_ _ _ (i))) i])
 
 (define-metafunction WASMrt
   check-tf : tf cl -> e
-  [(check-tf tf (j ((ex ...) (func tf (local (t ...) (e ...))))))
-   (call (j ((ex ...) (func tf (local (t ...) (e ...))))))]
-  [(check-tf tf_!_ (_ (_ (func tf_!_ _))))
-   (trap)])
+  [(check-tf tf (i (func tf (local (t ...) (e ...)))))
+   (call (i (func tf (local (t ...) (e ...)))))]
+  [(check-tf tf_!_ (_ (func tf_!_ _)))
+   trap])
 
 (define-metafunction WASMrt
   handle-call-indirect : s j j_1 tf -> e
@@ -286,7 +286,7 @@
   [(do-load ((inst ...) (tabinst ...) (meminst ...)) j t a o)
    ,(let-values ([(mem _) (get-mem (term (inst ...)) (term (meminst ...)) (term j))])
       (match (wrapped-load mem (term t) (term a) (term o))
-        [#f (term (trap))]
+        [#f (term trap)]
         [val (term (t const ,val))]))])
 
 (define-metafunction WASMrt
@@ -294,7 +294,7 @@
   [(do-load-packed ((inst ...) (tabinst ...) (meminst ...)) j t a o tp sx)
    ,(let-values ([(mem _) (get-mem (term (inst ...)) (term (meminst ...)) (term j))])
       (match (wrapped-load-packed mem (term t) (term a) (term o) (term tp) (term sx))
-        [#f (term (trap))]
+        [#f (term trap)]
         [val (term (t const ,val))]))])
 
 (define-metafunction WASMrt
@@ -302,7 +302,7 @@
   [(do-store ((inst ...) (tabinst ...) (meminst ...)) j t a o c)
    ,(let-values ([(mem memindex) (get-mem (term (inst ...)) (term (meminst ...)) (term j))])
       (match (wrapped-store mem (term t) (term a) (term o) (term c))
-        [#f (term (((inst ...) (tabinst ...) (meminst ...)) ((trap))))]
+        [#f (term (((inst ...) (tabinst ...) (meminst ...)) (trap)))]
         [newmem (term (((inst ...)
                         (tabinst ...)
                         (do-set (meminst ...) ,memindex ,newmem))
@@ -313,22 +313,18 @@
   [(do-store-packed ((inst ...) (tabinst ...) (meminst ...)) j t a o c tp)
    ,(let-values ([(mem memindex) (get-mem (term (inst ...)) (term (meminst ...)) (term j))])
       (match (wrapped-store-packed mem (term t) (term a) (term o) (term c) (term tp))
-        [#f (term (((inst ...) (tabinst ...) (meminst ...)) ((trap))))]
+        [#f (term (((inst ...) (tabinst ...) (meminst ...)) (trap)))]
         [newmem (term (((inst ...)
                         (tabinst ...)
                         (do-set (meminst ...) ,memindex ,newmem))
                        ()))]))])
 
 (define-metafunction WASMrt
-  inst-mem-index : inst -> i
-  [(inst-mem-index (_ _ _ (memory i))) i])
-
-(define-metafunction WASMrt
   store-mem : s i -> meminst
   [(store-mem ((inst ...) _ (meminst ...)) i)
-   (do-get (meminst ...) (inst-mem-index (do-get (inst ...) i)))])
+   (do-get (meminst ...) (inst-memory (do-get (inst ...) i)))])
 
 (define-metafunction WASMrt
-  with-mem : s i meminst -> s
-  [(with-mem ((inst ...) (tabinst ...) (meminst ...)) i meminst_new)
-   ((inst ...) (tabinst ...) (do-set (meminst ...) (inst-mem-index (do-get (inst ...) i)) meminst_new))])
+  store-with-mem : s i meminst -> s
+  [(store-with-mem ((inst ...) (tabinst ...) (meminst ...)) i meminst_new)
+   ((inst ...) (tabinst ...) (do-set (meminst ...) (inst-memory (do-get (inst ...) i)) meminst_new))])
