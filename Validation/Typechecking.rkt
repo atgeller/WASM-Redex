@@ -2,12 +2,34 @@
 
 (require redex/reduction-semantics
          "../Syntax.rkt"
-         "../Bits.rkt"
          "ModuleTyping.rkt"
          "InstructionTyping.rkt"
          "Utilities.rkt")
 
 (provide (all-defined-out))
+
+(define (type-width t)
+  (match t
+    ['i8 8]
+    ['i16 16]
+    ['i32 32]
+    ['i64 64]
+    ['f32 32]
+    ['f64 64]))
+
+(define (integer-type? t)
+  (match t
+    ['i32 #t]
+    ['i64 #t]
+    ['f32 #f]
+    ['f64 #f]))
+
+(define (floating-type? t)
+  (match t
+    ['i32 #f]
+    ['i64 #f]
+    ['f32 #t]
+    ['f64 #t]))
 
 ;; I'm doing this all using Racket's match instead of Redexes term-match
 ;; because I like the syntax of Racket's match better.

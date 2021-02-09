@@ -2,10 +2,19 @@
 
 (require redex/reduction-semantics
          "../Utilities.rkt"
-         "../Bits.rkt"
          "Utilities.rkt")
 
 (provide ⊢)
+
+(define-metafunction WASMTyping
+  integer-type? : t -> boolean
+  [(integer-type? inn) #t]
+  [(integer-type? fnn) #f])
+
+(define-metafunction WASMTyping
+  floating-type? : t -> boolean
+  [(floating-type? inn) #f]
+  [(floating-type? fnn) #t])
 
 (define-judgment-form WASMTyping
   #:contract (⊢ C (e ...) tf)
@@ -26,25 +35,25 @@
    (⊢ C ((t relop)) ((t t) -> (i32)))]
 
   [(where (t_!_1 t_!_1) (t_1 t_2))
-   (side-condition ,(or (and (integer-type? (term t_1))
-                             (integer-type? (term t_2))
-                             (< (type-width (term t_1)) (type-width (term t_2))))
-                        (and (floating-type? (term t_1))
-                             (floating-type? (term t_2)))))
+   (side-condition ,(or (and (term (integer-type? t_1))
+                             (term (integer-type? t_2))
+                             (< (term (bit-width t_1)) (term (bit-width t_2))))
+                        (and (term (floating-type? t_1))
+                             (term (floating-type? t_2)))))
    ------------------------------------------
    (⊢ C ((t_1 convert t_2)) ((t_2) -> (t_1)))]
 
   [(where (t_!_1 t_!_1) (t_1 t_2))
-   (side-condition ,(nor (and (integer-type? (term t_1))
-                              (integer-type? (term t_2))
-                              (< (type-width (term t_1)) (type-width (term t_2))))
-                         (and (floating-type? (term t_1))
-                              (floating-type? (term t_2)))))
+   (side-condition ,(nor (and (term (integer-type? t_1))
+                              (term (integer-type? t_2))
+                              (< (term (bit-width t_1)) (term (bit-width t_2))))
+                         (and (term (floating-type? t_1))
+                              (term (floating-type? t_2)))))
    ---------------------------------------------
    (⊢ C ((t_1 convert t_2 sx)) ((t_2) -> (t_1)))]
 
   [(where (t_!_1 t_!_1) (t_1 t_2))
-   (side-condition ,(= (type-width (term t_1)) (type-width (term t_2))))
+   (side-condition ,(= (term (bit-width t_1)) (term (bit-width t_2))))
    ----------------------------------------------
    (⊢ C ((t_1 reinterpret t_2)) ((t_2) -> (t_1)))]
 
@@ -126,29 +135,29 @@
 
   [(where (_ _ _ (memory j) _ _ _) C)
    (side-condition ,(<= (expt 2 (term a))
-                        (type-width (term t))))
+                        (term (bit-width t))))
    ------------------------------------------
    (⊢ C ((t load a _)) ((i32) -> (t)))]
 
   [(where (_ _ _ (memory j) _ _ _) C)
    (side-condition ,(<= (expt 2 (term a))
-                       (type-width (term tp))))
-   (side-condition ,(< (type-width (term tp)) (type-width (term t))))
-   (side-condition ,(integer-type? (term t)))
+                       (term (bit-width tp))))
+   (side-condition ,(< (term (bit-width tp)) (term (bit-width t))))
+   (side-condition ,(term (integer-type? t)))
    -----------------------------------------------------
    (⊢ C ((t load (tp sx) a _)) ((i32) -> (t)))]
 
   [(where (_ _ _ (memory j) _ _ _) C)
    (side-condition ,(<= (expt 2 (term j_1))
-                        (type-width (term t))))
+                        (term (bit-width t))))
    -------------------------------------------
    (⊢ C ((t store j_1 _)) ((i32 t) -> ()))]
 
   [(where (_ _ _ (memory j) _ _ _) C)
    (side-condition ,(<= (expt 2 (term j_1))
-                       (type-width (term tp))))
-   (side-condition ,(< (type-width (term tp)) (type-width (term t))))
-   (side-condition ,(integer-type? (term t)))
+                       (term (bit-width tp))))
+   (side-condition ,(< (term (bit-width tp)) (term (bit-width t))))
+   (side-condition ,(term (integer-type? t)))
    -----------------------------------------------------
    (⊢ C ((t store (tp) j_1 _)) ((i32 t) -> ()))]
 

@@ -5,9 +5,10 @@
 
 (provide (all-defined-out))
 
-(define-extended-language WASMTyping WASM  
-  (C ::= ((func (tf ...)) (global (tg ...)) (table j ...) (memory j ...) (local (t ...)) (label ((t ...) ...)) (return (t ...)))
-     ((func (tf ...)) (global (tg ...)) (table j ...) (memory j ...) (local (t ...)) (label ((t ...) ...)) (return)))
+(define-extended-language WASMTyping WASM
+  (C ::= ((func tf ...) (global tg ...) (table j ...) (memory j ...) (local t ...) (label (t ...) ...) (return (t ...) ...)))
+  ;;        funcs    globals  table   memory  locals  labels        return
+  #;(C ::= ((tf ...) (tg ...) (j ...) (j ...) (t ...) ((t ...) ...) ((t ...) ...)))
 
   (S ::= ((C ...) (j ...) (j ...))))
 
@@ -19,11 +20,25 @@
   [(reverse-get (any ... any_1) 0) any_1])
 
 (define-metafunction WASMTyping
+  with-locals : C (t ...) -> C
+  [(with-locals ((func (tf ...)) (global (tg ...)) (table n_t ...) (memory n_m ...) (local (t_1 ...)) (label ((t_2 ...) ...)) (return (t_3 ...))) (t ...))
+   ((func (tf ...)) (global (tg ...)) (table n_t ...) (memory n_m ...) (local (t ...)) (label ((t_2 ...) ...)) (return (t_3 ...)))]
+  [(with-locals ((func (tf ...)) (global (tg ...)) (table n_t ...) (memory n_m ...) (local (t_1 ...)) (label ((t_2 ...) ...)) (return)) (t ...))
+   ((func (tf ...)) (global (tg ...)) (table n_t ...) (memory n_m ...) (local (t ...)) (label ((t_2 ...) ...)) (return))])
+
+(define-metafunction WASMTyping
   in-label : C (t ...) -> C
   [(in-label ((func (tf ...)) (global (tg ...)) (table j_1 ...) (memory j_2 ...) (local (t_1 ...)) (label ((t_2 ...) ...)) (return (t_3 ...))) (t ...))
    ((func (tf ...)) (global (tg ...)) (table j_1 ...) (memory j_2 ...) (local (t_1 ...)) (label ((t_2 ...) ... (t ...))) (return (t_3 ...)))]
   [(in-label ((func (tf ...)) (global (tg ...)) (table j_1 ...) (memory j_2 ...) (local (t_1 ...)) (label ((t_2 ...) ...)) (return)) (t ...))
    ((func (tf ...)) (global (tg ...)) (table j_1 ...) (memory j_2 ...) (local (t_1 ...)) (label ((t_2 ...) ... (t ...))) (return))])
+
+(define-metafunction WASMTyping
+  with-return : C (t ...) -> C
+  [(with-return ((func (tf ...)) (global (tg ...)) (table n_t ...) (memory n_m ...) (local (t_1 ...)) (label ((t_2 ...) ...)) (return (t_3 ...))) (t ...))
+   ((func (tf ...)) (global (tg ...)) (table n_t ...) (memory n_m ...) (local (t_1 ...)) (label ((t_2 ...) ...)) (return (t ...)))]
+  [(with-return ((func (tf ...)) (global (tg ...)) (table n_t ...) (memory n_m ...) (local (t_1 ...)) (label ((t_2 ...) ...)) (return)) (t ...))
+   ((func (tf ...)) (global (tg ...)) (table n_t ...) (memory n_m ...) (local (t_1 ...)) (label ((t_2 ...) ...)) (return (t ...)))])
 
 (define-metafunction WASMTyping
   get-labels : C -> ((t ...) ...)
