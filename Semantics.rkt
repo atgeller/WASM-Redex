@@ -140,11 +140,12 @@
           (s i (v_l ...) (in-hole L (v_0 ... v v (set-local j) e_0 ...))))
 
      ;; Store stuff!
-     (--> (((inst ...) (tabinst ...) (meminst ...)) i (v_l ...) (in-hole L (v_0 ... (get-global j) e_0 ...)))
-          (((inst ...) (tabinst ...) (meminst ...)) i (v_l ...) (in-hole L (v_0 ... (do-global-get (inst ...) i j) e_0 ...))))
+     (--> (s i (v_l ...) (in-hole L (v_0 ... (get-global j) e_0 ...)))
+          (s i (v_l ...) (in-hole L (v_0 ... (store-global s i j) e_0 ...))))
 
-     (--> (((inst ...) (tabinst ...) (meminst ...)) i (v_l ...) (in-hole L (v_0 ... v (set-global j) e_0 ...)))
-          (((do-global-set (inst ...) i j v) (tabinst ...) (meminst ...)) i (v_l ...) (in-hole L (v_0 ... e_0 ...))))
+     (--> (s i (v_l ...) (in-hole L (v_0 ... v (set-global j) e_0 ...)))
+          (s_new i (v_l ...) (in-hole L (v_0 ... e_0 ...)))
+          (where s_new (store-with-global s i j v)))
 
      ; Function calls
      (--> (((inst ...) (tabinst ...) (meminst ...)) i (v_l ...) (in-hole L (v_0 ... (call j) e_0 ...)))

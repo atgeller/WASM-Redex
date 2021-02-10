@@ -298,6 +298,26 @@
               j_1))])
 
 (define-metafunction WASMrt
+  inst-global : inst j -> v
+  [(inst-global (_ (v ...) _ _) j)
+   (do-get (v ...) j)])
+
+(define-metafunction WASMrt
+  inst-with-global : inst j v -> inst
+  [(inst-with-global ((cl ...) (v_g ...) (i_t ...) (i_m ...)) j v)
+   ((cl ...) (do-set (v_g ...) j v) (i_t ...) (i_m ...))])
+
+(define-metafunction WASMrt
+  store-global : s i j -> v
+  [(store-global ((inst ...) _ _) i j)
+   (inst-global (do-get (inst ...) i) j)])
+
+(define-metafunction WASMrt
+  store-with-global : s i j v -> s
+  [(store-with-global ((inst ...) (tabinst ...) (meminst ...)) i j v)
+   ((do-set (inst ...) i (inst-with-global (do-get (inst ...) i) j v)) (tabinst ...) (meminst ...))])
+
+(define-metafunction WASMrt
   store-mem : s i -> meminst
   [(store-mem ((inst ...) _ (meminst ...)) i)
    (do-get (meminst ...) (inst-memory (do-get (inst ...) i)))])
