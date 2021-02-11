@@ -154,14 +154,14 @@
    (c-> (s (v_l ...) (in-hole L (v_0 ... (i32 const j) (call-indirect tf) e_0 ...)))
         (s (v_l ...) (in-hole L (v_0 ... (call (store-tab s ,i j)) e_0 ...)))
         ;; We inline cl-code because store-tab may return #f if there is no such closure
-        (where (_ (func tf (local (t ...) (e ...)))) (store-tab s ,i j)))
+        (where (func tf (local (t ...) (e ...))) (cl-code-opt (store-tab s ,i j))))
 
-   (c-> (s (v_l ...) (in-hole L (v_0 ... (i32 const j) (call-indirect tf_!_1) e_0 ...)))
+   (c-> (s (v_l ...) (in-hole L (v_0 ... (i32 const j) (call-indirect tf) e_0 ...)))
         (s (v_l ...) (in-hole L (v_0 ... trap e_0 ...)))
         (side-condition 'otherwise)
         (side-condition/hidden
-         (where/not `(,_ (func ,tf (local (t ...) (e ...))))
-                    (store-tab s ,i j))))
+         (where/not `(func ,tf (local (,t ...) (,e ...)))
+                    (cl-code-opt (store-tab s ,i j)))))
 
    (c-> (s (v_l ...) (in-hole L (v_0 ... v_1 ... (call cl) e_0 ...)))
         (s (v_l ...) (in-hole L (v_0 ...

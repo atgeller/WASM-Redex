@@ -228,6 +228,12 @@
    (func tf (local (t ...) (e ...)))])
 
 (define-metafunction WASMrt
+  cl-code-opt : any -> any
+  [(cl-code-opt (i (func tf (local (t ...) (e ...)))))
+   (func tf (local (t ...) (e ...)))]
+  [(cl-code-opt _) #f])
+
+(define-metafunction WASMrt
   cl-inst : cl -> i
   [(cl-inst (i (func tf (local (t ...) (e ...)))))
    i])
