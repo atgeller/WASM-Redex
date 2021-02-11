@@ -30,50 +30,50 @@
 
      (--> (s i (v_l ...) (in-hole L (v_0 ... trap e_0 ...)))
           (s i (v_l ...) (in-hole L (trap))))
-     
+
      ;; Due to validation we can be sure we are returning the proper number of values
      (--> (s i (v_l ...) (in-hole L (v_0 ... (t const c) (t unop) e_0 ...)))
           (s i (v_l ...) (in-hole L (v_0 ... (t const (eval-unop unop t c)) e_0 ...))))
-     
+
      (--> (s i (v_l ...) (in-hole L (v_0 ... (t const c_1) (t const c_2) (t binop) e_0 ...)))
           (s i (v_l ...) (in-hole L (v_0 ... (t const c) e_0 ...)))
           (where (c) (eval-binop binop t c_1 c_2)))
-     
+
      (--> (s i (v_l ...) (in-hole L (v_0 ... (t const c_1) (t const c_2) (t binop) e_0 ...)))
           (s i (v_l ...) (in-hole L (v_0 ... trap e_0 ...)))
           (where () (eval-binop binop t c_1 c_2)))
-     
+
      (--> (s i (v_l ...) (in-hole L (v_0 ... (t const c) (t testop) e_0 ...)))
           (s i (v_l ...) (in-hole L (v_0 ... (t const (eval-testop testop t c)) e_0 ...))))
-     
+
      (--> (s i (v_l ...) (in-hole L (v_0 ... (t const c_1) (t const c_2) (t relop) e_0 ...)))
           (s i (v_l ...) (in-hole L (v_0 ... (i32 const (eval-relop relop t c_1 c_2)) e_0 ...))))
 
      (--> (s i (v_l ...) (in-hole L (v_0 ... (t_1 const c) (t_2 convert t_1) e_0 ...)))
           (s i (v_l ...) (in-hole L (v_0 ... (t_2 const c_new) e_0 ...)))
-          (where (c_new) (do-convert t_1 t_2 #f c)))
-     
+          (where (c_new) (do-convert t_1 t_2 () c)))
+
      (--> (s i (v_l ...) (in-hole L (v_0 ... (t_1 const c) (t_2 convert t_1) e_0 ...)))
           (s i (v_l ...) (in-hole L (v_0 ... trap e_0 ...)))
-          (where () (do-convert t_1 t_2 #f c)))
+          (where () (do-convert t_1 t_2 () c)))
 
      (--> (s i (v_l ...) (in-hole L (v_0 ... (t_1 const c) (t_2 convert t_1 sx) e_0 ...)))
           (s i (v_l ...) (in-hole L (v_0 ... (t_2 const c_new) e_0 ...)))
-          (where (c_new) (do-convert t_1 t_2 sx c)))
-     
+          (where (c_new) (do-convert t_1 t_2 (sx) c)))
+
      (--> (s i (v_l ...) (in-hole L (v_0 ... (t_1 const c) (t_2 convert t_1 sx) e_0 ...)))
           (s i (v_l ...) (in-hole L (v_0 ... trap e_0 ...)))
-          (where () (do-convert t_1 t_2 sx c)))
-          
+          (where () (do-convert t_1 t_2 (sx) c)))
+
      (--> (s i (v_l ...) (in-hole L (v_0 ... (t_1 const c) (t_2 reinterpret t_1) e_0 ...)))
           (s i (v_l ...) (in-hole L (v_0 ... (t_2 const (bstr->const t_2 (const->bstr t_1 c))) e_0 ...))))
 
      (--> (s i (v_l ...) (in-hole L (v_0 ... unreachable e_0 ...)))
           (s i (v_l ...) (in-hole L (v_0 ... trap e_0 ...))))
-     
+
      (--> (s i (v_l ...) (in-hole L (v_0 ... nop e_0 ...)))
           (s i (v_l ...) (in-hole L (v_0 ... e_0 ...))))
-     
+
      (--> (s i (v_l ...) (in-hole L (v_0 ... v_2 drop e_0 ...)))
           (s i (v_l ...) (in-hole L (v_0 ... e_0 ...))))
 
@@ -83,7 +83,8 @@
      (--> (s i (v_l ...) (in-hole L (v_0 ... v_1 v_2 (i32 const c) select e_0 ...)))
           (s i (v_l ...) (in-hole L (v_0 ... v_1 e_0 ...)))
           (side-condition (> (term c) 0)))
-     
+
+     ;; Control flow!
      (--> (s i (v_l ...) (in-hole L (v_0 ... (i32 const 0) (if tf (e_1 ...) else (e_2 ...)) e_0 ...)))
           (s i (v_l ...) (in-hole L (v_0 ... (block tf (e_2 ...)) e_0 ...))))
 
@@ -91,28 +92,26 @@
           (s i (v_l ...) (in-hole L (v_0 ... (block tf (e_1 ...)) e_0 ...)))
           (side-condition (> (term c) 0)))
 
-     (--> (s i (v_l ...) (in-hole L (v_0 ... (block ((t_1 ...) -> (t_2 ...)) (e ...)) e_0 ...)))
-          (s i (v_l ...) (in-hole L (v_1 ... (label m () (v_2 ... e ...)) e_0 ...)))
-          (where (v_1 ...) ,(drop-right (term (v_0 ...)) (length (term (t_1 ...)))))
-          (where (v_2 ...) ,(take-right (term (v_0 ...)) (length (term (t_1 ...)))))
+     (--> (s i (v_l ...) (in-hole L (v_0 ... v ... (block ((t_1 ...) -> (t_2 ...)) (e ...)) e_0 ...)))
+          (s i (v_l ...) (in-hole L (v_0 ... (label m () (v ... e ...)) e_0 ...)))
+          (side-condition (= (length (term (t_1 ...))) (length (term (v ...)))))
           (where m ,(length (term (t_2 ...)))))
 
-     (--> (s i (v_l ...) (in-hole L (v_0 ... (loop ((t_1 ...) -> (t_2 ...)) (e ...)) e_0 ...)))
-          (s i (v_l ...) (in-hole L (v_1 ... (label n ((loop ((t_1 ...) -> (t_2 ...)) (e ...))) (v_2 ... e ...)) e_0 ...)))
-          (where (v_1 ...) ,(drop-right (term (v_0 ...)) (length (term (t_1 ...)))))
-          (where (v_2 ...) ,(take-right (term (v_0 ...)) (length (term (t_1 ...)))))
+     (--> (s i (v_l ...) (in-hole L (v_0 ... v ... (loop ((t_1 ...) -> (t_2 ...)) (e ...)) e_0 ...)))
+          (s i (v_l ...) (in-hole L (v_0 ... (label n ((loop ((t_1 ...) -> (t_2 ...)) (e ...))) (v ... e ...)) e_0 ...)))
+          (side-condition (= (length (term (t_1 ...))) (length (term (v ...)))))
           (where n ,(length (term (t_1 ...)))))
 
      (--> (s i (v_l ...) (in-hole L (v_0 ... (label n (e ...) (v ...)) e_0 ...)))
-          (s i (v_l ...) (v_0 ... v ... e_0 ...))
-          (where n ,(length (term (v ...)))))
+          (s i (v_l ...) (v_0 ... v ... e_0 ...)))
 
      (--> (s i (v_l ...) (in-hole L (v_0 ... (label n (e ...) (trap)) e_0 ...)))
           (s i (v_l ...) (in-hole L (v_0 ... trap e_0 ...))))
 
-     ; Knowing about contexts is necessary for this (so can't shortcut the rest :/)!
-     (--> (s i (v_l ...) (in-hole L (v_0 ... (br j) e_0 ...)))
-          (s i (v_l ...) (decompose L j (v_0 ...))))
+     (--> (s i (v_l ...) (in-hole L_1 (v_1 ... (label n (e ...) (in-hole L_2 (v_0 ... v ... (br j) e_0 ...))) e_1 ...)))
+          (s i (v_l ...) (in-hole L_1 (v_1 ... v ... e ... e_1 ...)))
+          (where j (context-depth L_2))
+          (where n ,(length (term (v ...)))))
 
      (--> (s i (v_l ...) (in-hole L (v_0 ... (i32 const 0) (br-if j) e_0 ...)))
           (s i (v_l ...) (in-hole L (v_0 ... e_0 ...))))
@@ -132,7 +131,7 @@
      ;; Locals!
      (--> (s i (v_l ...) (in-hole L (v_0 ... (get-local j) e_0 ...)))
           (s i (v_l ...) (in-hole L (v_0 ... (do-get (v_l ...) j) e_0 ...))))
-     
+
      (--> (s i (v_l ...) (in-hole L (v_0 ... v (set-local j) e_0 ...)))
           (s i (do-set (v_l ...) j v) (in-hole L (v_0 ... e_0 ...))))
 
@@ -141,11 +140,11 @@
 
      ;; Store stuff!
      (--> (s i (v_l ...) (in-hole L (v_0 ... (get-global j) e_0 ...)))
-          (s i (v_l ...) (in-hole L (v_0 ... (store-global s i j) e_0 ...))))
+          (s i (v_l ...) (in-hole L (v_0 ... (store-glob s i j) e_0 ...))))
 
      (--> (s i (v_l ...) (in-hole L (v_0 ... v (set-global j) e_0 ...)))
           (s_new i (v_l ...) (in-hole L (v_0 ... e_0 ...)))
-          (where s_new (store-with-global s i j v)))
+          (where s_new (store-with-glob s i j v)))
 
      ; Function calls
      (--> (((inst ...) (tabinst ...) (meminst ...)) i (v_l ...) (in-hole L (v_0 ... (call j) e_0 ...)))
@@ -156,16 +155,16 @@
 
      ; Stuff inside functions calls
      ;; NOTE: This is fun decomposition...
-     (--> (s i (v_l ...) (in-hole L_1 (v_0 ... (local n (j (v_1 ...)) (in-hole L_2 (v_2 ... return e_2 ...))) e_0 ...)))
-          (s i (v_l ...) (in-hole L_1 (v_0 ... v_3 ... e_0 ...)))
-          (where (v_3 ...) ,(take-right (term (v_2 ...)) (term n))))
+     (--> (s i (v_l ...) (in-hole L_1 (v_0 ... (local n (j (v_1 ...)) (in-hole L_2 (v_2 ... v ... return e_2 ...))) e_0 ...)))
+          (s i (v_l ...) (in-hole L_1 (v_0 ... v ... e_0 ...)))
+          (where n ,(length (term (v ...)))))
 
      (--> (s i (v_l ...) (in-hole L (v_0 ... (local n (j (v_1 ...)) (trap)) e_0 ...)))
           (s i (v_l ...) (in-hole L (v_0 ... trap e_0 ...))))
 
-     (--> (s i (v_l ...) (in-hole L (v_0 ... (local n (j (v_1 ...)) (v_2 ...)) e_0 ...)))
-          (s i (v_l ...) (in-hole L (v_0 ... v_2 ... e_0 ...)))
-          (where n ,(length (term (v_2 ...)))))
+     (--> (s i (v_l ...) (in-hole L (v_0 ... (local n (j (v_1 ...)) (v ...)) e_0 ...)))
+          (s i (v_l ...) (in-hole L (v_0 ... v ... e_0 ...)))
+          (where n ,(length (term (v ...)))))
 
      (--> (s i (v_l ...) (in-hole L (v_0 ... (local n (j (v ...)) (e ...)) e_0 ...)))
           (s_new i (v_l ...) (in-hole L (v_0 ... (local n (j (v_new ...)) (e_new ...)) e_0 ...)))
@@ -179,15 +178,15 @@
      (--> (s i (v_l ...) (in-hole L (v_0 ... (i32 const k) (t load a o) e_0 ...)))
           (s i (v_l ...) (in-hole L (v_0 ... (t const (bstr->const t bstr)) e_0 ...)))
           (where (bstr) (mem-bytes (store-mem s i) ,(+ (term k) (term o)) (bit-width t))))
-     
+
      (--> (s i (v_l ...) (in-hole L (v_0 ... (i32 const k) (t load a o) e_0 ...)))
           (s i (v_l ...) (in-hole L (v_0 ... trap e_0 ...)))
           (where () (mem-bytes (store-mem s i) ,(+ (term k) (term o)) (bit-width t))))
-     
+
      (--> (s i (v_l ...) (in-hole L (v_0 ... (i32 const k) (t load (tp sx) a o) e_0 ...)))
           (s i (v_l ...) (in-hole L (v_0 ... (t const (packed-bstr->const t sx bstr)) e_0 ...)))
           (where (bstr) (mem-bytes (store-mem s i) ,(+ (term k) (term o)) (packed-bit-width tp))))
-     
+
      (--> (s i (v_l ...) (in-hole L (v_0 ... (i32 const k) (t load (tp sx) a o) e_0 ...)))
           (s i (v_l ...) (in-hole L (v_0 ... trap e_0 ...)))
           (where () (mem-bytes (store-mem s i) ,(+ (term k) (term o)) (packed-bit-width tp))))

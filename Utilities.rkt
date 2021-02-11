@@ -156,26 +156,26 @@
 
 
 (define-metafunction WASMrt
-  do-convert : t_1 t_2 any c -> (c ...)
+  do-convert : t_1 t_2 (sx ...) c -> (c ...)
 
-  [(do-convert i64 i32 #f c) (,(to-unsigned-sized 32 (term c)))]
-  [(do-convert i32 i64 signed c) (,(to-unsigned-sized 64 (to-signed-sized 32 (term c))))]
-  [(do-convert i32 i64 unsigned c) (c)]
+  [(do-convert i64 i32 () c) (,(to-unsigned-sized 32 (term c)))]
+  [(do-convert i32 i64 (signed) c) (,(to-unsigned-sized 64 (to-signed-sized 32 (term c))))]
+  [(do-convert i32 i64 (unsigned) c) (c)]
   
-  [(do-convert f64 f32 #f c) (,(real->single-flonum (term c)))]
-  [(do-convert f32 f64 #f c) (,(real->double-flonum (term c)))]
+  [(do-convert f64 f32 () c) (,(real->single-flonum (term c)))]
+  [(do-convert f32 f64 () c) (,(real->double-flonum (term c)))]
 
-  [(do-convert inn f32 signed c) (,(real->single-flonum (to-signed-sized (term (bit-width inn)) (term c))))]
-  [(do-convert inn f32 unsigned c) (,(real->single-flonum (term c)))]
+  [(do-convert inn f32 (signed) c) (,(real->single-flonum (to-signed-sized (term (bit-width inn)) (term c))))]
+  [(do-convert inn f32 (unsigned) c) (,(real->single-flonum (term c)))]
   
-  [(do-convert inn f64 signed c) (,(real->double-flonum (to-signed-sized (term (bit-width inn)) (term c))))]
-  [(do-convert inn f64 unsigned c) (,(real->double-flonum (term c)))]
+  [(do-convert inn f64 (signed) c) (,(real->double-flonum (to-signed-sized (term (bit-width inn)) (term c))))]
+  [(do-convert inn f64 (unsigned) c) (,(real->double-flonum (term c)))]
 
-  [(do-convert fnn inn sx c)
+  [(do-convert fnn inn (sx) c)
    ()
    (side-condition (or (nan? (term c)) (infinite? (term c))))]
 
-  [(do-convert fnn inn signed c)
+  [(do-convert fnn inn (signed) c)
    (,(to-unsigned-sized (term (bit-width inn)) (inexact->exact (truncate (term c)))))
    (side-condition (< (sub1 (- (expt 2 (sub1 (term (bit-width inn))))))
                       (truncate (term c))
@@ -183,7 +183,7 @@
    or
    ()]
   
-  [(do-convert fnn inn unsigned c)
+  [(do-convert fnn inn (unsigned) c)
    (,(inexact->exact (truncate (term c))))
    (side-condition (< -1 (truncate (term c)) (expt 2 (term (bit-width inn)))))
    or
@@ -196,17 +196,6 @@
   context-depth : L -> j
   [(context-depth hole) 0]
   [(context-depth (v ... (label n (e ...) L) e_2 ...)) ,(add1 (term (context-depth L)))])
-
-; Second function to extract jth outer-layer
-(define-metafunction WASMrt
-  decompose : L j (v ...) -> (e ...)
-  [(decompose (v_j ... (label n (e_l ...) L) e_j ...) j (v ...))
-   (v_j ... v_n ... e_l ... e_j ...)
-   (side-condition (= (term j) (term (context-depth L))))
-   (where (v_n ...) ,(take-right (term (v ...)) (term n)))]
-  [(decompose (v_j ... (label n (e_l ...) L) e_j ...) j (v ...))
-   (v_j ... (label n (e_l ...) (decompose L j (v ...))) e_j ...)
-   (side-condition (< (term j) (term (context-depth L))))])
 
 ;; TODO: Pretty much all the utils below here are kind of awkward and unwieldy in combination.
 ;; I'm certain the solution is either calling into Racket more often or less often,
@@ -225,29 +214,6 @@
    ,(append (take (term (any_1 ...)) (term j))
             (term (any_2))
             (drop (term (any_1 ...)) (add1 (term j))))])
-
-(define-metafunction WASMrt
-  do-global-get : (inst ...) j j_1 -> v
-  [(do-global-get (inst_1 inst_2 ...) j j_1)
-   (do-global-get (inst_2 ...) ,(sub1 (term j)) j_1)
-   (side-condition (> (term j) 0))]
-  ;; Todo: This is probably slower than calling into racket, but is it significant?
-  [(do-global-get (((cl ...) (v ...) _ _) inst_2 ...) 0 j_1)
-   (do-get (v ...) j_1)])
-
-(define-metafunction WASMrt
-  inst-global-set : inst j v -> (inst)
-  [(inst-global-set ((cl ...) (v ...) (i_t ...) (i_m ...)) j v_2)
-   (((cl ...) (do-set (v ...) j v_2) (i_t ...) (i_m ...)))])
-
-(define-metafunction WASMrt
-  do-global-set : (inst ...) j j_1 v -> (inst ...)
-  [(do-global-set (inst ...) j j_1 v)
-   ,(let* ([head (take (term (inst ...)) (term j))]
-           [tail (drop (term (inst ...)) (term j))]
-           [to-change (car tail)]
-           [rest (cdr tail)])
-      (append head (term (inst-global-set ,to-change j_1 v)) rest))])
 
 (define-metafunction WASMrt
   function-lookup : (inst ...) j j_1 -> cl
@@ -298,24 +264,24 @@
               j_1))])
 
 (define-metafunction WASMrt
-  inst-global : inst j -> v
-  [(inst-global (_ (v ...) _ _) j)
+  inst-glob : inst j -> v
+  [(inst-glob (_ (v ...) _ _) j)
    (do-get (v ...) j)])
 
 (define-metafunction WASMrt
-  inst-with-global : inst j v -> inst
-  [(inst-with-global ((cl ...) (v_g ...) (i_t ...) (i_m ...)) j v)
+  inst-with-glob : inst j v -> inst
+  [(inst-with-glob ((cl ...) (v_g ...) (i_t ...) (i_m ...)) j v)
    ((cl ...) (do-set (v_g ...) j v) (i_t ...) (i_m ...))])
 
 (define-metafunction WASMrt
-  store-global : s i j -> v
-  [(store-global ((inst ...) _ _) i j)
-   (inst-global (do-get (inst ...) i) j)])
+  store-glob : s i j -> v
+  [(store-glob ((inst ...) _ _) i j)
+   (inst-glob (do-get (inst ...) i) j)])
 
 (define-metafunction WASMrt
-  store-with-global : s i j v -> s
-  [(store-with-global ((inst ...) (tabinst ...) (meminst ...)) i j v)
-   ((do-set (inst ...) i (inst-with-global (do-get (inst ...) i) j v)) (tabinst ...) (meminst ...))])
+  store-with-glob : s i j v -> s
+  [(store-with-glob ((inst ...) (tabinst ...) (meminst ...)) i j v)
+   ((do-set (inst ...) i (inst-with-glob (do-get (inst ...) i) j v)) (tabinst ...) (meminst ...))])
 
 (define-metafunction WASMrt
   store-mem : s i -> meminst
