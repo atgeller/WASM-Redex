@@ -136,7 +136,7 @@
 (define-metafunction WASMrt
   eval-testop : testop t c -> c
   [(eval-testop eqz t c)
-   ,(if (= (term c) 0) 1 0)])
+   (bool ,(= (term c) 0))])
 
 
 (define-metafunction WASMrt
@@ -221,45 +221,22 @@
             (term (any_2))
             (drop (term (any_1 ...)) (add1 (term j))))])
 
-(define-metafunction WASMrt
-  do-global-get : (inst ...) j j_1 -> v
-  [(do-global-get (inst_1 inst_2 ...) j j_1)
-   (do-global-get (inst_2 ...) ,(sub1 (term j)) j_1)
-   (side-condition (> (term j) 0))]
-  ;; Todo: This is probably slower than calling into racket, but is it significant?
-  [(do-global-get (((cl ...) (v ...) _ _) inst_2 ...) 0 j_1)
-   (do-get (v ...) j_1)])
-
-(define-metafunction WASMrt
-  inst-global-set : inst j v -> (inst)
-  [(inst-global-set ((cl ...) (v ...) (i_t ...) (i_m ...)) j v_2)
-   (((cl ...) (do-set (v ...) j v_2) (i_t ...) (i_m ...)))])
-
-(define-metafunction WASMrt
-  do-global-set : (inst ...) j j_1 v -> (inst ...)
-  [(do-global-set (inst ...) j j_1 v)
-   ,(let* ([head (take (term (inst ...)) (term j))]
-           [tail (drop (term (inst ...)) (term j))]
-           [to-change (car tail)]
-           [rest (cdr tail)])
-      (append head (term (inst-global-set ,to-change j_1 v)) rest))])
-
 ;; closure accessors
 (define-metafunction WASMrt
-  cl-code : any -> any
+  cl-code : cl -> (func tf (local (t ...) (e ...)))
   [(cl-code (i (func tf (local (t ...) (e ...)))))
    (func tf (local (t ...) (e ...)))])
 
 (define-metafunction WASMrt
-  cl-inst : any -> any
+  cl-inst : cl -> i
   [(cl-inst (i (func tf (local (t ...) (e ...)))))
    i])
 
 ;; same as s_func(i,j)
 (define-metafunction WASMrt
-  store-func : s j j_1 -> cl
-  [(store-func ((inst ...) _ _) j j_1)
-   (inst-func (do-get (inst ...) j) j_1)])
+  store-func : s i j -> cl
+  [(store-func ((inst ...) _ _) i j)
+   (inst-func (do-get (inst ...) i) j)])
 
 (define-metafunction WASMrt
   inst-func : inst j -> cl
@@ -268,12 +245,9 @@
 
 ;; same as s_tab(i,j)
 (define-metafunction WASMrt
-  store-tab : s j j_1 -> any
-  [(store-tab (_ (tabinst ...) _) j j_1)
-   (tab-func (do-get (tabinst ...) j) j_1)
-   (side-condition (< (term j) (length (term (do-get (tabinst ...) j)))))
-   or
-   #f])
+  store-tab : s i j -> any
+  [(store-tab ((inst ...) (tabinst ...) _) i j)
+   (tab-func (do-get (tabinst ...) (inst-tab (do-get (inst ...) i))) j)])
 
 (define-metafunction WASMrt
   tab-func : tabinst j -> any
@@ -284,12 +258,12 @@
    #f])
 
 (define-metafunction WASMrt
-  inst-table : inst -> i
-  [(inst-table (_ _ (i) _)) i])
+  inst-tab : inst -> i
+  [(inst-tab (_ _ (i) _)) i])
 
 (define-metafunction WASMrt
-  inst-memory : inst -> i
-  [(inst-memory (_ _ _ (i))) i])
+  inst-mem : inst -> i
+  [(inst-mem (_ _ _ (i))) i])
 
 (define-metafunction WASMrt
   inst-glob : inst j -> v
@@ -314,12 +288,12 @@
 (define-metafunction WASMrt
   store-mem : s i -> meminst
   [(store-mem ((inst ...) _ (meminst ...)) i)
-   (do-get (meminst ...) (inst-memory (do-get (inst ...) i)))])
+   (do-get (meminst ...) (inst-mem (do-get (inst ...) i)))])
 
 (define-metafunction WASMrt
   store-with-mem : s i meminst -> s
   [(store-with-mem ((inst ...) (tabinst ...) (meminst ...)) i meminst_new)
-   ((inst ...) (tabinst ...) (do-set (meminst ...) (inst-memory (do-get (inst ...) i)) meminst_new))])
+   ((inst ...) (tabinst ...) (do-set (meminst ...) (inst-mem (do-get (inst ...) i)) meminst_new))])
 
 (define-metafunction WASMrt
   mem-bytes : meminst natural natural -> (bstr ...)
