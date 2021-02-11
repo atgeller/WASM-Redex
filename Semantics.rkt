@@ -147,11 +147,31 @@
           (where s_new (store-with-glob s i j v)))
 
      ; Function calls
-     (--> (((inst ...) (tabinst ...) (meminst ...)) i (v_l ...) (in-hole L (v_0 ... (call j) e_0 ...)))
-          (((inst ...) (tabinst ...) (meminst ...)) i (v_l ...) (in-hole L (v_0 ... (call (function-lookup (inst ...) i j)) e_0 ...))))
+     (--> (s i (v_l ...) (in-hole L (v_0 ... (call j) e_0 ...)))
+          (s i (v_l ...) (in-hole L (v_0 ... (call (store-func s i j)) e_0 ...))))
 
-     (--> (s i (v_l ...) (in-hole L (v_0 ... (call cl) e_0 ...)))
-          (s i (v_l ...) (in-hole L (setup-call (v_0 ...) cl (e_0 ...)))))
+     (--> (s i (v_l ...) (in-hole L (v_0 ... (i32 const j) (call-indirect tf) e_0 ...)))
+          (s i (v_l ...) (in-hole L (v_0 ... (call (store-tab s i j)) e_0 ...)))
+          ;; We inline cl-code because store-tab may return #f if there is no such closure
+          (where (_ (func tf (local (t ...) (e ...)))) (store-tab s i j)))
+
+     (--> (s i (v_l ...) (in-hole L (v_0 ... (i32 const j) (call-indirect tf_!_1) e_0 ...)))
+          (s i (v_l ...) (in-hole L (v_0 ... trap e_0 ...)))
+          (side-condition 'otherwise)
+          (side-condition/hidden
+           (where/not `(,_ (func ,tf (local (t ...) (e ...))))
+                      (store-tab s i j))))
+     
+     (--> (s i (v_l ...) (in-hole L (v_0 ... v_1 ... (call cl) e_0 ...)))
+          (s i (v_l ...) (in-hole L (v_0 ...
+                                     (local
+                                       m
+                                       ((cl-inst cl) (v_1 ... (t const 0) ...))
+                                       ((block (() -> (t_2 ...)) (e ...))))
+                                     e_0 ...)))
+          (where (func ((t_1 ...) -> (t_2 ...)) (local (t ...) (e ...))) (cl-code cl))
+          (side-condition (= (length (term (v_1 ...))) (length (term (t_1 ...)))))
+          (where m ,(length (term (t_2 ...)))))
 
      ; Stuff inside functions calls
      ;; NOTE: This is fun decomposition...
@@ -170,9 +190,6 @@
           (s_new i (v_l ...) (in-hole L (v_0 ... (local n (j (v_new ...)) (e_new ...)) e_0 ...)))
           (where (_ ... (s_new j (v_new ...) (e_new ...)) _ ...)
                  ,(apply-reduction-relation -> (term (s j (v ...) (e ...))))))
-
-     (--> (s i (v_l ...) (in-hole L (v_0 ... (i32 const j) (call-indirect tf) e_0 ...)))
-          (s i (v_l ...) (in-hole L (v_0 ... (handle-call-indirect s i j tf) e_0 ...))))
 
      ; Memory instructions
      (--> (s i (v_l ...) (in-hole L (v_0 ... (i32 const k) (t load a o) e_0 ...)))

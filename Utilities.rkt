@@ -4,6 +4,12 @@
 
 (provide (all-defined-out))
 
+(define-syntax where/not
+  (syntax-rules ()
+   [(where/not x y) (match (term y)
+                      [x #f]
+                      [_ #t])]))
+
 (define-metafunction WASMrt
   bit-width : t -> natural
   [(bit-width i32) 32]
@@ -216,28 +222,66 @@
             (drop (term (any_1 ...)) (add1 (term j))))])
 
 (define-metafunction WASMrt
-  function-lookup : (inst ...) j j_1 -> cl
-  [(function-lookup (inst_1 inst_2 ...) j j_1)
-   (function-lookup (inst_2 ...) ,(sub1 (term j)) j_1)
+  do-global-get : (inst ...) j j_1 -> v
+  [(do-global-get (inst_1 inst_2 ...) j j_1)
+   (do-global-get (inst_2 ...) ,(sub1 (term j)) j_1)
    (side-condition (> (term j) 0))]
-  [(function-lookup (((cl ...) (v ...) _ _) inst_2 ...) 0 j_1)
-   (do-get (cl ...) j_1)])
+  ;; Todo: This is probably slower than calling into racket, but is it significant?
+  [(do-global-get (((cl ...) (v ...) _ _) inst_2 ...) 0 j_1)
+   (do-get (v ...) j_1)])
 
 (define-metafunction WASMrt
-  setup-call : (v ...) cl (e ...) -> (e ...)
-  [(setup-call (v ...) (j (func ((t ...) -> (t_2 ...)) (local (t_3 ...) (e ...)))) (e_2 ...))
-   ; 1. strip arguments from stack
-   ,(let-values ([(stack args) (split-at (term (v ...)) (- (length (term (v ...)))
-                                                           (length (term (t ...)))))])
-      ; 2. initialize locals
-      ;; TODO: something we can optimize in the type system? Check F to TAL
-      ;; May need something more explicit in the type system
-      (let* ([initialized (map (lambda (t) (term (,t const 0))) (term (t_3 ...)))]
-             [locals (append args initialized)]
-             [m (length (term (t_2 ...)))])
-        ; 3. combine and return
-        (term ,(append stack (term ((local ,m (j ,locals) ((block (() -> (t_2 ...)) (e ...)))))) (term (e_2 ...))))))
-   ])
+  inst-global-set : inst j v -> (inst)
+  [(inst-global-set ((cl ...) (v ...) (i_t ...) (i_m ...)) j v_2)
+   (((cl ...) (do-set (v ...) j v_2) (i_t ...) (i_m ...)))])
+
+(define-metafunction WASMrt
+  do-global-set : (inst ...) j j_1 v -> (inst ...)
+  [(do-global-set (inst ...) j j_1 v)
+   ,(let* ([head (take (term (inst ...)) (term j))]
+           [tail (drop (term (inst ...)) (term j))]
+           [to-change (car tail)]
+           [rest (cdr tail)])
+      (append head (term (inst-global-set ,to-change j_1 v)) rest))])
+
+;; closure accessors
+(define-metafunction WASMrt
+  cl-code : any -> any
+  [(cl-code (i (func tf (local (t ...) (e ...)))))
+   (func tf (local (t ...) (e ...)))])
+
+(define-metafunction WASMrt
+  cl-inst : any -> any
+  [(cl-inst (i (func tf (local (t ...) (e ...)))))
+   i])
+
+;; same as s_func(i,j)
+(define-metafunction WASMrt
+  store-func : s j j_1 -> cl
+  [(store-func ((inst ...) _ _) j j_1)
+   (inst-func (do-get (inst ...) j) j_1)])
+
+(define-metafunction WASMrt
+  inst-func : inst j -> cl
+  [(inst-func ((cl ...) _ _ _) j)
+   (do-get (cl ...) j)])
+
+;; same as s_tab(i,j)
+(define-metafunction WASMrt
+  store-tab : s j j_1 -> any
+  [(store-tab (_ (tabinst ...) _) j j_1)
+   (tab-func (do-get (tabinst ...) j) j_1)
+   (side-condition (< (term j) (length (term (do-get (tabinst ...) j)))))
+   or
+   #f])
+
+(define-metafunction WASMrt
+  tab-func : tabinst j -> any
+  [(tab-func (cl ...) j)
+   (do-get (cl ...) j)
+   (side-condition (< (term j) (length (term (cl ...)))))
+   or
+   #f])
 
 (define-metafunction WASMrt
   inst-table : inst -> i
@@ -246,22 +290,6 @@
 (define-metafunction WASMrt
   inst-memory : inst -> i
   [(inst-memory (_ _ _ (i))) i])
-
-(define-metafunction WASMrt
-  check-tf : tf cl -> e
-  [(check-tf tf (i (func tf (local (t ...) (e ...)))))
-   (call (i (func tf (local (t ...) (e ...)))))]
-  [(check-tf tf_!_ (_ (func tf_!_ _)))
-   trap])
-
-(define-metafunction WASMrt
-  handle-call-indirect : s j j_1 tf -> e
-  [(handle-call-indirect ((inst ...) (tabinst ...) _) j j_1 tf)
-   (check-tf tf
-             (do-get
-              (do-get (tabinst ...)
-                      (inst-table (do-get (inst ...) j)))
-              j_1))])
 
 (define-metafunction WASMrt
   inst-glob : inst j -> v

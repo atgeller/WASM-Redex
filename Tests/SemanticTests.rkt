@@ -716,6 +716,30 @@
                     ()
                     (trap))))
 
+  (test-->>E -> ;; call_indirect out of bounds
+             (term ((((() () (1) ()))
+                    (((0 (func ((i32) -> (i32)) (local () ((get-local 0) return))))
+                      (1 (func ((i32 i32) -> (i32)) (local () ((get-local 1) return))))
+                      (2 (func ((i32 i32 i32) -> (i32)) (local () ((get-local 2) return)))))
+                     ((3 (func ((i32) -> (i32)) (local () ((get-local 0) return))))
+                      (4 (func ((i32 i32) -> (i32)) (local () ((get-local 1) return))))
+                      (5 (func ((i32 i32 i32) -> (i32)) (local () ((get-local 2) return))))))
+                    ())
+                    0
+                    ()
+                    ((i64 const 2) (i32 const 71) (call-indirect ((i64) -> (i64))))))
+             (term ((((() () (1) ()))
+                    (((0 (func ((i32) -> (i32)) (local () ((get-local 0) return))))
+                      (1 (func ((i32 i32) -> (i32)) (local () ((get-local 1) return))))
+                      (2 (func ((i32 i32 i32) -> (i32)) (local () ((get-local 2) return)))))
+                     ((3 (func ((i32) -> (i32)) (local () ((get-local 0) return))))
+                      (4 (func ((i32 i32) -> (i32)) (local () ((get-local 1) return))))
+                      (5 (func ((i32 i32 i32) -> (i32)) (local () ((get-local 2) return))))))
+                    ())
+                    0
+                    ()
+                    (trap))))
+
   ;; Helper function for testing stores
 (define (make-memory size)
   (make-bytes (* (memory-page-size) size) 0))
