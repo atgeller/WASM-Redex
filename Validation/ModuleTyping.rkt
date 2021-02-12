@@ -98,29 +98,31 @@
    or
    #f])
 
-;; Helper metafunction to extract a function type declaration from the function definition
-(define-metafunction WASMTyping
-  extract-func-types : (f ...) -> (tf ...)
-  [(extract-func-types ()) ()]
-  [(extract-func-types ((_ (func tf _)) f_2 ...))
-   (tf (extract-func-types (f_2 ...)))])
 
-;; Helper metafunction to extract a global variable's type from the global variable definition
 (define-metafunction WASMTyping
-  extract-global-types : (glob ...) -> (tg ...)
-  [(extract-global-types ()) ()]
-  [(extract-global-types ((_ (global tg _)) glob_2 ...))
-   (tg (extract-global-types (glob_2 ...)))])
+  func-type : f -> tf
+  [(func-type (_ (func tf _))) tf])
 
-;; Extracts the declared module type (consisting of all declared function and global types in that module, as well as the size of table and memory if applicable)
-;; Eventually may be useful for deriving module types
+(define-metafunction WASMTyping
+  glob-type : glob -> tg
+  [(glob-type (_ (global tg _))) tg])
+
+(define-metafunction WASMTyping
+  tab-size : tab -> n
+  [(tab-size (_ (table n _ ...))) n])
+
+(define-metafunction WASMTyping
+  mem-size : mem -> n
+  [(mem-size (_ (memory n _ ...))) n])
+
+;; Extracts the module type annotations into a context
 (define-metafunction WASMTyping
   extract-module-type : mod -> C
-  [(extract-module-type (module (f ...) (glob ...) ((table i _)) ((memory j))))
-   ((extract-func-types (f ...)) (extract-global-types (glob ...)) (table i) (memory j) (local ()) (label ()) (return))]
-  [(extract-module-type (module (f ...) (glob ...) ((table i _)) ()))
-   ((extract-func-types (f ...)) (extract-global-types (glob ...)) (table i) (memory) (local ()) (label ()) (return))]
-  [(extract-module-type (module (f ...) (glob ...) () ((memory j))))
-   ((extract-func-types (f ...)) (extract-global-types (glob ...)) (table) (memory j) (local ()) (label ()) (return))]
-  [(extract-module-type (module (f ...) (glob ...) () ()))
-   ((extract-func-types (f ...)) (extract-global-types (glob ...)) (table) (memory) (local ()) (label ()) (return))])
+  [(extract-module-type (module (f ...) (glob ...) (tab ...) (mem ...)))
+   ((func (func-type f) ...)
+    (global (glob-type glob) ...)
+    (table (tab-size tab) ...)
+    (memory (mem-size mem) ...)
+    (local)
+    (label)
+    (return))])
