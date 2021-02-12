@@ -5,14 +5,11 @@
          "Utilities.rkt"
          "InstructionTyping.rkt")
 
-(provide ⊢-module-func ;; For store typing
+(provide ⊢-module-func
          ⊢-module-global
-         ⊢-module-func-list
-         ⊢-module-global-list
          ⊢-module-table
-         ⊢-module-mem
+         ⊢-module-memory
          ⊢-module
-         valid-indexes
          extract-module-type)
 
 ;; Validates the function definition and returns all exports and the type of the function
@@ -20,145 +17,86 @@
   #:contract (⊢-module-func C f ((ex ...) tf))
 
   [(where ((t_1 ...) -> (t_2 ...)) tf)
-   (⊢ ((func (tf_1 ...)) (global (tg ...)) (table j_1 ...) (memory j_2 ...) (local (t_1 ... t ...)) (label ((t_2 ...))) (return (t_2 ...)))
-      (e ...)
-      (() -> (t_2 ...)))
-   ---------------------
-   (⊢-module-func ((func (tf_1 ...)) (global (tg ...)) (table j_1 ...) (memory j_2 ...) _ _ _)
-                  ((ex ...) (func tf (local (t ...) (e ...))))
-                  ((ex ...) tf))]
+   (where C_2 (with-return (in-label (with-locals C (t_1 ... t ...)) (t_2 ...)) (t_2 ...)))
+   (⊢ C_2 (e ...) (() -> (t_2 ...)))
+   ----------------------------------------------------------------------------------------
+   (⊢-module-func C ((ex ...) (func tf (local (t ...) (e ...)))) ((ex ...) tf))]
 
-  [--------------------------------------
-   (⊢-module-func C
-                  ((ex ...) (func tf im))
-                  ((ex ...) tf))]
-  )
-
-;; Helper judgement to ensure that function declarations/definitions are valid
-;; Ensures each function in the list matches its respective type under a the module type consisting only of the preceeding global definitions in the list
-(define-judgment-form WASMTyping
-  #:contract (⊢-module-func-list C (f ...) (((ex ...) tf) ...))
-
-  [-----------------------------
-   (⊢-module-func-list C () ())]
-
-  [(⊢-module-func C f_1 ((ex_1 ...) tf_1))
-   (⊢-module-func-list C (f_2 ...) (((ex_2 ...) tf_2) ...))
-   --------------------------------------------------------
-   (⊢-module-func-list C (f_1 f_2 ...) (((ex_1 ...) tf_1) ((ex_2 ...) tf_2) ...))]
-  )
+  [-------------------------------------------------------
+   (⊢-module-func C ((ex ...) (func tf im)) ((ex ...) tf))])
 
 ;; Validates the global variable definition and returns all exports and the type of the global
 (define-judgment-form WASMTyping
   #:contract (⊢-module-global C glob ((ex ...) tg))
 
-  [(where (const t) tg)
+  [(where (mut t) tg)
    (⊢ C (e ...) (() -> (t)))
-   -------------------------
-   (⊢-module-global C
-                    ((ex ...) (global tg (e ...)))
-                    ((ex ...) tg))]
-
-  ;; Can't have exports if global is mutable
-  [(where (var t) tg)
-   (where () (ex ...))
-   (⊢ C (e ...) (() -> (t)))
-   -------------------------
-   (⊢-module-global C
-                    ((ex ...) (global tg (e ...)))
-                    ((ex ...) tg))]
+   (side-condition ,(or (empty? (term (ex ...))) (equal? (term (mut t)) (term (const t)))))
+   ----------------------------------------------------------------------------------------
+   (⊢-module-global C ((ex ...) (global tg (e ...))) ((ex ...) tg))]
 
   ;; Imported globals are immutable
   [(where (const t) tg)
-   ------------------
-   (⊢-module-global C
-                    ((ex ...) (global tg im))
-                    ((ex ...) tg))]
-  )
-
-;; Helper judgement to ensure that global variable definitions are valid
-;; Ensures each function in the list matches its respective type under a the module type consisting only of the preceeding global definitions in the list
-(define-judgment-form WASMTyping
-  #:contract (⊢-module-global-list (glob ...) (((ex ...) tg) ...))
-
-  [(⊢-module-global-list () ())]
-
-  [(⊢-module-global ((func ()) (global (tg ...)) (table) (memory) (local ()) (label ()) (return)) glob_1 ((ex_1 ...) tg_1))
-   (⊢-module-global-list (glob ...) (((ex ...) tg) ...))
-   ------------------------------------------------------------------------------------------------------------------------
-   (⊢-module-global-list (glob ... glob_1) (((ex ...) tg) ... ((ex_1 ...) tg_1)))]
-  )
-
-;; Helper function to ensure a table is well-formed
-;; Checks that there are exactly `i` indices (j ...), and that each one points to a valid function
-(define-metafunction WASMTyping
-  valid-indexes : C (j ...) i -> boolean
-  [(valid-indexes ((func (tf ...)) _ _ _ _ _ _) (j ...) i)
-   ,(and (= (length (term (j ...))) (term i))
-         (let ([bound (length (term (tf ...)))])
-           (andmap
-            (lambda (index) (< index bound))
-            (term (j ...)))))])
+   -----------------------------------------------------------
+   (⊢-module-global C ((ex ...) (global tg im)) ((ex ...) tg))])
 
 ;; Validates the table and returns all exports and the table size
 (define-judgment-form WASMTyping
   #:contract (⊢-module-table C tab ((ex ...) i))
 
-  [(where #t (valid-indexes C (j ...) i))
-   ---------------------------------------------
-   (⊢-module-table C
-                   ((ex ...) (table i (j ...)))
-                   ((ex ...) i))]
+  [(where (tf ...) ((context-func C i) ...))
+   (where n ,(length (term (i ...))))
+   ------------------------------------------------------------
+   (⊢-module-table C ((ex ...) (table n (i ...))) ((ex ...) n))]
 
-  [-----------------
-   (⊢-module-table C
-                   ((ex ...) (table i im))
-                   ((ex ...) i))]
-  )
+  [-------------------------------------------------------
+   (⊢-module-table C ((ex ...) (table n im)) ((ex ...) n))])
 
 ;; Returns all exports and the memory size
 (define-judgment-form WASMTyping
-  #:contract (⊢-module-mem C mem ((ex ...) i))
-
-  [----------------------------------------------------
-   (⊢-module-mem C ((ex ...) (memory i)) ((ex ...) i))]
+  #:contract (⊢-module-memory C mem ((ex ...) n))
 
   [------------------------------------------------------
-   (⊢-module-mem C ((ex ...) (memory i im)) ((ex ...) i))]
-  )
+   (⊢-module-memory C ((ex ...) (memory n)) ((ex ...) n))]
+
+  [---------------------------------------------------------
+   (⊢-module-memory C ((ex ...) (memory n im)) ((ex ...) n))])
 
 ;; Validates all definitions in the module against the types declared in the module
 (define-judgment-form WASMTyping
   #:contract (⊢-module mod C)
 
-  [(where ((func (tf ...)) (global (tg ...)) (table i) (memory j) (local ()) (label ()) (return)) C)
-   (⊢-module-func-list C (f ...) (((ex_1_ ...) tf) ...))
-   (⊢-module-global-list (glob ...) (((ex_2_ ...) tg) ...))
-   (⊢-module-table C tab ((ex_3_ ...) i))
-   (⊢-module-mem C mem ((ex_4_ ...) j))
-   ------------------------------------
-   (⊢-module (module (f ...) (glob ...) (tab) (mem)) C)]
+  [(⊢-module-func C_f f ((ex_f ...) tf)) ...
+   (⊢-module-global C_g glob ((ex_g ...) tg)) ...
+   (⊢-module-table C_t tab ((ex_t ...) n_t)) ...
+   (⊢-module-memory C_m mem ((ex_m ...) n_m)) ...
+   (side-condition ,(<= (length (term (n_t ...))) 1))
+   (side-condition ,(<= (length (term (n_m ...))) 1))
 
-  [(where ((func (tf ...)) (global (tg ...)) (table i) (memory) (local ()) (label ()) (return)) C)
-   (⊢-module-func-list C (f ...) (((ex_1_ ...) tf) ...))
-   (⊢-module-global-list (glob ...) (((ex_2_ ...) tg) ...))
-   (⊢-module-mem C tab ((ex_3_ ...) i))
-   ------------------------------------
-   (⊢-module (module (f ...) (glob ...) (tab) ()) C)]
+   (where (C_g ...) (global-contexts (tg ...)))
+   
+   (where ((func tf ...) (global tg ...) (table n_t ...) (memory n_m ...) (local) (label) (return)) C)
+   (side-condition (same (C_f ... C_t ... C_m ...) C))
 
-  [(where ((func (tf ...)) (global (tg ...)) (table) (memory j) (local ()) (label ()) (return)) C)
-   (⊢-module-func-list C (f ...) (((ex_1_ ...) tf) ...))
-   (⊢-module-global-list (glob ...) (((ex_2_ ...) tg) ...))
-   (⊢-module-mem C mem ((ex_4_ ...) j))
-   ------------------------------------
-   (⊢-module (module (f ...) (glob ...) () (mem)) C)]
+   (side-condition (distinct (ex_f ... ... ex_g ... ... ex_t ... ... ex_m ... ...)))
+   ---------------------------------------------------------------------------------------------------
+   (⊢-module (module (f ...) (glob ...) (tab ...) (mem ...)) C)])
 
-  [(⊢-module-func-list C (f ...) (((ex_1_ ...) tf) ...))
-   (⊢-module-global-list (glob ...) (((ex_2_ ...) tg) ...))
-   (where C ((func (tf ...)) (global (tg ...)) (table) (memory) (local ()) (label ()) (return)))
-   ---------------------------------------------------------------------------------------------
-   (⊢-module (module (f ...) (glob ...) () ()) C)]
-  )
+(define-metafunction WASMTyping
+  global-contexts : (tg ...) -> (C ...)
+  [(global-contexts ()) ()]
+  [(global-contexts (tg_i-1 ... tg))
+   (C ... ((func) (global tg_i-1 ...) (table) (memory) (local) (label) (return)))
+   (where (C ...) (global-contexts (tg_i-1 ...)))])
+
+(define-metafunction WASMTyping
+  distinct : (any ...) -> boolean
+  [(distinct ()) #t]
+  [(distinct (any any_rest ...))
+   (distinct (any_rest ...))
+   (side-condition (not (member (term any) (term (any_rest ...)))))
+   or
+   #f])
 
 ;; Helper metafunction to extract a function type declaration from the function definition
 (define-metafunction WASMTyping

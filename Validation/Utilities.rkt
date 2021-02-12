@@ -1,6 +1,7 @@
 #lang racket
 
 (require redex/reduction-semantics
+         "../Utilities.rkt"
          "../Syntax.rkt")
 
 (provide (all-defined-out))
@@ -20,7 +21,7 @@
 (define-metafunction WASMTyping
   with-locals : C (t ...) -> C
   [(with-locals ((func tf ...) (global tg ...) (table n_t ...) (memory n_m ...) _ (label (t_2 ...) ...) (return (t_3 ...) ...)) (t ...))
-   ((func tf ...) (global tg ...) (table n_t ...) (memory n_m ...) (local (t ...)) (label (t_2 ...) ...) (return (t_3 ...) ...))])
+   ((func tf ...) (global tg ...) (table n_t ...) (memory n_m ...) (local t ...) (label (t_2 ...) ...) (return (t_3 ...) ...))])
 
 (define-metafunction WASMTyping
   in-label : C (t ...) -> C
@@ -64,13 +65,20 @@
   context-global : C i -> tg
   [(context-global (_ (global tg ...) _ _ _ _ _) i) (do-get (tg ...) i)])
 
-(define-judgment-form WASMTyping
-  #:contract (same-types ((t ...) ...) (t ...))
-  #:mode (same-types I I)
+(define-metafunction WASMTyping
+  same : (any ...) any -> boolean
+  [(same () any) #t]
+  [(same (any_!_ any_rest ...) any_!_) #f]
+  [(same (any any_rest ...) any)
+   (same (any_rest ...) any)])
 
-  [-----------------------
-   (same-types () (t ...))]
+#;(define-judgment-form WASMTyping
+  #:contract (same (any ...) (any ...))
+  #:mode (same I I)
 
-  [(same-types ((t_1 ...) ...) (t ...))
-   --------------------------------------------
-   (same-types ((t ...) (t_1 ...) ...) (t ...))])
+  [-------------
+   (same () any)]
+
+  [(same (any_rest ...) any)
+   -----------------------------
+   (same (any any_rest ...) any)])
