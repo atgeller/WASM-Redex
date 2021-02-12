@@ -11,13 +11,13 @@
 
 (define-language WASM
   (e ::= unreachable nop drop select
-     (block tf (e ...)) (loop tf (e ...))
-     (if tf (e ...) else (e ...)) (br i) (br-if i)
-     (br-table i i ...) return (call i)
-     (call-indirect tf) (get-local i) (set-local i)
-     (tee-local i) (get-global i) (set-global i)
-     (t load a o) (t load (tp sx) a o) (t store a o)
-     (t store tp a o) current-memory grow-memory
+     (block tf (e ...)) (loop tf (e ...)) (if tf (e ...) else (e ...))
+     (br i) (br-if i) (br-table i i ...)
+     return (call i) (call-indirect tf)
+     (get-local i) (set-local i) (tee-local i)
+     (get-global i) (set-global i)
+     (t load a o) (t load (tp sx) a o) (t store a o) (t store tp a o)
+     current-memory grow-memory
 
      (inn iunop) (fnn funop)
      (inn ibinop) (fnn fbinop)

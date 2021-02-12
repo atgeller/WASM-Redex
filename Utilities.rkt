@@ -4,12 +4,6 @@
 
 (provide (all-defined-out))
 
-(define-syntax where/not
-  (syntax-rules ()
-   [(where/not x y) (match (term y)
-                      [x #f]
-                      [_ #t])]))
-
 (define-metafunction WASMrt
   bit-width : t -> natural
   [(bit-width i32) 32]
@@ -281,6 +275,7 @@
   [(inst-with-glob ((cl ...) (v_g ...) (i_t ...) (i_m ...)) j v)
    ((cl ...) (do-set (v_g ...) j v) (i_t ...) (i_m ...))])
 
+;; same as s_glob(i,j)
 (define-metafunction WASMrt
   store-glob : s i j -> v
   [(store-glob ((inst ...) _ _) i j)
@@ -291,6 +286,7 @@
   [(store-with-glob ((inst ...) (tabinst ...) (meminst ...)) i j v)
    ((do-set (inst ...) i (inst-with-glob (do-get (inst ...) i) j v)) (tabinst ...) (meminst ...))])
 
+;; same as s_mem(i,*)
 (define-metafunction WASMrt
   store-mem : s i -> meminst
   [(store-mem ((inst ...) _ (meminst ...)) i)
