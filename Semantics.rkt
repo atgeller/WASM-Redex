@@ -153,24 +153,25 @@
 
    (c-> (s (v_l ...) (in-hole L (v_0 ... (i32 const j) (call-indirect tf) e_0 ...)))
         (s (v_l ...) (in-hole L (v_0 ... (call (store-tab s ,i j)) e_0 ...)))
-        ;; We inline cl-code because store-tab may return #f if there is no such closure
         (where (func tf (local (t ...) (e ...))) (cl-code-opt (store-tab s ,i j))))
 
    (c-> (s (v_l ...) (in-hole L (v_0 ... (i32 const j) (call-indirect tf) e_0 ...)))
         (s (v_l ...) (in-hole L (v_0 ... trap e_0 ...)))
         (side-condition 'otherwise)
         (side-condition/hidden
-         (where/not `(func ,tf (local (,t ...) (,e ...)))
-                    (cl-code-opt (store-tab s ,i j)))))
+         (match (term (cl-code-opt (store-tab s ,i j)))
+           [#f #t]
+           [`(func ,tf-act ,_)
+            (not (equal? tf-act (term tf)))])))
 
-   (c-> (s (v_l ...) (in-hole L (v_0 ... v_1 ... (call cl) e_0 ...)))
+   (c-> (s (v_l ...) (in-hole L (v_0 ... v ... (call cl) e_0 ...)))
         (s (v_l ...) (in-hole L (v_0 ...
                                  (local m
-                                   ((cl-inst cl) (v_1 ... (t const 0) ...))
+                                   ((cl-inst cl) (v ... (t const 0) ...))
                                    ((block (() -> (t_2 ...)) (e ...))))
                                  e_0 ...)))
         (where (func ((t_1 ...) -> (t_2 ...)) (local (t ...) (e ...))) (cl-code cl))
-        (side-condition (= (length (term (v_1 ...))) (length (term (t_1 ...)))))
+        (side-condition (= (length (term (v ...))) (length (term (t_1 ...)))))
         (where m ,(length (term (t_2 ...)))))
 
    ;; Stuff inside functions calls!
