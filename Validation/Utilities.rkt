@@ -7,16 +7,24 @@
 (provide (all-defined-out))
 
 (define-extended-language WASMTyping WASM
-  (C ::= ((func tf ...) (global tg ...) (table j ...) (memory j ...) (local t ...) (label (t ...) ...) (return (t ...) ...)))
-  ;;        funcs    globals  table   memory  locals  labels        return
-  #;(C ::= ((tf ...) (tg ...) (j ...) (j ...) (t ...) ((t ...) ...) ((t ...) ...)))
+  (C ::= ((func tf ...) (global tg ...) (table j) (memory j) (local t ...) (label (t ...) ...) (return (t ...)))
+     ((func tf ...) (global tg ...) (table j) (memory j) (local t ...) (label (t ...) ...) (return))
+     ((func tf ...) (global tg ...) (table j) (memory) (local t ...) (label (t ...) ...) (return (t ...)))
+     ((func tf ...) (global tg ...) (table j) (memory) (local t ...) (label (t ...) ...) (return))
+     ((func tf ...) (global tg ...) (table) (memory j) (local t ...) (label (t ...) ...) (return (t ...)))
+     ((func tf ...) (global tg ...) (table) (memory j) (local t ...) (label (t ...) ...) (return))
+     ((func tf ...) (global tg ...) (table) (memory) (local t ...) (label (t ...) ...) (return (t ...)))
+     ((func tf ...) (global tg ...) (table) (memory) (local t ...) (label (t ...) ...) (return)))
 
   (S ::= ((C ...) (j ...) (j ...))))
+
+(define (list-ref-right lst pos)
+  (list-ref (reverse lst) pos))
 
 (define-metafunction WASMTyping
   reverse-get : (any ...) j -> any
   [(reverse-get (any ...) j)
-   ,(list-ref (reverse (term (any ...))) (term j))])
+   ,(list-ref-right (term (any ...)) (term j))])
 
 (define-metafunction WASMTyping
   with-locals : C (t ...) -> C
@@ -62,8 +70,12 @@
   [(context-local (_ _ _ _ (local t ...) _ _) i) (do-get (t ...) i)])
 
 (define-metafunction WASMTyping
+  context-globals : C -> (tg ...)
+  [(context-globals (_ (global tg ...) _ _ _ _ _)) (tg ...)])
+
+(define-metafunction WASMTyping
   context-global : C i -> tg
-  [(context-global (_ (global tg ...) _ _ _ _ _) i) (do-get (tg ...) i)])
+  [(context-global C i) (do-get (context-globals C) i)])
 
 (define-metafunction WASMTyping
   same : (any ...) any -> boolean

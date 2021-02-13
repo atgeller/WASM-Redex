@@ -10,6 +10,8 @@
          ⊢-module-table
          ⊢-module-memory
          ⊢-module
+         global-contexts
+         distinct
          extract-module-type)
 
 ;; Validates the function definition and returns all exports and the type of the function
@@ -64,23 +66,21 @@
 
 ;; Validates all definitions in the module against the types declared in the module
 (define-judgment-form WASMTyping
-  #:contract (⊢-module mod C)
+  #:contract (⊢-module mod)
 
   [(⊢-module-func C_f f ((ex_f ...) tf)) ...
    (⊢-module-global C_g glob ((ex_g ...) tg)) ...
    (⊢-module-table C_t tab ((ex_t ...) n_t)) ...
    (⊢-module-memory C_m mem ((ex_m ...) n_m)) ...
-   (side-condition ,(<= (length (term (n_t ...))) 1))
-   (side-condition ,(<= (length (term (n_m ...))) 1))
 
    (where (C_g ...) (global-contexts (tg ...)))
-   
-   (where ((func tf ...) (global tg ...) (table n_t ...) (memory n_m ...) (local) (label) (return)) C)
+
+   (where C ((func tf ...) (global tg ...) (table n_t ...) (memory n_m ...) (local) (label) (return)))
    (side-condition (same (C_f ... C_t ... C_m ...) C))
 
    (side-condition (distinct (ex_f ... ... ex_g ... ... ex_t ... ... ex_m ... ...)))
    ---------------------------------------------------------------------------------------------------
-   (⊢-module (module (f ...) (glob ...) (tab ...) (mem ...)) C)])
+   (⊢-module (module (f ...) (glob ...) (tab ...) (mem ...)))])
 
 (define-metafunction WASMTyping
   global-contexts : (tg ...) -> (C ...)
