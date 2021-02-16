@@ -43,7 +43,7 @@
        (let ([fs-derivs (map (curry typecheck-func C) fs)]
              [globs-derivs (map typecheck-global glob-Cs globs)]
              [tabs-derivs (map (curry typecheck-table C) tabs)]
-             [mems-derivs (map (curry memory-derivation C mems))])
+             [mems-derivs (map (curry memory-derivation C) mems)])
          (if (and (andmap identity fs-derivs)
                   (andmap identity globs-derivs)
                   (andmap identity tabs-derivs))
