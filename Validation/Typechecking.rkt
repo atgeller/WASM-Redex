@@ -34,6 +34,11 @@
 ;; I'm doing this all using Racket's match instead of Redexes term-match
 ;; because I like the syntax of Racket's match better.
 
+(define (deriv-exports deriv)
+  (match deriv
+    [(derivation `(,_ ,_ ,_ (,exs ,_)) _ _)
+     exs]))
+
 ;; mod -> derivation of ⊢-module or #f
 (define (typecheck-module module)
   (let* ([C (term (extract-module-type ,module))]
@@ -46,7 +51,9 @@
              [mems-derivs (map (curry memory-derivation C) mems)])
          (if (and (andmap identity fs-derivs)
                   (andmap identity globs-derivs)
-                  (andmap identity tabs-derivs))
+                  (andmap identity tabs-derivs)
+                  (term (distinct ,(append-map deriv-exports
+                                               (append fs-derivs globs-derivs tabs-derivs mems-derivs)))))
              ;; TODO check for export distinction
              (derivation `(⊢-module ,module)
                          #f (append fs-derivs

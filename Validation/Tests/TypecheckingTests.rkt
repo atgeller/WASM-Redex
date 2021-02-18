@@ -55,7 +55,7 @@
    ⊢-module-global
    (typecheck-global
     empty-context
-    '(() (global (const i32) ((i32 const 0))))))
+    '(((export "thing")) (global (const i32) ((i32 const 0))))))
 
   ;; variable
   (test-judgment-holds
@@ -213,6 +213,15 @@
     '(module
          ((() (func ((i32) -> (i32)) (local () ((get-local 0))))))
        ()
+       ()
+       ())))
+
+  ;; non-distinct exports should fail
+  (check-false
+   (typecheck-module
+    '(module
+         ((((export "thing")) (func ((i32) -> (i32)) (local () ((get-local 0))))))
+       ((((export "thing")) (global (const i32) ((i32 const 1)))))
        ()
        ())))
 
