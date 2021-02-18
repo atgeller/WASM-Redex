@@ -49,7 +49,7 @@
   [(where (tf ...) ((context-func C i) ...))
    (where n ,(length (term (i ...))))
    ------------------------------------------------------------
-   (⊢-module-table C ((ex ...) (table n (i ...))) ((ex ...) n))]
+   (⊢-module-table C ((ex ...) (table n i ...)) ((ex ...) n))]
 
   [-------------------------------------------------------
    (⊢-module-table C ((ex ...) (table n im)) ((ex ...) n))])

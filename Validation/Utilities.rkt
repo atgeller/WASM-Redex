@@ -54,8 +54,12 @@
   [(context-return (_ _ _ _ _ _ (return (t ...)))) (t ...)])
 
 (define-metafunction WASMTyping
+  context-funcs : C -> (tf ...)
+  [(context-funcs ((func tf ...) _ _ _ _ _ _)) (tf ...)])
+
+(define-metafunction WASMTyping
   context-func : C i -> tf
-  [(context-func ((func tf ...) _ _ _ _ _ _) i) (do-get (tf ...) i)])
+  [(context-func C i) (do-get (context-funcs C) i)])
 
 (define-metafunction WASMTyping
   context-table : C -> n

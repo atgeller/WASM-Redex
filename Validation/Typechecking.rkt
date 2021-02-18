@@ -62,7 +62,7 @@
      (derivation `(⊢-module-table ,C ,tab (,exs ,n)) #f (list))]
     [`(,exs (table ,n ,indexes ...))
      (if (and (= n (length indexes))
-              (andmap (curry > (length (term (context-funcs C)))) indexes))
+              (andmap (curry > (length (term (context-funcs ,C)))) indexes))
          (derivation `(⊢-module-table ,C ,tab (,exs ,n)) #f (list))
          #f)]))
 
@@ -75,6 +75,10 @@
 ;; C glob -> derivation of ⊢-module-global or #f
 (define (typecheck-global C glob)
   (match glob
+    [`(,exs (global (,mut ,t) (import ,_ ,_)))
+     (if (equal? mut 'const)
+         (derivation `(⊢-module-global ,C ,glob (,exs (const ,t))) #f (list))
+         #f)]
     [`(,exs (global (,mut ,t) ,es))
      (if (or (empty? exs) (equal? mut 'const))
          (match (typecheck-ins C es `() `(,t))
@@ -83,26 +87,22 @@
             (derivation `(⊢-module-global ,C ,glob (,exs (,mut ,t)))
                         #f
                         (list ins-deriv))])
-         #f)]
-    [`(,exs (global (,mut ,t) im))
-     (if (equal? mut 'const)
-         (derivation `(⊢-module-global ,C ,glob (,exs (const ,t))) #f (list))
          #f)]))
 
 ;; C f -> derivation of ⊢-module-func or #f
 (define (typecheck-func C func)
   (match func
+    [`(,exs (func ,tf (import ,_ ,_)))
+     (derivation `(⊢-module-func ,C ,func (,exs ,tf)) #f (list))]
     [`(,exs (func (,t_1 -> ,t_2) (local (,tl ...) ,ins)))
      (match-let ([`(,funcs ,globs ,tables ,memories ,_ ,_ ,_) C])
-       (let* ([C2 `(,funcs ,globs ,tables ,memories (local (,@t_1 ,@tl)) (label (,t_2)) (return ,t_2))]
+       (let* ([C2 `(,funcs ,globs ,tables ,memories (local ,@t_1 ,@tl) (label ,t_2) (return ,t_2))]
               [ins-deriv? (typecheck-ins C2 ins `() t_2)])
          (if ins-deriv?
              (derivation `(⊢-module-func ,C ,func (,exs (,t_1 -> ,t_2)))
                          #f
                          (list ins-deriv?))
-             #f)))]
-    [`(,exs (func ,tf (import ,_ ,_)))
-     (derivation `(⊢-module-func ,C ,func (,exs ,tf)) #f (list))]))
+             #f)))]))
 
 ;; C (listof e) (listof t) (listof t) -> (listof t) or #f
 ;; synthesizes stacks for the instruction sequence or #f upon failure
@@ -557,9 +557,13 @@
       [_ #f]))
 
   (define (build-ins-deriv ins-rev stacks)
-    (if (= (length ins-rev) 1)
-        (build-e-deriv (first ins-rev) (second stacks) (first stacks))
-        (match (build-e-deriv (first ins-rev) (second stacks) (first stacks))
+    (cond
+      [(empty? ins-rev)
+       (stack-polyize (derivation `(⊢ ,C () (() -> ())) #f (list)) (first stacks) (first stacks))]
+      [(= (length ins-rev) 1)
+       (build-e-deriv (first ins-rev) (second stacks) (first stacks))]
+      [else
+       (match (build-e-deriv (first ins-rev) (second stacks) (first stacks))
           [#f #f]
           [e-deriv
            (match (build-ins-deriv (rest ins-rev) (rest stacks))
@@ -567,18 +571,8 @@
              [es-deriv
               (derivation `(⊢ ,C ,(reverse ins-rev) (,(last stacks) -> ,(first stacks)))
                           #f
-                          (list es-deriv e-deriv))])])))
+                          (list es-deriv e-deriv))])])]))
 
-  (if (empty? ins)
-      (cond
-        [(and (empty? pre) (empty? post))
-         (derivation `(⊢ ,C () (() -> ())) #f (list))]
-        [(equal? pre post)
-         (derivation `(⊢ ,C () (,pre -> ,post))
-                     #f
-                     (list (derivation `(⊢ ,C () (() -> ())) #f (list))))]
-        [else #f])
-      (match (synthesize-stacks C ins pre post)
-        [#f #f]
-        [stacks
-         (build-ins-deriv (reverse ins) (reverse stacks))])))
+  (match (synthesize-stacks C ins pre post)
+    [#f #f]
+    [stacks (build-ins-deriv (reverse ins) (reverse stacks))]))
