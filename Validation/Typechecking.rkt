@@ -342,7 +342,10 @@
     (if (empty? ins)
         (match/values (consume stacks post)
           [(#f _ _) #f]
-          [(_ new-stacks _) new-stacks])
+          [(post-post new-stacks _)
+           (if (empty? (rest post-post))
+               new-stacks
+               #f)])
         (match (apply-e stacks (first ins))
           [#f #f]
           [new-stacks (synthesize-stacks-rec new-stacks (rest ins))])))
@@ -412,10 +415,10 @@
        (derivation `(⊢ ,C (unreachable) (,e-pre -> ,e-post)) #f (list))]
 
       [`nop
-       (stack-polyize (derivation `(⊢ ,C (nop) (() -> ()) #f (list))) e-pre e-post)]
+       (stack-polyize (derivation `(⊢ ,C (nop) (() -> ())) #f (list)) e-pre e-post)]
 
       [`drop
-       (stack-polyize (derivation `(⊢ ,C (drop) ((,(first e-pre)) -> ())) #f (list))
+       (stack-polyize (derivation `(⊢ ,C (drop) ((,(last e-pre)) -> ())) #f (list))
                       e-pre e-post)]
 
       [`select
@@ -433,7 +436,7 @@
       [`(loop (,l-pre -> ,l-post) ,l-ins)
        (match (typecheck-ins (term (in-label ,C ,l-pre)) l-ins l-pre l-post)
          [#f #f]
-         [l-deriv (stack-polyize (derivation `(⊢ ,C (,e) (,l-pre -> l-post)) #f (list l-deriv))
+         [l-deriv (stack-polyize (derivation `(⊢ ,C (,e) (,l-pre -> ,l-post)) #f (list l-deriv))
                                  e-pre e-post)])]
 
       [`(if (,i-pre -> ,i-post) ,then-ins else ,else-ins)
