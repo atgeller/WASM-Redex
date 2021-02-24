@@ -54,7 +54,6 @@
                   (andmap identity tabs-derivs)
                   (term (distinct ,(append-map deriv-exports
                                                (append fs-derivs globs-derivs tabs-derivs mems-derivs)))))
-             ;; TODO check for export distinction
              (derivation `(⊢-module ,module)
                          #f (append fs-derivs
                                     globs-derivs
@@ -470,7 +469,7 @@
        (derivation `(⊢ ,C (return) (,e-pre -> ,e-post)) #f (list))]
 
       [`(call ,i)
-       (match-let* ([`((func ,tfs) ,_ ,_ ,_ ,_ ,_ ,_) C]
+       (match-let* ([`((func ,tfs ...) ,_ ,_ ,_ ,_ ,_ ,_) C]
                     [`(,c-pre -> ,c-post) (list-ref tfs i)])
          (stack-polyize (derivation `(⊢ ,C (,e) (,c-pre -> ,c-post)) #f (list))
                         e-pre e-post))]
@@ -504,13 +503,11 @@
 
       [`(set-global ,i)
        (match-let ([`(,_ (global ,globals ...) ,_ ,_ ,_ ,_ ,_) C])
-         (if (< i (length globals))
-             (let ([glob (list-ref globals i)])
-               (if (equal? (first glob) 'var)
-                   (stack-polyize (derivation `(⊢ ,C (,e) ((,(second glob)) -> ())) #f (list))
-                                  e-pre e-post)
-                   #f))
-             #f))]
+         (let ([glob (list-ref globals i)])
+           (if (equal? (first glob) 'var)
+               (stack-polyize (derivation `(⊢ ,C (,e) ((,(second glob)) -> ())) #f (list))
+                              e-pre e-post)
+               #f)))]
 
       [`(,t load ,a ,_)
        (match C

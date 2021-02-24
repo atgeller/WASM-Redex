@@ -309,6 +309,272 @@
           ((i64 const 2))))
     '(i64 i32) '(i64)))
 
+  ;; branching
+
+  ;; br-if
+  (test-judgment-holds
+   ⊢
+   (typecheck-ins
+    empty-context
+    '((i32 const 0)
+      (block ((i32) -> (i32))
+             ((i32 const 1)
+              (br-if 0)
+              (i32 const 1)
+              (i32 add))))
+    '() '(i32)))
+
+  ;; br-table
+  (test-judgment-holds
+   ⊢
+   (typecheck-ins
+    empty-context
+    '((i32 const 0)
+      (block ((i32) -> (i32))
+             ((block ((i32) -> ())
+                     ((block ((i32) -> ())
+                             ((br-table 0 1 0 1)))
+                      (i32 const 0)
+                      (br 1)))
+              (i32 const 1))))
+    '() '(i32)))
+
+  ;; can't branch in an empty context
+  ;; checking that this fails gracefully
+  (check-false
+   (typecheck-ins
+    empty-context
+    '((br 0))
+    '() '()))
+  (check-false
+   (typecheck-ins
+    empty-context
+    '((i32 const 0) (br-if 0))
+    '() '()))
+  (check-false
+   (typecheck-ins
+    empty-context
+    '((i32 const 0) (br-table 0))
+    '() '()))
+
+  ;; br wrong label type
+  (check-false
+   (typecheck-ins
+    empty-context
+    '((block (() -> (i32))
+             ((i64 const 0)
+              (br 0))))
+    '() '(i32)))
+  
+  ;; same for br-if
+  (check-false
+   (typecheck-ins
+    empty-context
+    '((i64 const 1)
+      (block ((i64) -> (i32))
+             ((i32 const 0)
+              (br-if 0))))
+    '() '(i32)))
+
+  ;; same for br-table
+  (check-false
+   (typecheck-ins
+    empty-context
+    '((i64 const 1)
+      (block ((i64) -> (i32))
+             ((block ((i64) -> (i32))
+                     ((i32 const 0)
+                      (br-table 0 1))))))
+    '() '(i32)))
+
+  ;; not all br-table branches equal
+  (check-false
+   (typecheck-ins
+    empty-context
+    '((i64 const 1)
+      (block ((i64) -> (i32))
+             ((block ((i64) -> (i64))
+                     ((i32 const 0)
+                      (br-table 0 1)))
+              drop
+              (i32 const 0))))
+    '() '(i32)))
+
+  ;; function calls and return
+
+  ;; basic return
+  (test-judgment-holds
+   ⊢
+   (typecheck-ins
+    '((func) (global) (table) (memory) (local) (label) (return (i32)))
+    '((i32 const 0)
+      (i32 const 1)
+      return)
+    '() '()))
+
+  ;; return wrong type
+  (check-false
+   (typecheck-ins
+    '((func) (global) (table) (memory) (local) (label) (return (i32)))
+    '((i64 const 1)
+      return)
+    '() '()))
+
+  ;; return from empty context doesn't type
+  (check-false
+   (typecheck-ins
+    empty-context
+    '((i32 const 0)
+      return)
+    '() '()))
+
+  ;; function call
+  (test-judgment-holds
+   ⊢
+   (typecheck-ins
+    '((func ((i64) -> (i32))) (global) (table) (memory) (local) (label) (return))
+    '((i64 const 1)
+      (call 0))
+    '() '(i32)))
+
+  ;; call invalid index
+  (check-false
+   (typecheck-ins
+    empty-context
+    '((call 0))
+    '() '()))
+
+  ;; call wrong type
+  (check-false
+   (typecheck-ins
+    '((func ((i64) -> (i32))) (global) (table) (memory) (local) (label) (return))
+    '((i32 const 1)
+      (call 0))
+    '() '(i32)))
+
+  ;; call-indirect
+  (test-judgment-holds
+   ⊢
+   (typecheck-ins
+    '((func) (global) (table 2) (memory) (local) (label) (return))
+    '((i32 const 0)
+      (call-indirect ((i32) -> (i32 i64))))
+    '(i32) '(i32 i64)))
+
+  ;; call-indirect no table
+  (check-false
+   (typecheck-ins
+    empty-context
+    '((i32 const 0)
+      (call-indirect ((i32) -> (i32 i64))))
+    '(i32) '(i32 i64)))
+
+  ;; local variables
+
+  ;; get-local
+  (test-judgment-holds
+   ⊢
+   (typecheck-ins
+    '((func) (global) (table) (memory) (local i32 i64) (label) (return))
+    '((get-local 1))
+    '() '(i64)))
+
+  ;; get-local index out of bounds
+  (check-false
+   (typecheck-ins
+    empty-context
+    '((get-local 0))
+    '() '(i32)))
+
+  ;; set-local
+  (test-judgment-holds
+   ⊢
+   (typecheck-ins
+    '((func) (global) (table) (memory) (local i32 i64) (label) (return))
+    '((i64 const 3)
+      (set-local 1))
+    '() '()))
+
+  ;; set-local wrong type
+  (check-false
+   (typecheck-ins
+    '((func) (global) (table) (memory) (local i32 i64) (label) (return))
+    '((i64 const 1)
+      (set-local 0))
+    '() '()))
+
+  ;; set-local index out of bounds
+  (check-false
+   (typecheck-ins
+    empty-context
+    '((set-local 0))
+    '(i32) '()))
+
+  ;; tee-local
+  (test-judgment-holds
+   ⊢
+   (typecheck-ins
+    '((func) (global) (table) (memory) (local i32 i64) (label) (return))
+    '((i64 const 3)
+      (tee-local 1))
+    '() '(i64)))
+
+  ;; tee-local index out of bounds
+  (check-false
+   (typecheck-ins
+    empty-context
+    '((tee-local 0))
+    '(i32) '(i32)))
+
+  ;; global variables
+
+  ;; get-global
+  (test-judgment-holds
+   ⊢
+   (typecheck-ins
+    '((func) (global (var i32) (const i64)) (table) (memory) (local) (label) (return))
+    '((get-global 1))
+    '() '(i64)))
+
+  ;; get-global index out of bounds
+  (check-false
+   (typecheck-ins
+    empty-context
+    '((get-global 1))
+    '() '(i64)))
+
+  ;; set-global
+  (test-judgment-holds
+   ⊢
+   (typecheck-ins
+    '((func) (global (var i32) (const i64)) (table) (memory) (local) (label) (return))
+    '((i32 const 3)
+      (set-global 0))
+    '() '()))
+
+  ;; set-global wrong type
+  (check-false
+   (typecheck-ins
+    '((func) (global (var i32) (const i64)) (table) (memory) (local) (label) (return))
+    '((i64 const 3)
+      (set-global 0))
+    '() '()))
+
+  ;; set-global immutable
+  (check-false
+   (typecheck-ins
+    '((func) (global (var i32) (const i64)) (table) (memory) (local) (label) (return))
+    '((i64 const 3)
+      (set-global 1))
+    '() '()))
+
+  ;; set-global index out of bounds
+  (check-false
+   (typecheck-ins
+    empty-context
+    '((set-global 1))
+    '(i32) '()))
+
   
   ;; Global typing tests
 
