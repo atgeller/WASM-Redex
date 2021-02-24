@@ -513,7 +513,7 @@
        (match C
          [`(,_ ,_ ,_ (memory) ,_ ,_ ,_) #f]
          [`(,_ ,_ ,_ (memory ,_) ,_ ,_ ,_)
-          (if (<= (expt 2 a) (type-width t))
+          (if (<= (expt 2 a) (/ (type-width t) 8))
               (stack-polyize (derivation `(⊢ ,C (,e) ((i32) -> (,t))) #f (list))
                              e-pre e-post)
               #f)])]
@@ -522,7 +522,7 @@
        (match C
          [`(,_ ,_ ,_ (memory) ,_ ,_ ,_) #f]
          [`(,_ ,_ ,_ (memory ,_) ,_ ,_ ,_)
-          (if (and (<= (expt 2 a) (type-width tp))
+          (if (and (<= (expt 2 a) (/ (type-width tp) 8))
                    (< (type-width tp) (type-width t))
                    (integer-type? t))
               (stack-polyize (derivation `(⊢ ,C (,e) ((i32) -> (,t))) #f (list))
@@ -533,7 +533,7 @@
        (match C
          [`(,_ ,_ ,_ (memory) ,_ ,_ ,_) #f]
          [`(,_ ,_ ,_ (memory ,_) ,_ ,_ ,_)
-          (if (<= (expt 2 a) (type-width t))
+          (if (<= (expt 2 a) (/ (type-width t) 8))
               (stack-polyize (derivation `(⊢ ,C (,e) ((i32 ,t) -> ())) #f (list))
                              e-pre e-post)
               #f)])]
@@ -542,7 +542,7 @@
        (match C
          [`(,_ ,_ ,_ (memory) ,_ ,_ ,_) #f]
          [`(,_ ,_ ,_ (memory ,_) ,_ ,_ ,_)
-          (if (and (<= (expt 2 a) (type-width tp))
+          (if (and (<= (expt 2 a) (/ (type-width tp) 8))
                    (< (type-width tp) (type-width t))
                    (integer-type? t))
               (stack-polyize (derivation `(⊢ ,C (,e) ((i32 ,t) -> ())) #f (list))

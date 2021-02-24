@@ -181,6 +181,12 @@
     '((i32 convert i32 signed))
     '(i32) '(i32)))
 
+  ;; convert int to float
+  (check-typecheck-ins
+   empty-context
+   '((f64 convert i64 signed))
+   '(i64) '(f64))
+
   ;; reinterpret
 
   (check-typecheck-ins
@@ -584,6 +590,168 @@
     empty-context
     '((set-global 1))
     '(i32) '()))
+
+  ;; memory instructions
+
+  ;; load
+  (check-typecheck-ins
+   '((func) (global) (table) (memory 4) (local) (label) (return))
+   '((i32 const 8)
+     (i64 load 0 0))
+   '() '(i64))
+
+  ;; load no memory
+  (check-false
+   (typecheck-ins
+    empty-context
+    '((i32 const 8)
+      (i64 load 0 0))
+    '() '(i64)))
+
+  ;; load improper alignment
+  (check-false
+   (typecheck-ins
+   '((func) (global) (table) (memory 4) (local) (label) (return))
+    '((i32 const 8)
+      (i64 load 4 0))
+    '() '(i64)))
+
+  ;; packed load
+  (check-typecheck-ins
+   '((func) (global) (table) (memory 4) (local) (label) (return))
+   '((i32 const 8)
+     (i64 load (i8 signed) 0 0))
+   '() '(i64))
+
+  ;; packed load no memory
+  (check-false
+   (typecheck-ins
+    empty-context
+    '((i32 const 8)
+      (i64 load (i8 signed) 0 0))
+    '() '(i64)))
+
+  ;; packed load improper alignment
+  (check-false
+   (typecheck-ins
+    '((func) (global) (table) (memory 4) (local) (label) (return))
+    '((i32 const 8)
+      (i64 load (i8 signed) 1 0))
+    '() '(i64)))
+
+  ;; packed load floating type
+  (check-false
+   (typecheck-ins
+    '((func) (global) (table) (memory 4) (local) (label) (return))
+    '((i32 const 8)
+      (f64 load (i8 signed) 0 0))
+    '() '(f64)))
+
+  ;; packed load i32 i32
+  (check-false
+   (typecheck-ins
+    '((func) (global) (table) (memory 4) (local) (label) (return))
+    '((i32 const 8)
+      (i32 load (i32 signed) 0 0))
+    '() '(i32)))
+
+  ;; store
+  (check-typecheck-ins
+   '((func) (global) (table) (memory 4) (local) (label) (return))
+   '((i32 const 8)
+     (i64 const 0)
+     (i64 store 0 0))
+   '() '())
+
+  ;; store no memory
+  (check-false
+   (typecheck-ins
+    empty-context
+    '((i32 const 8)
+      (i64 const 0)
+      (i64 store 0 0))
+    '() '()))
+
+  ;; store improper alignment
+  (check-false
+   (typecheck-ins
+   '((func) (global) (table) (memory 4) (local) (label) (return))
+    '((i32 const 8)
+      (i64 const 0)
+      (i64 store 4 0))
+    '() '()))
+
+  ;; packed store
+  (check-typecheck-ins
+   '((func) (global) (table) (memory 4) (local) (label) (return))
+   '((i32 const 8)
+     (i64 const 0)
+     (i64 store i8 0 0))
+   '() '())
+
+  ;; packed store no memory
+  (check-false
+   (typecheck-ins
+    empty-context
+    '((i32 const 8)
+      (i64 const 0)
+      (i64 store i8 0 0))
+    '() '()))
+
+  ;; packed store improper alignment
+  (check-false
+   (typecheck-ins
+    '((func) (global) (table) (memory 4) (local) (label) (return))
+    '((i32 const 8)
+      (i64 const 0)
+      (i64 store i16 2 0))
+    '() '()))
+
+  ;; packed store floating type
+  (check-false
+   (typecheck-ins
+    '((func) (global) (table) (memory 4) (local) (label) (return))
+    '((i32 const 8)
+      (f64 const 0.0)
+      (f64 store i8 0 0))
+    '() '()))
+
+  ;; packed store i32 i32
+  (check-false
+   (typecheck-ins
+    '((func) (global) (table) (memory 4) (local) (label) (return))
+    '((i32 const 8)
+      (i32 const 0)
+      (i32 store i32 0 0))
+    '() '()))
+
+  ;; current-memory
+  (check-typecheck-ins
+   '((func) (global) (table) (memory 4) (local) (label) (return))
+   '(current-memory)
+   '() '(i32))
+
+  ;; current-memory no memory
+  (check-false
+   (typecheck-ins
+    empty-context
+    '(current-memory)
+    '() '(i32)))
+
+  ;; grow-memory
+  (check-typecheck-ins
+   '((func) (global) (table) (memory 4) (local) (label) (return))
+   '((i32 const 2)
+     grow-memory)
+   '() '(i32))
+
+  ;; grow-memory no memory
+  (check-false
+   (typecheck-ins
+    empty-context
+    '((i32 const 2)
+      grow-memory)
+    '() '(i32)))
 
   
   ;; Global typing tests

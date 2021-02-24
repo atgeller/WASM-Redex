@@ -132,28 +132,28 @@
    (⊢ C ((set-global i)) ((t) -> ()))]
 
   [(where n (context-memory C))
-   (side-condition ,(<= (expt 2 (term a)) (term (bit-width t))))
+   (side-condition ,(<= (expt 2 (term a)) (/ (term (bit-width t)) 8)))
    -------------------------------------------------------------
    (⊢ C ((t load a o)) ((i32) -> (t)))]
 
   [(where n (context-memory C))
-   (side-condition ,(<= (expt 2 (term a)) (term (packed-bit-width tp))))
+   (side-condition ,(<= (expt 2 (term a)) (/ (term (packed-bit-width tp)) 8)))
    (side-condition ,(< (term (packed-bit-width tp)) (term (bit-width t))))
    (where inn t)
    -----------------------------------------------------------------------
    (⊢ C ((t load (tp sx) a o)) ((i32) -> (t)))]
 
   [(where n (context-memory C))
-   (side-condition ,(<= (expt 2 (term a)) (term (bit-width t))))
+   (side-condition ,(<= (expt 2 (term a)) (/ (term (bit-width t)) 8)))
    -------------------------------------------------------------
    (⊢ C ((t store a o)) ((i32 t) -> ()))]
 
   [(where n (context-memory C))
-   (side-condition ,(<= (expt 2 (term a)) (term (packed-bit-width tp))))
+   (side-condition ,(<= (expt 2 (term a)) (/ (term (packed-bit-width tp)) 8)))
    (side-condition ,(< (term (packed-bit-width tp)) (term (bit-width t))))
    (where inn t)
    -----------------------------------------------------------------------
-   (⊢ C ((t store (tp) a o)) ((i32 t) -> ()))]
+   (⊢ C ((t store tp a o)) ((i32 t) -> ()))]
 
   [(where n (context-memory C))
    --------------------------------------
