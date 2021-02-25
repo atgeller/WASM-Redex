@@ -1,11 +1,11 @@
 #lang racket
 
 (require redex/reduction-semantics
-         "Syntax.rkt"
-         "Binops.rkt"
+         "../Syntax.rkt"
+         "../Utilities.rkt"
+         "SimpleOps.rkt"
          "StoreUtilities.rkt"
-         "ConstUtilities.rkt"
-         "Utilities.rkt")
+         "ConstUtilities.rkt")
 
 (provide -> memory-page-size)
 

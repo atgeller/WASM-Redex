@@ -2,9 +2,12 @@
 
 (require racket/flonum
          redex/reduction-semantics
-         "Syntax.rkt"
-         "MachineOps.rkt"
+         "../Syntax.rkt"
+         "../Utilities.rkt"
+         "SizedOps.rkt"
          "ConstUtilities.rkt")
+
+(provide (all-defined-out))
 
 (define-metafunction WASMrt
   eval-unop : unop t c -> c

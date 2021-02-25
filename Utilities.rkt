@@ -32,19 +32,19 @@
             (term (any_2))
             (drop (term (any_1 ...)) (add1 (term j))))])
 
-;; closure accessors
+; Returns the number of bits required to represent values of a given type
+; Equivalent to |t|
 (define-metafunction WASMrt
-  cl-code : cl -> (func tf (local (t ...) (e ...)))
-  [(cl-code (i (func tf (local (t ...) (e ...)))))
-   (func tf (local (t ...) (e ...)))])
+  bit-width : t -> natural
+  [(bit-width i32) 32]
+  [(bit-width i64) 64]
+  [(bit-width f32) 32]
+  [(bit-width f64) 64])
 
+; Returns the number of bits required to represent values of a given packed type
+; Equivalent to |tp|
 (define-metafunction WASMrt
-  cl-code-opt : any -> any
-  [(cl-code-opt (i (func tf (local (t ...) (e ...)))))
-   (func tf (local (t ...) (e ...)))]
-  [(cl-code-opt _) #f])
-
-(define-metafunction WASMrt
-  cl-inst : cl -> i
-  [(cl-inst (i (func tf (local (t ...) (e ...)))))
-   i])
+  packed-bit-width : tp -> natural
+  [(packed-bit-width i8) 8]
+  [(packed-bit-width i16) 16]
+  [(packed-bit-width i32) 32])

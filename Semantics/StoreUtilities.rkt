@@ -1,8 +1,31 @@
 #lang racket
 
 (require redex/reduction-semantics
-         "Syntax.rkt"
-         "ConstUtilities.rkt")
+         "../Syntax.rkt"
+         "../Utilities.rkt")
+
+(provide (all-defined-out))
+
+; closure accessors
+;; implements cl_code
+(define-metafunction WASMrt
+  cl-code : cl -> (func tf (local (t ...) (e ...)))
+  [(cl-code (i (func tf (local (t ...) (e ...)))))
+   (func tf (local (t ...) (e ...)))])
+
+;; returns the cl_code field if the input is a well-defined cl
+;; otherwise returns #f
+(define-metafunction WASMrt
+  cl-code-opt : any -> any
+  [(cl-code-opt (i (func tf (local (t ...) (e ...)))))
+   (func tf (local (t ...) (e ...)))]
+  [(cl-code-opt _) #f])
+
+;; implements cl_inst
+(define-metafunction WASMrt
+  cl-inst : cl -> i
+  [(cl-inst (i (func tf (local (t ...) (e ...)))))
+   i])
 
 ; store and inst field accessor functions
 ;; implements s_func(i,j)

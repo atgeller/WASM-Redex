@@ -1,21 +1,12 @@
 #lang racket
 
 (require redex/reduction-semantics
-         "Syntax.rkt"
-         "MachineOps.rkt")
+         "../Syntax.rkt"
+         "../Ints.rkt"
+         "../Utilities.rkt"
+         "SizedOps.rkt")
 
-(define-metafunction WASMrt
-  bit-width : t -> natural
-  [(bit-width i32) 32]
-  [(bit-width i64) 64]
-  [(bit-width f32) 32]
-  [(bit-width f64) 64])
-
-(define-metafunction WASMrt
-  packed-bit-width : tp -> natural
-  [(packed-bit-width i8) 8]
-  [(packed-bit-width i16) 16]
-  [(packed-bit-width i32) 32])
+(provide (all-defined-out))
 
 (define-metafunction WASMrt
   bool : boolean -> c

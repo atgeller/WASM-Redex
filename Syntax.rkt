@@ -2,7 +2,7 @@
 
 (require redex/reduction-semantics)
 
-(require "MachineOps.rkt")
+(require "Ints.rkt")
 
 (provide WASM WASMrt)
 
