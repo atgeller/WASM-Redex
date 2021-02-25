@@ -2,6 +2,9 @@
 
 (require redex/reduction-semantics
          "Syntax.rkt"
+         "Binops.rkt"
+         "StoreUtilities.rkt"
+         "ConstUtilities.rkt"
          "Utilities.rkt")
 
 (provide -> memory-page-size)
