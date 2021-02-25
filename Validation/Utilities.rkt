@@ -59,7 +59,7 @@
 
 (define-metafunction WASMTyping
   context-func : C i -> tf
-  [(context-func C i) (do-get (context-funcs C) i)])
+  [(context-func C i) (index (context-funcs C) i)])
 
 (define-metafunction WASMTyping
   context-table : C -> n
@@ -71,7 +71,7 @@
 
 (define-metafunction WASMTyping
   context-local : C i -> t
-  [(context-local (_ _ _ _ (local t ...) _ _) i) (do-get (t ...) i)])
+  [(context-local (_ _ _ _ (local t ...) _ _) i) (index (t ...) i)])
 
 (define-metafunction WASMTyping
   context-globals : C -> (tg ...)
@@ -79,7 +79,7 @@
 
 (define-metafunction WASMTyping
   context-global : C i -> tg
-  [(context-global C i) (do-get (context-globals C) i)])
+  [(context-global C i) (index (context-globals C) i)])
 
 (define-metafunction WASMTyping
   same : (any ...) any -> boolean

@@ -125,7 +125,7 @@
         (side-condition (> (term c) 0)))
 
    (c-> (s (v_l ...) (in-hole L (v_0 ... (i32 const c) (br-table j ...) e_0 ...)))
-        (s (v_l ...) (in-hole L (v_0 ... (br (do-get (j ...) c)) e_0 ...)))
+        (s (v_l ...) (in-hole L (v_0 ... (br (index (j ...) c)) e_0 ...)))
         (side-condition (< (term c) (length (term (j ...))))))
 
    (c-> (s (v_l ...) (in-hole L (v_0 ... (i32 const c) (br-table j_1 ... j) e_0 ...)))
@@ -134,10 +134,10 @@
 
    ;; Locals!
    (c-> (s (v_l ...) (in-hole L (v_0 ... (get-local j) e_0 ...)))
-        (s (v_l ...) (in-hole L (v_0 ... (do-get (v_l ...) j) e_0 ...))))
+        (s (v_l ...) (in-hole L (v_0 ... (index (v_l ...) j) e_0 ...))))
 
    (c-> (s (v_l ...) (in-hole L (v_0 ... v (set-local j) e_0 ...)))
-        (s (do-set (v_l ...) j v) (in-hole L (v_0 ... e_0 ...))))
+        (s (with-index (v_l ...) j v) (in-hole L (v_0 ... e_0 ...))))
 
    (c-> (s (v_l ...) (in-hole L (v_0 ... v (tee-local j) e_0 ...)))
         (s (v_l ...) (in-hole L (v_0 ... v v (set-local j) e_0 ...))))

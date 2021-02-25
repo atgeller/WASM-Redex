@@ -20,14 +20,14 @@
 
 ;; NOTE: Useful for the very popular myriad index-based lookups
 (define-metafunction WASMrt
-  do-get : (any ...) j -> any
-  [(do-get (any ...) j)
+  index : (any ...) j -> any
+  [(index (any ...) j)
    ,(list-ref (term (any ...)) (term j))])
 
 ;; NOTE: Useful for the very popular myriad index-based lookups
 (define-metafunction WASMrt
-  do-set : (any ...) j any -> (any ...)
-  [(do-set (any_1 ...) j any_2)
+  with-index : (any ...) j any -> (any ...)
+  [(with-index (any_1 ...) j any_2)
    ,(append (take (term (any_1 ...)) (term j))
             (term (any_2))
             (drop (term (any_1 ...)) (add1 (term j))))])
