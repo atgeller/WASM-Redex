@@ -1,7 +1,6 @@
 #lang racket
 
-(require "../Ints.rkt"
-         "../Utilities.rkt")
+(require "../Utilities.rkt")
 
 (provide (all-defined-out))
 
@@ -10,7 +9,7 @@
 
 (define (to-signed-sized size x)
   (let ([unsigned (to-unsigned-sized size x)])
-    (if (<= unsigned (max-signed-int size))
+    (if (< unsigned (expt 2 (sub1 size)))
         unsigned
         (- unsigned (expt 2 size)))))
 

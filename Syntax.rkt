@@ -1,13 +1,9 @@
 #lang racket
 
-(require redex/reduction-semantics)
-
-(require "Ints.rkt")
+(require racket/flonum
+         redex/reduction-semantics)
 
 (provide WASM WASMrt)
-
-; needed to read single precision floats
-(read-single-flonum #t)
 
 (define-language WASM
   (e ::= unreachable nop drop select
@@ -25,10 +21,10 @@
      (inn irelop) (fnn frelop)
      (t cvtop t) (t cvtop t sx)
      
-     (i32 const (side-condition integer_1 (u32? (term integer_1))))
-     (i64 const (side-condition integer_1 (u64? (term integer_1))))
-     (f32 const (side-condition real_1 (single-flonum? (term real_1))))
-     (f64 const (side-condition real_1 (double-flonum? (term real_1)))))
+     (i32 const (side-condition integer_1 (<= 0 (term integer_1) (sub1 (expt 2 32)))))
+     (i64 const (side-condition integer_1 (<= 0 (term integer_1) (sub1 (expt 2 64)))))
+     (f32 const (side-condition real_1 (and (flonum? (term real_1)) (equal? (term real_1) (flsingle (term real_1))))))
+     (f64 const (side-condition real_1 (flonum? (term real_1)))))
 
   (inn ::= i32 i64)
   (fnn ::= f32 f64)
@@ -58,7 +54,7 @@
   (cvtop ::= convert reinterpret)
 
   (i j n m ::= natural)
-  (a o ::= (side-condition natural_1 (u32? (term natural_1))))
+  (a o ::= (side-condition natural_1 (<= 0 (term natural_1) (sub1 (expt 2 32)))))
   
   ; real is a superset of all constant types
   (c k ::= real)

@@ -18,12 +18,15 @@
   [(eval-unop abs t c) ,(abs (term c))]
   [(eval-unop neg t c) ,(- (term c))]
   
-  [(eval-unop sqrt t c)
+  [(eval-unop sqrt f32 c)
    ,(if (negative? (term c))
-        (match (term t)
-          [`f32 (real->single-flonum +nan.f)]
-          [`f64 +nan.0])
-        (sqrt (term c)))]
+        +nan.0
+        (flsingle (flsqrt (term c))))]
+  
+  [(eval-unop sqrt f64 c)
+   ,(if (negative? (term c))
+        +nan.0
+        (flsqrt (term c)))]
   
   [(eval-unop ceil t c) ,(ceiling (term c))]
   [(eval-unop floor t c) ,(floor (term c))]
@@ -70,19 +73,25 @@
   [(eval-binop rotl inn c_1 c_2) (,(sized-rotl (term (bit-width inn)) (term c_1) (term c_2)))]
   [(eval-binop rotr inn c_1 c_2) (,(sized-rotr (term (bit-width inn)) (term c_1) (term c_2)))]
   
-  [(eval-binop add fnn c_1 c_2) (,(+ (term c_1) (term c_2)))]
-  [(eval-binop sub fnn c_1 c_2) (,(- (term c_1) (term c_2)))]
-  [(eval-binop mul fnn c_1 c_2) (,(* (term c_1) (term c_2)))]
-  [(eval-binop div fnn c_1 c_2) (,(/ (term c_1) (term c_2)))]
-  [(eval-binop min fnn c_1 c_2) (,(min (term c_1) (term c_2)))]
-  [(eval-binop max fnn c_1 c_2) (,(max (term c_1) (term c_2)))]
+  
+  [(eval-binop add f32 c_1 c_2) (,(flsingle (fl+ (term c_1) (term c_2))))]
+  [(eval-binop sub f32 c_1 c_2) (,(flsingle (fl- (term c_1) (term c_2))))]
+  [(eval-binop mul f32 c_1 c_2) (,(flsingle (fl* (term c_1) (term c_2))))]
+  [(eval-binop div f32 c_1 c_2) (,(flsingle (fl/ (term c_1) (term c_2))))]
+  
+  [(eval-binop add f64 c_1 c_2) (,(fl+ (term c_1) (term c_2)))]
+  [(eval-binop sub f64 c_1 c_2) (,(fl- (term c_1) (term c_2)))]
+  [(eval-binop mul f64 c_1 c_2) (,(fl* (term c_1) (term c_2)))]
+  [(eval-binop div f64 c_1 c_2) (,(fl/ (term c_1) (term c_2)))]
+  
+  [(eval-binop min fnn c_1 c_2) (,(flmin (term c_1) (term c_2)))]
+  [(eval-binop max fnn c_1 c_2) (,(flmax (term c_1) (term c_2)))]
   
   [(eval-binop copysign fnn c_1 c_2)
    (,(if (or (negative? (term c_2))
-             (equal? (term c_2) -0.0)
-             (equal? (term c_2) (real->single-flonum -0.0f0)))
-         (- (abs (term c_1)))
-         (abs (term c_1))))])
+             (fl= (term c_2) -0.0))
+         (fl- (flabs (term c_1)))
+         (flabs (term c_1))))])
 
 
 (define-metafunction WASMrt
@@ -107,10 +116,10 @@
   [(eval-relop le-s t c_1 c_2) (bool ,(<= (term (signed t c_1)) (term (signed t c_2))))]
   [(eval-relop ge-s t c_1 c_2) (bool ,(>= (term (signed t c_1)) (term (signed t c_2))))]
   
-  [(eval-relop lt t c_1 c_2) (bool ,(< (term c_1) (term c_2)))]
-  [(eval-relop gt t c_1 c_2) (bool ,(> (term c_1) (term c_2)))]
-  [(eval-relop le t c_1 c_2) (bool ,(<= (term c_1) (term c_2)))]
-  [(eval-relop ge t c_1 c_2) (bool ,(>= (term c_1) (term c_2)))])
+  [(eval-relop lt t c_1 c_2) (bool ,(fl< (term c_1) (term c_2)))]
+  [(eval-relop gt t c_1 c_2) (bool ,(fl> (term c_1) (term c_2)))]
+  [(eval-relop le t c_1 c_2) (bool ,(fl<= (term c_1) (term c_2)))]
+  [(eval-relop ge t c_1 c_2) (bool ,(fl>= (term c_1) (term c_2)))])
 
 
 (define-metafunction WASMrt
@@ -120,21 +129,18 @@
   [(do-convert i32 i64 (signed) c) (,(to-unsigned-sized 64 (to-signed-sized 32 (term c))))]
   [(do-convert i32 i64 (unsigned) c) (c)]
   
-  [(do-convert f64 f32 () c) (,(real->single-flonum (term c)))]
-  [(do-convert f32 f64 () c) (,(real->double-flonum (term c)))]
+  [(do-convert f64 f32 () c) (,(flsingle (term c)))]
+  [(do-convert f32 f64 () c) (c)]
 
-  [(do-convert inn f32 (signed) c) (,(real->single-flonum (to-signed-sized (term (bit-width inn)) (term c))))]
-  [(do-convert inn f32 (unsigned) c) (,(real->single-flonum (term c)))]
-  
-  [(do-convert inn f64 (signed) c) (,(real->double-flonum (to-signed-sized (term (bit-width inn)) (term c))))]
-  [(do-convert inn f64 (unsigned) c) (,(real->double-flonum (term c)))]
+  [(do-convert inn fnn (signed) c) (,(->fl (to-signed-sized (term (bit-width inn)) (term c))))]
+  [(do-convert inn fnn (unsigned) c) (,(->fl (term c)))]
 
   [(do-convert fnn inn (sx) c)
    ()
    (side-condition (or (nan? (term c)) (infinite? (term c))))]
 
   [(do-convert fnn inn (signed) c)
-   (,(to-unsigned-sized (term (bit-width inn)) (inexact->exact (truncate (term c)))))
+   (,(to-unsigned-sized (term (bit-width inn)) (fl->exact-integer (truncate (term c)))))
    (side-condition (< (sub1 (- (expt 2 (sub1 (term (bit-width inn))))))
                       (truncate (term c))
                       (expt 2 (sub1 (term (bit-width inn))))))
@@ -142,7 +148,7 @@
    ()]
   
   [(do-convert fnn inn (unsigned) c)
-   (,(inexact->exact (truncate (term c))))
+   (,(fl->exact-integer (truncate (term c))))
    (side-condition (< -1 (truncate (term c)) (expt 2 (term (bit-width inn)))))
    or
    ()])

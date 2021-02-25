@@ -1,8 +1,8 @@
 #lang racket
 
-(require redex/reduction-semantics
+(require racket/flonum
+         redex/reduction-semantics
          "../Syntax.rkt"
-         "../Ints.rkt"
          "../Utilities.rkt"
          "SizedOps.rkt")
 
@@ -33,8 +33,8 @@
 (define-metafunction WASMrt
   bstr->const : t bstr -> c
   [(bstr->const inn bstr) ,(integer-bytes->integer (term bstr) #f #f)]
-  [(bstr->const f32 bstr) ,(real->single-flonum (floating-point-bytes->real (term bstr) #f))]
-  [(bstr->const f64 bstr) ,(real->double-flonum (floating-point-bytes->real (term bstr) #f))])
+  [(bstr->const f32 bstr) ,(floating-point-bytes->real (term bstr) #f)]
+  [(bstr->const f64 bstr) ,(floating-point-bytes->real (term bstr) #f)])
 
 (define-metafunction WASMrt
   packed-bstr->const : t sx bstr -> c

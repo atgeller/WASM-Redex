@@ -1,7 +1,8 @@
 #lang racket
 
 (module+ test
-  (require redex/reduction-semantics
+  (require racket/flonum
+           redex/reduction-semantics
            "../Semantics.rkt"
            rackunit)
 
@@ -68,12 +69,13 @@
              (term ((() () ()) () ((f64 const 1.5) (f64 nearest))))
              (term ((() () ()) () ((f64 const 2.0)))))
 
+  ;; need to use flsingle since (flsingle 1.4142135f0) = 1.4142135381698608
   (test-->>E (-> 0) ;; f32 sqrt
-             (term ((() () ()) () ((f32 const ,(real->single-flonum 2.0f0)) (f32 sqrt))))
-             (term ((() () ()) () ((f32 const ,(real->single-flonum 1.4142135f0))))))
+             (term ((() () ()) () ((f32 const ,(flsingle 2.0f0)) (f32 sqrt))))
+             (term ((() () ()) () ((f32 const ,(flsingle 1.4142135f0))))))
   (test-->>E (-> 0) ;; f32 sqrt negative
-             (term ((() () ()) () ((f32 const ,(real->single-flonum -2.0f0)) (f32 sqrt))))
-             (term ((() () ()) () ((f32 const ,(real->single-flonum +nan.f))))))
+             (term ((() () ()) () ((f32 const ,(flsingle -2.0f0)) (f32 sqrt))))
+             (term ((() () ()) () ((f32 const ,(flsingle +nan.f))))))
 
   ;; Tests of simple binops
   (test-->>E (-> 0) ;; add
@@ -217,10 +219,9 @@
              (term ((() () ()) () ((f64 const -3.0) (f64 const 2.0) (f64 copysign))))
              (term ((() () ()) () ((f64 const 3.0)))))
 
-  ;; Cursed becuase Racket has an understandable hatred for reading single precision floats
   (test-->>E (-> 0) ;; f32 add
-             (term ((() () ()) () ((f32 const ,(real->single-flonum 0.2f0)) (f32 const ,(real->single-flonum 0.1f0)) (f32 add))))
-             (term ((() () ()) () ((f32 const ,(real->single-flonum 0.3f0))))))
+             (term ((() () ()) () ((f32 const ,(flsingle 0.2f0)) (f32 const ,(flsingle 0.1f0)) (f32 add))))
+             (term ((() () ()) () ((f32 const ,(flsingle 0.3f0))))))
 
   (test-->>E (-> 0) ;; eqz false
              (term ((() () ()) () ((i32 const 8) (i32 eqz))))
@@ -428,14 +429,14 @@
              (term ((() () ()) () ((i64 const #xFFFFFFFF)))))
   
   (test-->>E (-> 0) ;; f32 -> f64
-             (term ((() () ()) () ((f32 const ,(real->single-flonum 2.3f0)) (f64 convert f32))))
+             (term ((() () ()) () ((f32 const ,(flsingle 2.3f0)) (f64 convert f32))))
              (term ((() () ()) () ((f64 const 2.299999952316284)))))
   (test-->>E (-> 0) ;; f64 -> f32
              (term ((() () ()) () ((f64 const 2.3) (f32 convert f64))))
-             (term ((() () ()) () ((f32 const ,(real->single-flonum 2.3f0))))))
+             (term ((() () ()) () ((f32 const ,(flsingle 2.3f0))))))
   (test-->>E (-> 0) ;; f64 -> f32 inf
              (term ((() () ()) () ((f64 const 2.3e+40) (f32 convert f64))))
-             (term ((() () ()) () ((f32 const ,(real->single-flonum +inf.f))))))
+             (term ((() () ()) () ((f32 const ,(flsingle +inf.f))))))
   
   (test-->>E (-> 0) ;; f64 -> unsigned i64
              (term ((() () ()) () ((f64 const ,pi) (i64 convert f64 unsigned))))
@@ -479,22 +480,22 @@
              (term ((() () ()) () ((f64 const -1.0)))))
   (test-->>E (-> 0) ;; unsigned i64 -> f32
              (term ((() () ()) () ((i64 const #xFFFFFFFFFFFFFFFF) (f32 convert i64 unsigned))))
-             (term ((() () ()) () ((f32 const ,(real->single-flonum 1.8446744f+19))))))
+             (term ((() () ()) () ((f32 const ,(flsingle 1.8446744f+19))))))
   (test-->>E (-> 0) ;; signed i64 -> f32
              (term ((() () ()) () ((i64 const #xFFFFFFFFFFFFFFFF) (f32 convert i64 signed))))
-             (term ((() () ()) () ((f32 const ,(real->single-flonum -1.0f0))))))
+             (term ((() () ()) () ((f32 const ,(flsingle -1.0f0))))))
   
   (test-->>E (-> 0) ;; reinterpret i32 -> f32 0
              (term ((() () ()) () ((i32 const 0) (f32 reinterpret i32))))
-             (term ((() () ()) () ((f32 const ,(real->single-flonum 0.0f0))))))
+             (term ((() () ()) () ((f32 const ,(flsingle 0.0f0))))))
   (test-->>E (-> 0) ;; reinterpret i32 -> f32 inf
              (term ((() () ()) () ((i32 const #x7F800000) (f32 reinterpret i32))))
-             (term ((() () ()) () ((f32 const ,(real->single-flonum +inf.f))))))
+             (term ((() () ()) () ((f32 const ,(flsingle +inf.f))))))
   (test-->>E (-> 0) ;; reinterpret i64 -> f64 42.0
              (term ((() () ()) () ((i64 const #x4045000000000000) (f64 reinterpret i64))))
              (term ((() () ()) () ((f64 const 42.0)))))
   (test-->>E (-> 0) ;; reinterpret f32 -> i32 -0.0
-             (term ((() () ()) () ((f32 const ,(real->single-flonum -0.0f0)) (i32 reinterpret f32))))
+             (term ((() () ()) () ((f32 const ,(flsingle -0.0f0)) (i32 reinterpret f32))))
              (term ((() () ()) () ((i32 const #x80000000)))))
   (test-->>E (-> 0) ;; reinterpret f64 -> i64 -1.0
              (term ((() () ()) () ((f64 const -1.0) (i64 reinterpret f64))))
@@ -817,7 +818,7 @@
                        (,(make-memory 1)))
                       ()
                       ((i32 const 0)
-                       (f32 const ,(real->single-flonum pi))
+                       (f32 const ,(flsingle pi))
                        (f32 store 0 8)
                        (i32 const 0)
                        (f32 load 0 8))))
@@ -825,7 +826,7 @@
                        ()
                        (,(store-floating (make-memory 1) 8 4 pi)))
                       ()
-                      ((f32 const ,(real->single-flonum pi))))))
+                      ((f32 const ,(flsingle pi))))))
 
     (test-->>E (-> 0) ;; store i64, load f64 (reinterpret equivalent)
                (term ((((() () () (0)))
