@@ -40,6 +40,7 @@ The function `->` takes an instance number as a natural number and produces a `r
 
 ## Validation
 The type system is in the form of deduction rules on a context `C`, a sequence of instructions `e*`, and a function type `tf`.
+Since the context is not present in the base WebAssembly language, we define an extended language `Wasm-Typing` in ![Validation/TypingLanguage.rkt](Validation/TypingLanguage.rkt) which includes the context.
 The typing rules for instructions are defined in ![Validation/InstructionTyping.rkt](Validation/InstructionTyping.rkt), which provides the judgment-form `⊢`.
 
 The typing rules for modules and module objects (tables, memories, globals, and functions) are defined in `Validation/ModuleTyping.rkt`,
