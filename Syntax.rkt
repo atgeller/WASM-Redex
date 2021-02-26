@@ -5,6 +5,10 @@
 
 (provide WASM WASMrt)
 
+(define (flsingle-flonum? c)
+  (and (flonum? c)
+       (equal? c (flsingle c))))
+
 (define-language WASM
   (e ::= unreachable nop drop select
      (block tf (e ...)) (loop tf (e ...)) (if tf (e ...) else (e ...))
@@ -23,7 +27,7 @@
      
      (i32 const (side-condition integer_1 (<= 0 (term integer_1) (sub1 (expt 2 32)))))
      (i64 const (side-condition integer_1 (<= 0 (term integer_1) (sub1 (expt 2 64)))))
-     (f32 const (side-condition real_1 (and (flonum? (term real_1)) (equal? (term real_1) (flsingle (term real_1))))))
+     (f32 const (side-condition real_1 (flsingle-flonum? (term real_1))))
      (f64 const (side-condition real_1 (flonum? (term real_1)))))
 
   (inn ::= i32 i64)
