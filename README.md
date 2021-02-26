@@ -22,22 +22,25 @@ The WASM Redex language is defined in `Syntax.rkt`. A typeset version can be vie
 ![The WebAssembly language syntax](Syntax.pdf)
 
 ## Semantics
+WebAssembly introduces several administrative instructions to define the semantics.
+Therefore, we extend the base WebAssembly syntax with these forms to create a run-time language, `WASM-RunTime`, defined in ![Semantics/RunTimeLanguage.rkt](Semantics/RunTimeLanguage.rkt)
+
 The reduction relation is in the form of a small-step operational semantics inside an evaluation context.
-The evaluation context keeps track of the list of instructions surrounding the current code block.
+The evaluation context, L, keeps track of the list of instructions surrounding the current code block.
 Evaluation contexts can be thought of as being akin to a stack frame.
 There are four parameters: `(s v* e*) (-> i) (s v* e*)` with roughly equivalent meaning to the ones in the paper:
 * `s`: the store which keeps track of all instances (modules), as well as all function tables and memories.
 * `v*`: the list of local variables (referred to by an index).
-* `e*`: the list of instructions. Since values are expressions it is more helpful to think of this as `v* e*` where `v*` is the stack values and `e*` is the instruction list.
+* `e*`: the list of instructions. Since values are expressions and the value stack is implicit in the instruction list, it is helpful to think of this as `v* e*` where `v*` is the value stack and `e*` is the instruction stack.
 * `i`: the index of the current instance in which execution is taking place.
 
-The WASM Redex reduction semantics are defined in `Semantics/Semantics.rkt`.
+The WASM Redex reduction semantics are defined in ![Semantics/Semantics.rkt](Semantics/Semantics.rkt).
 
 The function `->` takes an instance number as a natural number and produces a `reduction-relation` for reducing terms under the given instance number.
 
 ## Validation
 The type system is in the form of deduction rules on a context `C`, a sequence of instructions `e*`, and a function type `tf`.
-The typing rules for instructions are defined in `Validation/InstructionTyping.rkt`, which provides the judgment-form `⊢`.
+The typing rules for instructions are defined in ![Validation/InstructionTyping.rkt](Validation/InstructionTyping.rkt), which provides the judgment-form `⊢`.
 
 The typing rules for modules and module objects (tables, memories, globals, and functions) are defined in `Validation/ModuleTyping.rkt`,
 which provides the `⊢-module-func`, `⊢-module-global`, `⊢-module-table`, `⊢-module-memory`, and `⊢-module` judgment-forms.
