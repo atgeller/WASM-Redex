@@ -11,21 +11,14 @@
                       [x #f]
                       [_ #t])]))
 
-; Calculates the depth of a given execution context L
-; This is equivalent to the inductive annotation n, in the Wasm paper
-(define-metafunction WASMrt
-  context-depth : L -> j
-  [(context-depth hole) 0]
-  [(context-depth (v ... (label n (e ...) L) e_2 ...)) ,(add1 (term (context-depth L)))])
-
 ;; NOTE: Useful for the very popular myriad index-based lookups
-(define-metafunction WASMrt
+(define-metafunction WASM
   index : (any ...) j -> any
   [(index (any ...) j)
    ,(list-ref (term (any ...)) (term j))])
 
 ;; NOTE: Useful for the very popular myriad index-based lookups
-(define-metafunction WASMrt
+(define-metafunction WASM
   with-index : (any ...) j any -> (any ...)
   [(with-index (any_1 ...) j any_2)
    ,(append (take (term (any_1 ...)) (term j))
@@ -34,7 +27,7 @@
 
 ; Returns the number of bits required to represent values of a given type
 ; Equivalent to |t|
-(define-metafunction WASMrt
+(define-metafunction WASM
   bit-width : t -> natural
   [(bit-width i32) 32]
   [(bit-width i64) 64]
@@ -43,7 +36,7 @@
 
 ; Returns the number of bits required to represent values of a given packed type
 ; Equivalent to |tp|
-(define-metafunction WASMrt
+(define-metafunction WASM
   packed-bit-width : tp -> natural
   [(packed-bit-width i8) 8]
   [(packed-bit-width i16) 16]

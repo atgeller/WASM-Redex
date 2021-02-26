@@ -3,7 +3,7 @@
 (require racket/flonum
          redex/reduction-semantics)
 
-(provide WASM WASMrt)
+(provide WASM)
 
 (define (flsingle-flonum? c)
   (and (flonum? c)
@@ -74,19 +74,3 @@
   (im ::= (import string string))
   (ex ::= (export string))
   (mod ::= (module (f ...) (glob ...) (tab ...) (mem ...))))
-
-(define-extended-language WASMrt WASM
-  (v ::= (t const c))
-
-  (e ::= .... trap (call cl) (label n (e ...) (e ...))
-     (local n (i (v ...)) (e ...)))
-  (L ::= hole (v ... (label n (e ...) L) e ...))
-
-  (s ::= ((inst ...) (tabinst ...) (meminst ...)))
-  (cl ::= (i (func tf (local (t ...) (e ...)))))
-  (inst ::= ((cl ...) (v ...) (i ...) (i ...)))
-
-  (tabinst ::= (cl ...))
-  (meminst ::= bstr)
-
-  (bstr ::= (side-condition any_1 (bytes? (term any_1)))))

@@ -1,8 +1,8 @@
 #lang racket
 
-(require "../Utilities.rkt")
-
 (provide (all-defined-out))
+
+; Racket functions to handle all of the signed and unsigned integer operations on integers of a particular size
 
 (define (to-unsigned-sized size x)
   (modulo x (expt 2 size)))

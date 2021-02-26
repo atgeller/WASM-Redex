@@ -1,6 +1,7 @@
 #lang racket
 
-(require redex)
+(require redex
+         "../TypingSyntax.rkt")
 
 (provide (all-defined-out))
 

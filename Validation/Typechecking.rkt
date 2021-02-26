@@ -2,6 +2,7 @@
 
 (require redex/reduction-semantics
          "../Syntax.rkt"
+         "TypingSyntax.rkt"
          "ModuleTyping.rkt"
          "InstructionTyping.rkt"
          "Utilities.rkt")
@@ -432,22 +433,22 @@
                       e-pre e-post)]
 
       [`(block (,b-pre -> ,b-post) ,b-ins)
-       (match (typecheck-ins (term (in-label ,C ,b-post)) b-ins b-pre b-post)
+       (match (typecheck-ins (term (add-label ,C ,b-post)) b-ins b-pre b-post)
          [#f #f]
          [b-deriv (stack-polyize (derivation `(⊢ ,C (,e) (,b-pre -> ,b-post)) #f (list b-deriv))
                                  e-pre e-post)])]
 
       [`(loop (,l-pre -> ,l-post) ,l-ins)
-       (match (typecheck-ins (term (in-label ,C ,l-pre)) l-ins l-pre l-post)
+       (match (typecheck-ins (term (add-label ,C ,l-pre)) l-ins l-pre l-post)
          [#f #f]
          [l-deriv (stack-polyize (derivation `(⊢ ,C (,e) (,l-pre -> ,l-post)) #f (list l-deriv))
                                  e-pre e-post)])]
 
       [`(if (,i-pre -> ,i-post) ,then-ins else ,else-ins)
-       (match (typecheck-ins (term (in-label ,C ,i-post)) then-ins i-pre i-post)
+       (match (typecheck-ins (term (add-label ,C ,i-post)) then-ins i-pre i-post)
          [#f #f]
          [then-deriv
-          (match (typecheck-ins (term (in-label ,C ,i-post)) else-ins i-pre i-post)
+          (match (typecheck-ins (term (add-label ,C ,i-post)) else-ins i-pre i-post)
             [#f #f]
             [else-deriv
              (stack-polyize (derivation `(⊢ ,C (,e) (,(append i-pre (list 'i32)) -> ,i-post))

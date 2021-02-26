@@ -1,8 +1,9 @@
 #lang racket
 
 (require redex/reduction-semantics
-         "../Syntax.rkt"
+         "RunTimeSyntax.rkt"
          "../Utilities.rkt"
+         "Utilities.rkt"
          "SimpleOps.rkt"
          "StoreUtilities.rkt"
          "ConstUtilities.rkt")
@@ -16,7 +17,7 @@
 ;; Thus, the next instruction to execute is the head of e ..., and the stack is v ...
 (define (-> i)
   (reduction-relation
-   WASMrt
+   WASM-RunTime
    #:domain (s (v ...) (e ...))
    #:codomain (s (v ...) (e ...))
    #:arrow c->

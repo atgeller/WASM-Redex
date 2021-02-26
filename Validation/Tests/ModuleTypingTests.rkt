@@ -3,6 +3,7 @@
 (module+ test
   (require redex/reduction-semantics
            "TestUtilities.rkt"
+           "../TypingSyntax.rkt"
            "../ModuleTyping.rkt"
            "../InstructionTyping.rkt"
            rackunit)

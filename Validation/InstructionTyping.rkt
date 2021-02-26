@@ -2,21 +2,22 @@
 
 (require redex/reduction-semantics
          "../Utilities.rkt"
-         "Utilities.rkt")
+         "Utilities.rkt"
+         "TypingSyntax.rkt")
 
 (provide ⊢)
 
-(define-metafunction WASMTyping
+(define-metafunction WASM-Typing
   inn? : t -> boolean
   [(inn? inn) #t]
   [(inn? fnn) #f])
 
-(define-metafunction WASMTyping
+(define-metafunction WASM-Typing
   fnn? : t -> boolean
   [(fnn? inn) #f]
   [(fnn? fnn) #t])
 
-(define-judgment-form WASMTyping
+(define-judgment-form WASM-Typing
   #:contract (⊢ C (e ...) tf)
   
   [------------------------------
@@ -66,19 +67,19 @@
    (⊢ C (select) ((t t i32) -> (t)))]
 
   [(where ((t_1 ...) -> (t_2 ...)) tf)
-   (where C_2 (in-label C (t_2 ...)))
+   (where C_2 (add-label C (t_2 ...)))
    (⊢ C_2 (e ...) tf)
    -----------------------------------
    (⊢ C ((block tf (e ...))) tf)]
 
   [(where ((t_1 ...) -> (t_2 ...)) tf)
-   (where C_2 (in-label C (t_1 ...)))
+   (where C_2 (add-label C (t_1 ...)))
    (⊢ C_2 (e ...) tf)
    -----------------------------------
    (⊢ C ((loop tf (e ...))) tf)]
 
   [(where ((t_1 ...) -> (t_2 ...)) tf)
-   (where C_2 (in-label C (t_2 ...)))
+   (where C_2 (add-label C (t_2 ...)))
    (⊢ C_2 (e_1 ...) tf)
    (⊢ C_2 (e_2 ...) tf)
    ---------------------------------------------------------------------
