@@ -1,6 +1,13 @@
 # WASM Redex Model
-This is a model of the WebAssembly language syntax, semantics, and (in progress) validation rules.
+This is a model of the WebAssembly language syntax, semantics, and validation rules, written in [PLT Redex](https://redex.racket-lang.org/).
 The model is based off of the [2017 PLDI paper by Haas et al](https://dl.acm.org/doi/10.1145/3062341.3062363).
+
+The goal of this model is to provide a starting point for modeling extensions to the language.
+For example, for a research project we have built an extended type system for WebAssembly on top of this model.
+There are two straightforward ways to build language extensions using this model:
+
+1. The preferred way is to use Redex's `define-extended-*` forms to explicity extend the basic WebAssembly specification. For example, using `define-extended-language` to extend the base WebAssembly syntax with new types or instructions, and then using `define-extended-relation` and `define-extended-judgment` when necessary, or creating new reduction relations and judgement forms.
+2. Create a fork of this repository, and change the language definition, reduction relation, and judgment forms as needed.
 
 ## Syntax
 The syntactic representation used in the model is `s-expression` based.
@@ -10,11 +17,9 @@ Other small differences include:
 * The explicit enumeration of the `sx` non-terminal in binops and relops.
 * Optional terms are handled via enumeration or faked using lists (there's a hidden low-priority TODO to clean this up).
 
-The WASM Redex language is defined in `Syntax.rkt`. A typeset version can be viewed below and uses similar terminology to the
+The WASM Redex language is defined in `Syntax.rkt`. A typeset version can be viewed below and uses similar terminology to the WebAssembly paper.
 
 ![The WebAssembly language syntax](Syntax.pdf)
-
-
 
 ## Semantics
 The reduction relation is in the form of a small-step operational semantics inside an evaluation context.
@@ -29,8 +34,6 @@ There are four parameters: `(s v* e*) (-> i) (s v* e*)` with roughly equivalent 
 The WASM Redex reduction semantics are defined in `Semantics/Semantics.rkt`.
 
 The function `->` takes an instance number as a natural number and produces a `reduction-relation` for reducing terms under the given instance number.
-
-
 
 ## Validation
 The type system is in the form of deduction rules on a context `C`, a sequence of instructions `e*`, and a function type `tf`.
