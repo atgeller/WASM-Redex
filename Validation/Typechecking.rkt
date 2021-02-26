@@ -6,7 +6,12 @@
          "InstructionTyping.rkt"
          "Utilities.rkt")
 
-(provide (all-defined-out))
+(provide typecheck-module
+         typecheck-table
+         memory-derivation
+         typecheck-global
+         typecheck-func
+         typecheck-ins)
 
 (define (type-width t)
   (match t
