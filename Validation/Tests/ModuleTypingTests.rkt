@@ -12,7 +12,7 @@
   
   ;; Basic test that an empty module is well-typed
   (test-judgment-holds ⊢-module
-                       (derivation `(⊢-module (module () () () ()) ,empty-context)
+                       (derivation `(⊢-module (module () () () ()))
                                    #f
                                    (list)))
   ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -32,7 +32,7 @@
 
   ;; Tests that a module with a single, well-typed, simple function is well-typed
   (test-judgment-holds ⊢-module
-                       (derivation `(⊢-module (module ((() (func (() -> (i32)) (local () ((i32 const 0)))))) () () ()) ,context1)
+                       (derivation `(⊢-module (module ((() (func (() -> (i32)) (local () ((i32 const 0)))))) () () ()))
                                    #f
                                    (list
                                     (derivation `(⊢-module-func ,context1
@@ -49,7 +49,7 @@
   ;; Tests that a module with two well-typed functions that refer to each other, is well-typed
   (test-judgment-holds ⊢-module
                        (derivation `(⊢-module (module ((() (func (() -> (i32)) (local () ((call 1)))))
-                                                       (() (func (() -> (i32)) (local () ((call 0)))))) () () ()) ,context2)
+                                                       (() (func (() -> (i32)) (local () ((call 0)))))) () () ()))
                                    #f
                                    (list
                                     (derivation `(⊢-module-func ,context2
@@ -77,7 +77,7 @@
 
   ;; Tests that a module with a single well-typed global is well-typed
   (test-judgment-holds ⊢-module
-                       (derivation `(⊢-module (module () ((() (global (const i32) ((i32 const 0))))) () ()) ,context3)
+                       (derivation `(⊢-module (module () ((() (global (const i32) ((i32 const 0))))) () ()))
                                    #f
                                    (list
                                     (derivation `(⊢-module-global ((func) (global) (table) (memory) (local) (label) (return))
@@ -99,13 +99,12 @@
                             ((((export "test")) (global (const i32) ((i32 const 0))))
                              (((export "test2")) (global (const i32) ((get-global 0)))))
                             ()
-                            ())
-                          ,context4)
+                            ()))
                #f
                (list
                 (derivation `(⊢-module-global ((func) (global) (table) (memory) (local) (label) (return))
-                                              (() (global (const i32) ((i32 const 0))))
-                                              (() (const i32)))
+                                              (((export "test")) (global (const i32) ((i32 const 0))))
+                                              (((export "test")) (const i32)))
                             #f
                             (list
                              (derivation `(⊢ ((func) (global) (table) (memory) (local) (label) (return))
@@ -114,8 +113,8 @@
                                          #f
                                          (list))))
                 (derivation `(⊢-module-global ((func) (global (const i32)) (table) (memory) (local) (label) (return))
-                                              (() (global (const i32) ((get-global 0))))
-                                              (() (const i32)))
+                                              (((export "test2")) (global (const i32) ((get-global 0))))
+                                              (((export "test2")) (const i32)))
                             #f
                             (list
                              (derivation `(⊢ ((func) (global (const i32)) (table) (memory) (local) (label) (return))
