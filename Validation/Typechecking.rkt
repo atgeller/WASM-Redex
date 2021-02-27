@@ -342,7 +342,7 @@
 
       [`grow-memory
        (apply-pre-post stacks (list 'i32) (list 'i32))]))
-  
+
   (define (synthesize-stacks-rec stacks ins)
     (if (empty? ins)
         (match/values (consume stacks post)
@@ -384,7 +384,7 @@
     (match e
       [`(,t const ,_)
        (stack-polyize (derivation `(⊢ ,C (,e) (() -> (,t))) #f (list)) e-pre e-post)]
-      
+
       [`(,t ,(? (redex-match? WASM unop) _))
        (stack-polyize (derivation `(⊢ ,C (,e) ((,t) -> (,t))) #f (list)) e-pre e-post)]
 
