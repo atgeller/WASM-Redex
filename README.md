@@ -23,7 +23,7 @@ The WASM Redex language is defined in `Syntax.rkt`. A typeset version can be vie
 
 ## Semantics
 WebAssembly introduces several administrative instructions to define the semantics.
-Therefore, we extend the base WebAssembly syntax with these forms to create a run-time language, `WASM-RunTime`, defined in ![Semantics/RunTimeLanguage.rkt](Semantics/RunTimeLanguage.rkt)
+Therefore, we extend the base WebAssembly syntax with these forms to create a run-time language, `WASM-RunTime`, defined in ![Semantics/RunTimeSyntax.rkt](Semantics/RunTimeSyntax.rkt)
 
 The reduction relation is in the form of a small-step operational semantics inside an evaluation context.
 The evaluation context, L, keeps track of the list of instructions surrounding the current code block.
@@ -40,7 +40,7 @@ The function `->` takes an instance number as a natural number and produces a `r
 
 ## Validation
 The type system is in the form of deduction rules on a context `C`, a sequence of instructions `e*`, and a function type `tf`.
-Since the context is not present in the base WebAssembly language, we define an extended language `Wasm-Typing` in ![Validation/TypingLanguage.rkt](Validation/TypingLanguage.rkt) which includes the context.
+Since the context is not present in the base WebAssembly language, we define an extended language `Wasm-Typing` in ![Validation/TypingSyntax.rkt](Validation/TypingSyntax.rkt) which includes the context.
 The typing rules for instructions are defined in ![Validation/InstructionTyping.rkt](Validation/InstructionTyping.rkt), which provides the judgment-form `⊢`.
 
 The typing rules for modules and module objects (tables, memories, globals, and functions) are defined in `Validation/ModuleTyping.rkt`,
