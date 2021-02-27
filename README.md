@@ -6,18 +6,18 @@ The goal of this model is to provide a starting point for modeling extensions to
 For example, for a research project we have built an extended type system for WebAssembly on top of this model.
 There are two straightforward ways to build language extensions using this model:
 
-1. The preferred way is to use Redex's `define-extended-*` forms to explicity extend the basic WebAssembly specification. For example, using `define-extended-language` to extend the base WebAssembly syntax with new types or instructions, and then using `define-extended-relation` and `define-extended-judgment` when necessary, or creating new reduction relations and judgement forms.
+1. The preferred way is to use Redex's `define-extended-*` forms to explicitly extend the basic WebAssembly specification. For example, using `define-extended-language` to extend the base WebAssembly syntax with new types or instructions, and then using `define-extended-relation` and `define-extended-judgment` when necessary, or creating new reduction relations and judgement forms.
 2. Create a fork of this repository, and change the language definition, reduction relation, and judgment forms as needed.
 
 ## Syntax
 The syntactic representation used in the model is `s-expression` based.
-It contains a few more parentheses than are present in the original grammer (to speed up parsing).
+It contains a few more parentheses than are present in the original grammar (to simplify parsing).
 Other small differences include:
 * The removal of the `.` character between types and a number of terminal expressions (e.g., `i32.add` becomes `(i32 add)`).
 * The explicit enumeration of the `sx` non-terminal in binops and relops.
 * Optional terms are handled via enumeration or faked using lists (there's a hidden low-priority TODO to clean this up).
 
-The WASM Redex language is defined in `Syntax.rkt`. A typeset version can be viewed below and uses similar terminology to the WebAssembly paper.
+The WASM Redex syntax is defined in `Syntax.rkt`. A typeset version can be viewed below and uses similar terminology to the WebAssembly paper.
 
 ![The WebAssembly language syntax](Syntax.pdf)
 
@@ -25,8 +25,8 @@ The WASM Redex language is defined in `Syntax.rkt`. A typeset version can be vie
 WebAssembly introduces several administrative instructions to define the semantics.
 Therefore, we extend the base WebAssembly syntax with these forms to create a run-time language, `WASM-Admin`, defined in ![Semantics/AdministrativeSyntax.rkt](Semantics/AdministrativeSyntax.rkt)
 
-The reduction relation is in the form of a small-step operational semantics inside an evaluation context.
-The evaluation context, L, keeps track of the list of instructions surrounding the current code block.
+The reduction relation is a small-step operational semantics inside an evaluation context.
+The evaluation context, `L`, keeps track of the list of instructions surrounding the current code block.
 Evaluation contexts can be thought of as being akin to a stack frame.
 There are four parameters: `(s v* e*) (-> i) (s v* e*)` with roughly equivalent meaning to the ones in the paper:
 * `s`: the store which keeps track of all instances (modules), as well as all function tables and memories.
@@ -46,8 +46,8 @@ The typing rules for instructions are defined in ![Validation/InstructionTyping.
 The typing rules for modules and module objects (tables, memories, globals, and functions) are defined in `Validation/ModuleTyping.rkt`,
 which provides the `⊢-module-func`, `⊢-module-global`, `⊢-module-table`, `⊢-module-memory`, and `⊢-module` judgment-forms.
 
-In `Validation/Typechecking.rkt` we provide an algorithm for finding a derivation that types a given syntax object.
-This algorithm is more complicated than the reference validation algorithm since it needs to synthesize the actual program stacks for instructions after unconditional branches and `unreachable`.
+In `Validation/Typechecking.rkt` we provide an inference algorithm for finding a typing derivation over syntax.
+This algorithm is more complicated than the reference validation algorithm since it produces a derivation witness, and needs to synthesize the actual program stacks for instructions after unconditional branches and `unreachable`.
 
 The typechecking algorithm is split between typechecking functions for each judgment-form.
 * `typecheck-module` produces derivations of `⊢-module` for a given `mod`.
@@ -55,4 +55,4 @@ The typechecking algorithm is split between typechecking functions for each judg
 * `memory-derivation` produces derivations of `⊢-module-memory` for a given context and `mem`.
 * `typecheck-global` produces derivations of `⊢-module-global` for a given context and `glob`.
 * `typecheck-func` produces derivations of `⊢-module-func` for a given context and `func`.
-* `typecheck-ins` produces derivaitions of `⊢` for a given context, `e*`, and pre- and post-stacks.
+* `typecheck-ins` produces derivations of `⊢` for a given context, `e*`, and pre- and post-stacks.
