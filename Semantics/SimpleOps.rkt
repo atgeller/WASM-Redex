@@ -2,7 +2,7 @@
 
 (require racket/flonum
          redex/reduction-semantics
-         "RunTimeSyntax.rkt"
+         "AdministrativeSyntax.rkt"
          "../Utilities.rkt"
          "SizedOps.rkt"
          "ConstUtilities.rkt")
@@ -12,7 +12,7 @@
 ; Metafunctions to implement all of the WebAssembly operations
 
 ; equivalent to unop_t(c)
-(define-metafunction WASM-RunTime
+(define-metafunction WASM-Admin
   eval-unop : unop t c -> c
   
   [(eval-unop clz t c) ,(sized-clz (term (bit-width t)) (term c))]
@@ -36,7 +36,7 @@
   [(eval-unop nearest t c) ,(round (term c))])
 
 ; equivalent to binop_t(c1, c2)
-(define-metafunction WASM-RunTime
+(define-metafunction WASM-Admin
   eval-binop : binop t c c -> (c ...)
   
   [(eval-binop add inn c_1 c_2) (,(sized-add (term (bit-width inn)) (term c_1) (term c_2)))]
@@ -97,13 +97,13 @@
          (flabs (term c_1))))])
 
 
-(define-metafunction WASM-RunTime
+(define-metafunction WASM-Admin
   eval-testop : testop t c -> c
   [(eval-testop eqz t c)
    (bool ,(= (term c) 0))])
 
 
-(define-metafunction WASM-RunTime
+(define-metafunction WASM-Admin
   eval-relop : relop t c c -> c
   
   [(eval-relop eq t c_1 c_2) (bool ,(= (term c_1) (term c_2)))]
@@ -125,7 +125,7 @@
   [(eval-relop ge t c_1 c_2) (bool ,(fl>= (term c_1) (term c_2)))])
 
 
-(define-metafunction WASM-RunTime
+(define-metafunction WASM-Admin
   do-convert : t_1 t_2 (sx ...) c -> (c ...)
 
   [(do-convert i64 i32 () c) (,(to-unsigned-sized 32 (term c)))]

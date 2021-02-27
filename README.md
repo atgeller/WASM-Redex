@@ -23,7 +23,7 @@ The WASM Redex language is defined in `Syntax.rkt`. A typeset version can be vie
 
 ## Semantics
 WebAssembly introduces several administrative instructions to define the semantics.
-Therefore, we extend the base WebAssembly syntax with these forms to create a run-time language, `WASM-RunTime`, defined in ![Semantics/RunTimeSyntax.rkt](Semantics/RunTimeSyntax.rkt)
+Therefore, we extend the base WebAssembly syntax with these forms to create a run-time language, `WASM-Admin`, defined in ![Semantics/AdministrativeSyntax.rkt](Semantics/AdministrativeSyntax.rkt)
 
 The reduction relation is in the form of a small-step operational semantics inside an evaluation context.
 The evaluation context, L, keeps track of the list of instructions surrounding the current code block.

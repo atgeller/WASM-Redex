@@ -3,9 +3,9 @@
 (require redex/reduction-semantics
          "../Syntax.rkt")
 
-(provide WASM-RunTime)
+(provide WASM-Admin)
 
-(define-extended-language WASM-RunTime WASM
+(define-extended-language WASM-Admin WASM
   (v ::= (t const c))
 
   (e ::= .... trap (call cl) (label n (e ...) (e ...))
