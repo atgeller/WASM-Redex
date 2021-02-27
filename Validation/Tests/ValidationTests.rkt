@@ -46,7 +46,7 @@
                                     (derivation `(⊢ ,empty-context ((f64 copysign)) ((f64 f64) -> (f64)))
                                                 #f
                                                 (list)))))
-  
+
   ;; testop
   (test-judgment-holds ⊢
                        (derivation `(⊢ ,empty-context ((i64 const 0) (i64 eqz)) (() -> (i32)))
@@ -75,7 +75,7 @@
                                     (derivation `(⊢ ,empty-context ((i64 gt-u)) ((i64 i64) -> (i32)))
                                                 #f
                                                 (list)))))
-  
+
   (test-judgment-holds ⊢
                        (derivation `(⊢ ,empty-context ((f64 const 0.0) (f64 const 0.1) (f64 gt)) (() -> (i32)))
                                    #f
@@ -99,7 +99,7 @@
                                    (list
                                     (derivation `(⊢ ,empty-context ((i32 const 0)) (() -> (i32))) #f (list))
                                     (derivation `(⊢ ,empty-context ((i64 convert i32 unsigned)) ((i32) -> (i64))) #f (list)))))
-  
+
   (test-judgment-holds ⊢
                        (derivation `(⊢ ,empty-context ((i64 const 0) (i32 convert i64)) (() -> (i32)))
                                    #f
@@ -107,14 +107,14 @@
                                     (derivation `(⊢ ,empty-context ((i64 const 0)) (() -> (i64))) #f (list))
                                     (derivation `(⊢ ,empty-context ((i32 convert i64)) ((i64) -> (i32))) #f (list)))))
 
-  
+
   (test-judgment-holds ⊢
                        (derivation `(⊢ ,empty-context ((f64 const 0.0) (i32 convert f64 signed)) (() -> (i32)))
                                    #f
                                    (list
                                     (derivation `(⊢ ,empty-context ((f64 const 0.0)) (() -> (f64))) #f (list))
                                     (derivation `(⊢ ,empty-context ((i32 convert f64 signed)) ((f64) -> (i32))) #f (list)))))
-  
+
   (test-judgment-holds ⊢
                        (derivation `(⊢ ,empty-context ((f64 const 0.0) (i64 reinterpret f64)) (() -> (i64)))
                                    #f
@@ -255,7 +255,7 @@
                                     (derivation `(⊢ ,empty-context (select) ((i32 i32 i32) -> (i32)))
                                                 #f
                                                 (list)))))
-  
+
   (test-judgment-holds ⊢
                        (derivation `(⊢ ,empty-context ((i64 const 0) (i64 const 1) (i32 const 0) select) (() -> (i64)))
                                    #f
@@ -292,7 +292,7 @@
                                        (() -> (i32)))
                                    #f
                                    (list)))
-  
+
   (test-judgment-holds ⊢
                        (derivation `(⊢ ,empty-context ((block (() -> (i32)) ((i32 const 0)))) (() -> (i32)))
                                    #f
@@ -302,7 +302,7 @@
                                                     (() -> (i32)))
                                                 #f
                                                 (list)))))
-  
+
   (test-judgment-holds ⊢
                        (derivation `(⊢ ,empty-context ((block ((i64) -> (i32)) (drop (i32 const 0)))) ((i64) -> (i32)))
                                    #f
@@ -322,7 +322,7 @@
                                                                  (() -> (i32)))
                                                              #f
                                                              (list)))))))
-  
+
   (test-judgment-holds ⊢
                        (derivation `(⊢ ,empty-context ((i64 const 0) (block ((i64) -> (i32)) (drop (i32 const 0)))) (() -> (i32)))
                                    #f

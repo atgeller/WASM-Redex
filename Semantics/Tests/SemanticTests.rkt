@@ -168,7 +168,7 @@
   (test-->>E (-> 0) ;; rotr far
              (term ((() () ()) () ((i32 const #xFF0000FF) (i32 const 40) (i32 rotr))))
              (term ((() () ()) () ((i32 const #xFFFF0000)))))
-  
+
   (test-->>E (-> 0) ;; i64 math
              (term ((() () ()) () ((i64 const 4294967295) (i64 const 2) (i64 mul))))
              (term ((() () ()) () ((i64 const 8589934590)))))
@@ -229,7 +229,7 @@
   (test-->>E (-> 0) ;; eqz true
              (term ((() () ()) () ((i32 const 0) (i32 eqz))))
              (term ((() () ()) () ((i32 const 1)))))
-  
+
   (test-->>E (-> 0) ;; eq true
              (term ((() () ()) () ((i32 const 42) (i32 const 42) (i32 eq))))
              (term ((() () ()) () ((i32 const 1)))))
@@ -246,14 +246,14 @@
   (test-->>E (-> 0) ;; eq float false
              (term ((() () ()) () ((f64 const 0.0) (f64 const 42.0) (f64 eq))))
              (term ((() () ()) () ((i32 const 0)))))
-  
+
   (test-->>E (-> 0) ;; ne false
              (term ((() () ()) () ((i32 const 42) (i32 const 42) (i32 ne))))
              (term ((() () ()) () ((i32 const 0)))))
   (test-->>E (-> 0) ;; ne true
              (term ((() () ()) () ((i32 const 42) (i32 const 43) (i32 ne))))
              (term ((() () ()) () ((i32 const 1)))))
-  
+
   (test-->>E (-> 0) ;; ne float false
              (term ((() () ()) () ((f64 const 42.0) (f64 const 42.0) (f64 ne))))
              (term ((() () ()) () ((i32 const 0)))))
@@ -263,7 +263,7 @@
   (test-->>E (-> 0) ;; ne float true
              (term ((() () ()) () ((f64 const 0.0) (f64 const 42.0) (f64 ne))))
              (term ((() () ()) () ((i32 const 1)))))
-  
+
   (test-->>E (-> 0) ;; lt-u
              (term ((() () ()) () ((i32 const 42) (i32 const 42) (i32 lt-u))))
              (term ((() () ()) () ((i32 const 0)))))
@@ -276,7 +276,7 @@
   (test-->>E (-> 0) ;; lt-u signed
              (term ((() () ()) () ((i32 const #xFFFFFFFF) (i32 const 0) (i32 lt-u))))
              (term ((() () ()) () ((i32 const 0)))))
-  
+
   (test-->>E (-> 0) ;; lt-s
              (term ((() () ()) () ((i32 const 42) (i32 const 42) (i32 lt-s))))
              (term ((() () ()) () ((i32 const 0)))))
@@ -289,7 +289,7 @@
   (test-->>E (-> 0) ;; lt-s signed
              (term ((() () ()) () ((i32 const #xFFFFFFFF) (i32 const 0) (i32 lt-s))))
              (term ((() () ()) () ((i32 const 1)))))
-    
+
   (test-->>E (-> 0) ;; gt-u
              (term ((() () ()) () ((i32 const 42) (i32 const 42) (i32 gt-u))))
              (term ((() () ()) () ((i32 const 0)))))
@@ -302,7 +302,7 @@
   (test-->>E (-> 0) ;; gt-u signed
              (term ((() () ()) () ((i32 const #xFFFFFFFF) (i32 const 0) (i32 gt-u))))
              (term ((() () ()) () ((i32 const 1)))))
-  
+
   (test-->>E (-> 0) ;; gt-s
              (term ((() () ()) () ((i32 const 42) (i32 const 42) (i32 gt-s))))
              (term ((() () ()) () ((i32 const 0)))))
@@ -315,7 +315,7 @@
   (test-->>E (-> 0) ;; gt-s signed
              (term ((() () ()) () ((i32 const #xFFFFFFFF) (i32 const 0) (i32 gt-s))))
              (term ((() () ()) () ((i32 const 0)))))
-  
+
   (test-->>E (-> 0) ;; le-u
              (term ((() () ()) () ((i32 const 42) (i32 const 42) (i32 le-u))))
              (term ((() () ()) () ((i32 const 1)))))
@@ -328,7 +328,7 @@
   (test-->>E (-> 0) ;; le-u signed
              (term ((() () ()) () ((i32 const #xFFFFFFFF) (i32 const 0) (i32 le-u))))
              (term ((() () ()) () ((i32 const 0)))))
-  
+
   (test-->>E (-> 0) ;; le-s
              (term ((() () ()) () ((i32 const 42) (i32 const 42) (i32 le-s))))
              (term ((() () ()) () ((i32 const 1)))))
@@ -341,7 +341,7 @@
   (test-->>E (-> 0) ;; le-s signed
              (term ((() () ()) () ((i32 const #xFFFFFFFF) (i32 const 0) (i32 le-s))))
              (term ((() () ()) () ((i32 const 1)))))
-  
+
   (test-->>E (-> 0) ;; ge-u
              (term ((() () ()) () ((i32 const 42) (i32 const 42) (i32 ge-u))))
              (term ((() () ()) () ((i32 const 1)))))
@@ -354,7 +354,7 @@
   (test-->>E (-> 0) ;; ge-u signed
              (term ((() () ()) () ((i32 const #xFFFFFFFF) (i32 const 0) (i32 ge-u))))
              (term ((() () ()) () ((i32 const 1)))))
-  
+
   (test-->>E (-> 0) ;; ge-s
              (term ((() () ()) () ((i32 const 42) (i32 const 42) (i32 ge-s))))
              (term ((() () ()) () ((i32 const 1)))))
@@ -367,7 +367,7 @@
   (test-->>E (-> 0) ;; ge-s signed
              (term ((() () ()) () ((i32 const #xFFFFFFFF) (i32 const 0) (i32 ge-s))))
              (term ((() () ()) () ((i32 const 0)))))
-  
+
   (test-->>E (-> 0) ;; lt
              (term ((() () ()) () ((f64 const 1.0) (f64 const 1.0) (f64 lt))))
              (term ((() () ()) () ((i32 const 0)))))
@@ -377,7 +377,7 @@
   (test-->>E (-> 0) ;; lt
              (term ((() () ()) () ((f64 const -1.0) (f64 const 1.0) (f64 lt))))
              (term ((() () ()) () ((i32 const 1)))))
-  
+
   (test-->>E (-> 0) ;; gt
              (term ((() () ()) () ((f64 const 1.0) (f64 const 1.0) (f64 gt))))
              (term ((() () ()) () ((i32 const 0)))))
@@ -387,7 +387,7 @@
   (test-->>E (-> 0) ;; gt
              (term ((() () ()) () ((f64 const -1.0) (f64 const 1.0) (f64 gt))))
              (term ((() () ()) () ((i32 const 0)))))
-  
+
   (test-->>E (-> 0) ;; le
              (term ((() () ()) () ((f64 const 1.0) (f64 const 1.0) (f64 le))))
              (term ((() () ()) () ((i32 const 1)))))
@@ -397,7 +397,7 @@
   (test-->>E (-> 0) ;; le
              (term ((() () ()) () ((f64 const -1.0) (f64 const 1.0) (f64 le))))
              (term ((() () ()) () ((i32 const 1)))))
-  
+
   (test-->>E (-> 0) ;; ge
              (term ((() () ()) () ((f64 const 1.0) (f64 const 1.0) (f64 ge))))
              (term ((() () ()) () ((i32 const 1)))))
@@ -427,7 +427,7 @@
   (test-->>E (-> 0) ;; i32 -1 -> i64 -1 unsigned
              (term ((() () ()) () ((i32 const #xFFFFFFFF) (i64 convert i32 unsigned))))
              (term ((() () ()) () ((i64 const #xFFFFFFFF)))))
-  
+
   (test-->>E (-> 0) ;; f32 -> f64
              (term ((() () ()) () ((f32 const ,(flsingle 2.3f0)) (f64 convert f32))))
              (term ((() () ()) () ((f64 const 2.299999952316284)))))
@@ -437,7 +437,7 @@
   (test-->>E (-> 0) ;; f64 -> f32 inf
              (term ((() () ()) () ((f64 const 2.3e+40) (f32 convert f64))))
              (term ((() () ()) () ((f32 const ,(flsingle +inf.f))))))
-  
+
   (test-->>E (-> 0) ;; f64 -> unsigned i64
              (term ((() () ()) () ((f64 const ,pi) (i64 convert f64 unsigned))))
              (term ((() () ()) () ((i64 const 3)))))
@@ -484,7 +484,7 @@
   (test-->>E (-> 0) ;; signed i64 -> f32
              (term ((() () ()) () ((i64 const #xFFFFFFFFFFFFFFFF) (f32 convert i64 signed))))
              (term ((() () ()) () ((f32 const ,(flsingle -1.0f0))))))
-  
+
   (test-->>E (-> 0) ;; reinterpret i32 -> f32 0
              (term ((() () ()) () ((i32 const 0) (f32 reinterpret i32))))
              (term ((() () ()) () ((f32 const ,(flsingle 0.0f0))))))
@@ -726,7 +726,7 @@
   ;; Helper function for testing stores
 (define (make-memory size)
   (make-bytes (* (memory-page-size) size) 0))
-  
+
   (define (store-integer mem offset width value)
     (integer->integer-bytes value width #f #f mem offset))
 
@@ -811,7 +811,7 @@
                        (,(store-floating (make-memory 1) 8 8 pi)))
                       ()
                       ((f64 const ,pi)))))
-    
+
     (test-->>E (-> 0) ;; store/load f32
                (term ((((() () () (0)))
                        ()
@@ -1025,7 +1025,7 @@
                          ()
                          ()
                          (0))))])
-    
+
       (test-->>E (-> 0)
                  (term ((,insts () (,(make-bytes 8 0)))
                         ()
@@ -1034,7 +1034,7 @@
                  (term ((,insts () (,(make-bytes 8 0)))
                         ()
                         ())))
-  
+
       (test-->>E (-> 0)
                  (term ((,insts
                          ()
@@ -1045,7 +1045,7 @@
                  (term ((,insts () (,(make-bytes 16 0)))
                         ()
                         ())))
-  
+
       (test-->>E (-> 0)
                  (term ((,insts
                          ()
