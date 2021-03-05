@@ -13,7 +13,8 @@
   (L ::= hole (v ... (label n (e ...) L) e ...))
 
   (s ::= ((inst ...) (tabinst ...) (meminst ...)))
-  (cl ::= (i (func tf (local (t ...) (e ...)))))
+  (cl ::= (i (func tf (local (t ...) (e ...))))
+      (-1 (func tf (racket (side-condition any_1 (procedure? (term any_1)))))))
   (inst ::= ((cl ...) (v ...) (i ...) (i ...)))
 
   (tabinst ::= (cl ...))
