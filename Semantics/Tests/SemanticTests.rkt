@@ -3,8 +3,7 @@
 (module+ test
   (require racket/flonum
            redex/reduction-semantics
-           "../Semantics.rkt"
-           rackunit)
+           "../Semantics.rkt")
 
   ;; Tests of unops
   (test-->>E (-> 0) ;; clz 0

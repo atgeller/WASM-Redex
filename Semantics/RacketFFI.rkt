@@ -9,12 +9,12 @@
 (define (racket-trampoline post proc s cs)
   (let-values ([(s_new cs_post) (apply proc s cs)])
     (unless (= (length cs_post) (length post))
-      (error "Racket procedure produced an incorrect number of return types"))
+      (error "Racket procedure produced an incorrect number of values"))
     (term (,s_new ,(map coerce-value post cs_post)))))
 
 (define (coerce-value t n)
-  (unless (number? n)
-    (error "Racket procedure produced a non-number value"))
+  (unless (real? n)
+    (error "Racket procedure produced a non-real value"))
   (match t
     ['i32
      (unless (exact? n)
@@ -30,6 +30,6 @@
        (error "Racket procedure expected i64, but produced a value outside that range"))
      (to-unsigned-sized 64 n)]
     
-    ['f32 (flsingle (->fl n))]
+    ['f32 (flsingle (real->double-flonum n))]
     
-    ['f64 (->fl n)]))
+    ['f64 (real->double-flonum n)]))
