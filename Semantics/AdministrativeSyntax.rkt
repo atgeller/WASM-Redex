@@ -14,7 +14,8 @@
 
   (s ::= ((inst ...) (tabinst ...) (meminst ...)))
   (cl ::= (i (func tf (local (t ...) (e ...))))
-      (-1 (func tf (racket (side-condition any_1 (procedure? (term any_1)))))))
+      (racket tf (side-condition any_1 (procedure? (term any_1))))
+      uninit)
   (inst ::= ((cl ...) (v ...) (i ...) (i ...)))
 
   (tabinst ::= (cl ...))

@@ -722,6 +722,28 @@
                     ()
                     (trap))))
 
+  (test-->>E (-> 0) ;; call_indirect uninitialized cl
+             (term ((((() () (1) ()))
+                    (((0 (func ((i32) -> (i32)) (local () ((get-local 0) return))))
+                      uninit
+                      (2 (func ((i32 i32 i32) -> (i32)) (local () ((get-local 2) return)))))
+                     ((3 (func ((i32) -> (i32)) (local () ((get-local 0) return))))
+                      (4 (func ((i32 i32) -> (i32)) (local () ((get-local 1) return))))
+                      (5 (func ((i32 i32 i32) -> (i32)) (local () ((get-local 2) return))))))
+                    ())
+                    ()
+                    ((i32 const 2) (i32 const 1) (call-indirect ((i32) -> (i32))))))
+             (term ((((() () (1) ()))
+                    (((0 (func ((i32) -> (i32)) (local () ((get-local 0) return))))
+                      uninit
+                      (2 (func ((i32 i32 i32) -> (i32)) (local () ((get-local 2) return)))))
+                     ((3 (func ((i32) -> (i32)) (local () ((get-local 0) return))))
+                      (4 (func ((i32 i32) -> (i32)) (local () ((get-local 1) return))))
+                      (5 (func ((i32 i32 i32) -> (i32)) (local () ((get-local 2) return))))))
+                    ())
+                    ()
+                    (trap))))
+
   ;; Helper function for testing stores
 (define (make-memory size)
   (make-bytes (* (memory-page-size) size) 0))
