@@ -6,11 +6,11 @@
 
 (provide racket-trampoline)
 
-(define (racket-trampoline post proc s cs)
-  (let-values ([(s_new cs_post) (apply proc s cs)])
-    (unless (= (length cs_post) (length post))
+(define (racket-trampoline post proc s args)
+  (match-let ([(list s-new ret-vals ...) (call-with-values (thunk (apply proc s args)) list)])
+    (unless (= (length ret-vals) (length post))
       (error "Racket procedure produced an incorrect number of values"))
-    (term (,s_new ,(map coerce-value post cs_post)))))
+    (term (,s-new ,(map coerce-value post ret-vals)))))
 
 (define (coerce-value t n)
   (unless (real? n)

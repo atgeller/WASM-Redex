@@ -8,10 +8,10 @@
            "../StoreUtilities.rkt")
 
   (define (racket-add s a b)
-    (values s (list (+ a b))))
+    (values s (+ a b)))
 
   (define (racket-sub1 s a)
-    (values s (list (sub1 a))))
+    (values s (sub1 a)))
 
   ;; basic ffi usage
   (test-->>E (-> 0)
@@ -95,9 +95,7 @@
     (integer->integer-bytes value width #f #f mem offset))
 
   (define (racket-store-test s)
-    (values (term (store-with-mem ,s 0 ,(store-integer (bytes-copy (term (store-mem ,s 0)))
-                                                  0 4 #xFFFFFFFF)))
-            (list)))
+    (term (store-with-mem ,s 0 ,(store-integer (bytes-copy (term (store-mem ,s 0))) 0 4 #xFFFFFFFF))))
 
   ;; ffi writes a value into memory
   (parameterize ([memory-page-size 64])
