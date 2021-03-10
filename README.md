@@ -1,3 +1,8 @@
+The canonical branch (`canon`) is unstable in terms of what features from which specification version is supported.
+To view the model of a specific version of the WebAssembly specification please check the [releases](https://github.com/atgeller/WASM-Redex/releases).
+Additionally, here is a list of releases for each supported specification version:
+* 2017 PLDI Paper Model -- https://github.com/atgeller/WASM-Redex/releases/tag/v1.0
+
 # WASM Redex Model
 This is a model of the WebAssembly language syntax, semantics, and validation rules, written in [PLT Redex](https://redex.racket-lang.org/).
 The model is based off of the [2017 PLDI paper by Haas et al](https://dl.acm.org/doi/10.1145/3062341.3062363).
