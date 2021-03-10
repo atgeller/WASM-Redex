@@ -182,7 +182,7 @@
    ;; Foreign function calls
    (c-> (s (v_l ...) (in-hole L (v_0 ... (t_1 const c_1) ... (call cl) e_0 ...)))
         (s_new (v_l ...) (in-hole L (v_0 ... (t_2 const c_2) ... e_0 ...)))
-        (where (racket ((t_1 ...) -> (t_2 ...)) (name proc any)) cl)
+        (where (host-func ((t_1 ...) -> (t_2 ...)) (name proc any)) cl)
         (where (s_new (c_2 ...)) ,(racket-trampoline (term (t_2 ...)) (term proc) (term s) (term (c_1 ...)))))
 
    ;; Stuff inside functions calls!

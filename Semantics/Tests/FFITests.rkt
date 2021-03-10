@@ -15,13 +15,13 @@
 
   ;; basic ffi usage
   (test-->>E (-> 0)
-             (term ((((((racket ((i32 i32) -> (i32)) ,racket-add))
+             (term ((((((host-func ((i32 i32) -> (i32)) ,racket-add))
                        () () ()))
                      ()
                      ()) ; store
                     () ; locals
                     ((i32 const 0) (i32 const 1) (i32 const 2) (call 0))))
-             (term ((((((racket ((i32 i32) -> (i32)) ,racket-add))
+             (term ((((((host-func ((i32 i32) -> (i32)) ,racket-add))
                        () () ()))
                      ()
                      ()) ; store
@@ -30,13 +30,13 @@
 
   ;; ffi coercion i64
   (test-->>E (-> 0)
-             (term ((((((racket ((i32 i32) -> (i64)) ,racket-add))
+             (term ((((((host-func ((i32 i32) -> (i64)) ,racket-add))
                        () () ()))
                      ()
                      ()) ; store
                     () ; locals
                     ((i32 const 0) (i32 const 1) (i32 const 2) (call 0))))
-             (term ((((((racket ((i32 i32) -> (i64)) ,racket-add))
+             (term ((((((host-func ((i32 i32) -> (i64)) ,racket-add))
                        () () ()))
                      ()
                      ()) ; store
@@ -45,13 +45,13 @@
 
   ;; ffi coercion f64
   (test-->>E (-> 0)
-             (term ((((((racket ((i32 i32) -> (f64)) ,racket-add))
+             (term ((((((host-func ((i32 i32) -> (f64)) ,racket-add))
                        () () ()))
                      ()
                      ()) ; store
                     () ; locals
                     ((i32 const 0) (i32 const 1) (i32 const 2) (call 0))))
-             (term ((((((racket ((i32 i32) -> (f64)) ,racket-add))
+             (term ((((((host-func ((i32 i32) -> (f64)) ,racket-add))
                        () () ()))
                      ()
                      ()) ; store
@@ -60,13 +60,13 @@
 
   ;; ffi coercion f32
   (test-->>E (-> 0)
-             (term ((((((racket ((f64 f64) -> (f32)) ,racket-add))
+             (term ((((((host-func ((f64 f64) -> (f32)) ,racket-add))
                        () () ()))
                      ()
                      ()) ; store
                     () ; locals
                     ((i32 const 0) (f64 const 0.1) (f64 const 0.2) (call 0))))
-             (term ((((((racket ((f64 f64) -> (f32)) ,racket-add))
+             (term ((((((host-func ((f64 f64) -> (f32)) ,racket-add))
                        () () ()))
                      ()
                      ()) ; store
@@ -75,13 +75,13 @@
 
   ;; ffi coercion -1 i32
   (test-->>E (-> 0)
-             (term ((((((racket ((i32) -> (i32)) ,racket-sub1))
+             (term ((((((host-func ((i32) -> (i32)) ,racket-sub1))
                        () () ()))
                      ()
                      ()) ; store
                     () ; locals
                     ((i32 const 0) (call 0))))
-             (term ((((((racket ((i32) -> (i32)) ,racket-sub1))
+             (term ((((((host-func ((i32) -> (i32)) ,racket-sub1))
                        () () ()))
                      ()
                      ()) ; store
@@ -102,13 +102,13 @@
   ;; ffi writes a value into memory
   (parameterize ([memory-page-size 64])
     (test-->>E (-> 0) ;; store then load
-               (term ((((((racket (() -> ()) ,racket-store-test))
+               (term ((((((host-func (() -> ()) ,racket-store-test))
                          () () (0)))
                        ()
                        (,(make-memory 1)))
                       ()
                       ((call 0))))
-               (term ((((((racket (() -> ()) ,racket-store-test))
+               (term ((((((host-func (() -> ()) ,racket-store-test))
                          () () (0)))
                        ()
                        (,(store-integer (make-memory 1) 0 4 #xFFFFFFFF)))
@@ -122,7 +122,7 @@
    (thunk
     (apply-reduction-relation*
      (-> 0)
-     (term ((((((racket ((i32 i32) -> ()) ,racket-add))
+     (term ((((((host-func ((i32 i32) -> ()) ,racket-add))
                () () ()))
              ()
              ()) ; store
@@ -135,7 +135,7 @@
    (thunk
     (apply-reduction-relation*
      (-> 0)
-     (term ((((((racket (() -> (i32)) ,(λ (s) (values s (list "hello world")))))
+     (term ((((((host-func (() -> (i32)) ,(λ (s) (values s (list "hello world")))))
                () () ()))
              ()
              ()) ; store
@@ -148,7 +148,7 @@
    (thunk
     (apply-reduction-relation*
      (-> 0)
-     (term ((((((racket (() -> (i32)) ,(λ (s) (values s (list 0.5)))))
+     (term ((((((host-func (() -> (i32)) ,(λ (s) (values s (list 0.5)))))
                () () ()))
              ()
              ()) ; store
@@ -161,7 +161,7 @@
    (thunk
     (apply-reduction-relation*
      (-> 0)
-     (term ((((((racket (() -> (i32)) ,(λ (s) (values s (list (expt 2 32))))))
+     (term ((((((host-func (() -> (i32)) ,(λ (s) (values s (list (expt 2 32))))))
                () () ()))
              ()
              ()) ; store
@@ -174,7 +174,7 @@
    (thunk
     (apply-reduction-relation*
      (-> 0)
-     (term ((((((racket (() -> (i64)) ,(λ (s) (values s (list 0.5)))))
+     (term ((((((host-func (() -> (i64)) ,(λ (s) (values s (list 0.5)))))
                () () ()))
              ()
              ()) ; store
@@ -187,7 +187,7 @@
    (thunk
     (apply-reduction-relation*
      (-> 0)
-     (term ((((((racket (() -> (i64)) ,(λ (s) (values s (list (expt 2 64))))))
+     (term ((((((host-func (() -> (i64)) ,(λ (s) (values s (list (expt 2 64))))))
                () () ()))
              ()
              ()) ; store
