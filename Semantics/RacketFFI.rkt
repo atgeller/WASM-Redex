@@ -2,15 +2,98 @@
 
 (require racket/flonum
          redex/reduction-semantics
+         "AdministrativeSyntax.rkt"
+         "../Utilities.rkt"
+         "StoreUtilities.rkt"
          "SizedOps.rkt")
 
-(provide racket-trampoline)
+(provide racket-trampoline
+         memory-page-size
+         wasm-grow-memory
+         wasm-mem-read-integer
+         wasm-mem-write-integer!
+         wasm-grow-table!
+         wasm-table-get
+         wasm-table-set!
+         wasm-lookup-export)
 
-(define (racket-trampoline post proc s args)
-  (match-let ([(list s-new ret-vals ...) (call-with-values (thunk (apply proc s args)) list)])
-    (unless (= (length ret-vals) (length post))
+
+(define memory-page-size (make-parameter 65536))
+
+;; these parameters are set when calling racket ffi procedures as the getter/setter for the wasm store
+(define get-store (make-parameter #f))
+(define set-store! (make-parameter #f))
+
+(define wasm-exports (make-parameter #f))
+
+(struct wasm-memory (index))
+
+;; wasm-memory natural -> void
+(define (wasm-grow-memory mem n)
+  (let ([i (wasm-memory-index mem)])
+    (match-let ([`(,insts ,tabinsts ,meminsts) ((get-store))])
+      ((set-store!) (term (,insts ,tabinsts (with-index ,meminsts ,i ,(bytes-append (list-ref meminsts i) (make-bytes (* (memory-page-size) n) 0)))))))))
+
+;; wasm-memory natural natural boolean -> integer
+(define (wasm-mem-read-integer mem offset width signed?)
+  (unless (or (= width 1) (= width 2) (= width 4) (= width 8))
+    (error "Integer width must be one of 1, 2, 4, 8"))
+  (match-let ([`(,_ ,_ ,meminsts) ((get-store))])
+    (let ([mem-bytes (list-ref meminsts (wasm-memory-index mem))])
+      (integer-bytes->integer mem-bytes signed? #f offset (+ offset width)))))
+
+;; wasm-memory natural natural integer -> void
+(define (wasm-mem-write-integer! mem offset width value)
+  (unless (or (= width 1) (= width 2) (= width 4) (= width 8))
+    (error "Integer width must be one of 1, 2, 4, 8"))
+  (match-let ([`(,insts ,tabinsts ,meminsts) ((get-store))])
+    (let* ([i (wasm-memory-index mem)]
+           [mem-bytes (bytes-copy (list-ref meminsts i))])
+      ((set-store!) (term (,insts ,tabinsts (with-index ,meminsts ,i ,(integer->integer-bytes value width (< value 0) #f mem-bytes offset))))))))
+
+(struct wasm-table (index))
+
+;; wasm-table natural -> void
+(define (wasm-grow-table! table n)
+  (let ([i (wasm-table-index table)])
+    (match-let ([`(,insts ,tabinsts ,meminsts) ((get-store))])
+      ((set-store!) (term (,insts (with-index ,tabinsts ,i ,(append (list-ref tabinsts i) (build-list n (λ (_) (term uninit))))) ,meminsts))))))
+
+;; wasm-table natural -> cl
+(define (wasm-table-get table n)
+  (let ([i (wasm-table-index table)])
+    (match-let ([`(,insts ,tabinsts ,meminsts) ((get-store))])
+      (list-ref (list-ref tabinsts i) n))))
+
+;; checks that the provided is a valid `cl`
+;; TODO: typecheck if a wasm `cl`?
+;; wasm-table natural cl -> void
+(define (wasm-table-set! table n cl)
+  (unless (redex-match? WASM-Admin cl cl)
+    (error "Table entry must be a valid closure"))
+  (let ([i (wasm-table-index table)])
+    (match-let ([`(,insts ,tabinsts ,meminsts) ((get-store))])
+      ((set-store!) (term (,insts (with-index ,tabinsts ,i (with-index ,(list-ref tabinsts i) n cl)) ,meminsts))))))
+
+(define (wasm-lookup-export name)
+  (let ([desc (dict-ref (wasm-exports) name)])
+    (match (car desc)
+      ['table (wasm-table (cdr desc))]
+      ['memory (wasm-memory (cdr desc))])))
+
+(define (racket-trampoline post exports proc s args)
+  (let* ([s-box (box s)]
+         [ret-vals (filter (λ (rv) (not (void? rv)))
+                           (call-with-values (thunk
+                                              (parameterize ([get-store (λ () (unbox s-box))]
+                                                             [set-store! (λ (s-new) (set-box! s-box s-new))]
+                                                             [wasm-exports exports])
+                                                (apply proc args)))
+                                             list))])
+    (unless (= (length post) (length ret-vals))
       (error "Racket procedure produced an incorrect number of values"))
-    (term (,s-new ,(map coerce-value post ret-vals)))))
+
+    (term (,(unbox s-box) ,(map coerce-value post ret-vals)))))
 
 (define (coerce-value t n)
   (unless (real? n)

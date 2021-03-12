@@ -4,14 +4,15 @@
   (require rackunit
            racket/flonum
            redex/reduction-semantics
+           "../RacketFFI.rkt"
            "../Semantics.rkt"
            "../StoreUtilities.rkt")
 
-  (define (racket-add s a b)
-    (values s (+ a b)))
+  (define (racket-add a b)
+    (+ a b))
 
-  (define (racket-sub1 s a)
-    (values s (sub1 a)))
+  (define (racket-sub1 a)
+    (sub1 a))
 
   ;; basic ffi usage
   (test-->>E (-> 0)
@@ -94,12 +95,13 @@
   (define (store-integer mem offset width value)
     (integer->integer-bytes value width #f #f mem offset))
 
-  (define (racket-store-test s)
-    (term (store-with-mem ,s 0 ,(store-integer (bytes-copy (term (store-mem ,s 0))) 0 4 #xFFFFFFFF))))
+  (define (racket-store-test)
+    (let ([mem (wasm-lookup-export "mem")])
+      (wasm-mem-write-integer! mem 0 4 -1)))
 
   ;; ffi writes a value into memory
   (parameterize ([memory-page-size 64])
-    (test-->>E (-> 0) ;; store then load
+    (test-->>E (-> 0 '(("mem" . (memory . 0))))
                (term ((((((host-func (() -> ()) ,racket-store-test))
                          () () (0)))
                        ()

@@ -11,12 +11,10 @@
 
 (provide -> memory-page-size)
 
-(define memory-page-size (make-parameter 65536))
-
 ;; TL;DR about stack: the stack is implicit in the stream of instructions being processed.
 ;; This is because v \subset e, so although we say (e ...) it ends up looking like (v ... e ...).
 ;; Thus, the next instruction to execute is the head of e ..., and the stack is v ...
-(define (-> i)
+(define (-> i (exports '()))
   (reduction-relation
    WASM-Admin
    #:domain (s (v ...) (e ...))
@@ -183,7 +181,7 @@
    (c-> (s (v_l ...) (in-hole L (v_0 ... (t_1 const c_1) ... (call cl) e_0 ...)))
         (s_new (v_l ...) (in-hole L (v_0 ... (t_2 const c_2) ... e_0 ...)))
         (where (host-func ((t_1 ...) -> (t_2 ...)) (name proc any)) cl)
-        (where (s_new (c_2 ...)) ,(racket-trampoline (term (t_2 ...)) (term proc) (term s) (term (c_1 ...)))))
+        (where (s_new (c_2 ...)) ,(racket-trampoline (term (t_2 ...)) exports (term proc) (term s) (term (c_1 ...)))))
 
    ;; Stuff inside functions calls!
    (c-> (s (v_l ...) (in-hole L (v_0 ... (local n (j (v_1 ...)) (v ...)) e_0 ...)))
