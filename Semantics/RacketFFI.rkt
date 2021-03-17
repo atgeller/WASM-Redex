@@ -65,6 +65,36 @@
     (match-let ([`(,insts ,tabinsts ,meminsts) ((get-store))])
       (list-ref (list-ref tabinsts i) n))))
 
+(struct wasm-func (inst index))
+
+;; wasm-func . args -> e e
+#;(define (wasm-func-call func . args)
+  ; need to change trampoline code to return es, then produce a local call and foreign call with the continuation
+  'TODO)
+
+(struct wasm-global (inst index))
+
+;; wasm-global real -> void
+;; commented out since you can't export mutable globals with the current WASM version modelled
+#;(define (wasm-set-global! global v)
+  (let ([inst (wasm-global-inst global)]
+        [i (wasm-global-index global)])
+    (match-let* ([`(,insts ,tabinsts ,meminsts) ((get-store))]
+                 [`(,cls ,globs ,tab ,mem) (list-ref insts inst)]
+                 [`(,t const ,_) (list-ref globs i)])
+      ((set-store!) (term ((with-index ,insts ,inst
+                             (,cls (with-index ,globs ,i (,t const ,(coerce-value t v))) ,tab ,mem))
+                           ,tabinsts
+                           ,meminsts))))))
+
+;; wasm-global -> real
+(define (wasm-get-global global)
+  (match-let* ([`(,insts ,_ ,_) ((get-store))]
+               [`(,_ ,globs ,_ ,_) (list-ref insts (wasm-global-inst global))]
+               [`(,_ const ,v) (list-ref globs (wasm-global-index global))])
+    v))
+      
+
 ;; checks that the provided is a valid `cl`
 ;; TODO: typecheck if a wasm `cl`?
 ;; wasm-table natural cl -> void
@@ -75,11 +105,14 @@
     (match-let ([`(,insts ,tabinsts ,meminsts) ((get-store))])
       ((set-store!) (term (,insts (with-index ,tabinsts ,i (with-index ,(list-ref tabinsts i) n cl)) ,meminsts))))))
 
+;; TODO: check that export describes the store value?
 (define (wasm-lookup-export name)
   (let ([desc (dict-ref (wasm-exports) name)])
     (match (car desc)
       ['table (wasm-table (cdr desc))]
-      ['memory (wasm-memory (cdr desc))])))
+      ['memory (wasm-memory (cdr desc))]
+      ['func (wasm-func (cadr desc) (cddr desc))]
+      ['global (wasm-global (cadr desc) (cddr desc))])))
 
 (define (racket-trampoline post exports proc s args)
   (let* ([s-box (box s)]
