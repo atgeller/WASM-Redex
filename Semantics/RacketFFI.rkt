@@ -114,14 +114,9 @@
     (match-let ([`(,insts ,tabinsts ,meminsts) ((get-store))])
       ((set-store!) (term (,insts (with-index ,tabinsts ,i (with-index ,(list-ref tabinsts i) n cl)) ,meminsts))))))
 
-;; TODO: check that export describes the store value?
+;; Exports are assumed to be valid
 (define (wasm-lookup-export name)
-  (let ([desc (dict-ref (wasm-exports) name)])
-    (match (car desc)
-      ['table (wasm-table (cdr desc))]
-      ['memory (wasm-memory (cdr desc))]
-      ['func (wasm-func (cadr desc) (cddr desc))]
-      ['global (wasm-global (cadr desc) (cddr desc))])))
+  (dict-ref (wasm-exports) name))
 
 (define (racket-trampoline post exports proc s args)
   (let* ([s-box (box s)]

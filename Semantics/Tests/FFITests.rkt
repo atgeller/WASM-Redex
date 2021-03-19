@@ -101,7 +101,7 @@
 
   ;; ffi writes a value into memory
   (parameterize ([memory-page-size 64])
-    (test-->>E (-> 0 '(("mem" . (memory . 0))))
+    (test-->>E (-> 0 `(("mem" . ,(wasm-memory 0))))
                (term ((((((host-func (() -> ()) ,racket-store-test))
                          () () (0)))
                        ()
