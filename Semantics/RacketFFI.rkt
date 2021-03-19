@@ -15,7 +15,16 @@
          wasm-grow-table!
          wasm-table-get
          wasm-table-set!
-         wasm-lookup-export)
+         wasm-lookup-export
+
+         coerce-value
+
+         ;; These structs are provided so instantiation can use them,
+         ;; but they should not be constructed by ffi functions
+         (struct-out wasm-memory)
+         (struct-out wasm-table)
+         (struct-out wasm-func)
+         (struct-out wasm-global))
 
 
 (define memory-page-size (make-parameter 65536))
@@ -130,22 +139,23 @@
 
 (define (coerce-value t n)
   (unless (real? n)
-    (error "Racket procedure produced a non-real value"))
+    (error "Cannot coerce a non-real value"))
   (match t
     ['i32
      (unless (exact? n)
-       (error "Racket procedure expected i32, but produced an inexact value"))
+       (error "Cannot coerce an inexact to an i32"))
      (unless (<= (- (expt 2 31)) n (sub1 (expt 2 32)))
-       (error "Racket procedure expected i32, but produced a value outside that range"))
+       (error "Value outside of i32 range"))
      (to-unsigned-sized 32 n)]
     
     ['i64
      (unless (exact? n)
-       (error "Racket procedure expected i64, but produced an inexact value"))
+       (error "Cannot coerce an inexact to an i64"))
      (unless (<= (- (expt 2 63)) n (sub1 (expt 2 64)))
-       (error "Racket procedure expected i64, but produced a value outside that range"))
+       (error "Value outside of i64 range"))
      (to-unsigned-sized 64 n)]
     
     ['f32 (flsingle (real->double-flonum n))]
     
     ['f64 (real->double-flonum n)]))
+
