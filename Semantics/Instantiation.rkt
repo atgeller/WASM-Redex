@@ -88,7 +88,6 @@
                           (match (first tab?)
                             [`(,exs (table ,n (import ,ns ,name)))
                              (values (match (lookup-import ns name)
-                                       ;; TODO: can imported tables be linked with a larger table?
                                        [(wasm-table import-index)
                                         (unless (<= n (length (list-ref tabinsts import-index)))
                                           (error "Link error: imported table does not have the right length"))
@@ -112,7 +111,7 @@
                             [`(,exs (memory ,n (import ,ns ,name)))
                              (values (match (lookup-import ns name)
                                        [(wasm-memory import-index)
-                                        (unless (<= n (/ (bytes-length (list-ref meminsts import-index)) (memory-page-size)))
+                                        (unless (<= (* n (memory-page-size)) (bytes-length (list-ref meminsts import-index)))
                                           (error "Link error: imported memory does not have the right length"))
                                         import-index]
                                        [_ (error "Link error: imported object is not a memory")])
@@ -120,7 +119,7 @@
                                      exs)]
                             [`(,exs (memory ,n))
                              (values (length meminsts)
-                                     (make-bytes (* (memory-page-size) n) 0)
+                                     (make-bytes (* n (memory-page-size)) 0)
                                      exs)])])
               (values (list index)
                       (list meminst)
