@@ -76,6 +76,20 @@
 
 (struct wasm-func (inst index))
 
+;; checks that the provided is a valid `cl`
+;; wasm-table natural (or/c wasm-func 'uninit) -> void
+(define (wasm-table-set! table n func)
+  (unless (or (wasm-func? func) (equal? func 'uninit))
+    (error "Table entry must be an exported function or 'uninit"))
+  (let* ([i (wasm-table-index table)]
+         [s ((get-store))]
+         [cl (if (wasm-func? func)
+                 (term (store-func ,s ,(wasm-func-inst func) ,(wasm-func-index func)))
+                 'uninit)])
+    (match-let ([`(,insts ,tabinsts ,meminsts) s])
+      ((set-store!) (term (,insts (with-index ,tabinsts ,i (with-index ,(list-ref tabinsts i) n cl)) ,meminsts))))))
+
+
 ;; wasm-func . args -> e e
 #;(define (wasm-func-call func . args)
   ; need to change trampoline code to return es, then produce a local call and foreign call with the continuation
@@ -103,16 +117,6 @@
                [`(,_ const ,v) (list-ref globs (wasm-global-index global))])
     v))
       
-
-;; checks that the provided is a valid `cl`
-;; TODO: typecheck if a wasm `cl`?
-;; wasm-table natural cl -> void
-(define (wasm-table-set! table n cl)
-  (unless (redex-match? WASM-Admin cl cl)
-    (error "Table entry must be a valid closure"))
-  (let ([i (wasm-table-index table)])
-    (match-let ([`(,insts ,tabinsts ,meminsts) ((get-store))])
-      ((set-store!) (term (,insts (with-index ,tabinsts ,i (with-index ,(list-ref tabinsts i) n cl)) ,meminsts))))))
 
 ;; Exports are assumed to be valid
 (define (wasm-lookup-export name)
