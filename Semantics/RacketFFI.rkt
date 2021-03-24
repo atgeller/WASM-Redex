@@ -76,7 +76,6 @@
 
 (struct wasm-func (inst index))
 
-;; checks that the provided is a valid `cl`
 ;; wasm-table natural (or/c wasm-func 'uninit) -> void
 (define (wasm-table-set! table n func)
   (unless (or (wasm-func? func) (equal? func 'uninit))
