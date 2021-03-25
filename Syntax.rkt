@@ -24,7 +24,7 @@
      (inn itestop)
      (inn irelop) (fnn frelop)
      (t cvtop t) (t cvtop t sx)
-     
+
      (i32 const (side-condition integer_1 (<= 0 (term integer_1) (sub1 (expt 2 32)))))
      (i64 const (side-condition integer_1 (<= 0 (term integer_1) (sub1 (expt 2 64)))))
      (f32 const (side-condition real_1 (flsingle-flonum? (term real_1))))
@@ -32,7 +32,7 @@
 
   (inn ::= i32 i64)
   (fnn ::= f32 f64)
-  
+
   (t ::= i32 i64 f32 f64)
   (tp ::= i8 i16 i32)
   (tf ::= ((t ...) -> (t ...)))
@@ -59,7 +59,7 @@
 
   (i j n m ::= natural)
   (a o ::= (side-condition natural_1 (<= 0 (term natural_1) (sub1 (expt 2 32)))))
-  
+
   ; real is a superset of all constant types
   (c k ::= real)
 

@@ -9,14 +9,14 @@
            rackunit)
 
   ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-  
+
   ;; Basic test that an empty module is well-typed
   (test-judgment-holds ⊢-module
                        (derivation `(⊢-module (module () () () ()))
                                    #f
                                    (list)))
   ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-  
+
   ;; Tests that a very simple function is well-typed under a context type containing only that function
   (test-judgment-holds ⊢-module-func
                        (derivation `(⊢-module-func ,context1
@@ -45,7 +45,7 @@
                                                                  (() -> (i32)))
                                                              #f
                                                              (list)))))))
-  
+
   ;; Tests that a module with two well-typed functions that refer to each other, is well-typed
   (test-judgment-holds ⊢-module
                        (derivation `(⊢-module (module ((() (func (() -> (i32)) (local () ((call 1)))))
@@ -90,7 +90,7 @@
                                                                  (() -> (i32)))
                                                              #f
                                                              (list)))))))
-  
+
   ;; Tests that a module with a well-typed list of globals, where the second global refers to the first, is well-typed
   (test-judgment-holds
    ⊢-module

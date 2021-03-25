@@ -113,7 +113,7 @@
    empty-context
    '((i32 const 0) (i32 const 1) (i32 add))
    '() '(i32))
-  
+
   ;; binop wrong type
   (check-false
    (typecheck-ins
@@ -397,7 +397,7 @@
              ((i64 const 0)
               (br 0))))
     '() '(i32)))
-  
+
   ;; same for br-if
   (check-false
    (typecheck-ins
@@ -753,7 +753,7 @@
       grow-memory)
     '() '(i32)))
 
-  
+
   ;; Global typing tests
 
   ;; simple
