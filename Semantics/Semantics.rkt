@@ -6,16 +6,15 @@
          "Utilities.rkt"
          "SimpleOps.rkt"
          "StoreUtilities.rkt"
-         "ConstUtilities.rkt")
+         "ConstUtilities.rkt"
+         "RacketFFI.rkt")
 
 (provide -> memory-page-size)
-
-(define memory-page-size (make-parameter 65536))
 
 ;; TL;DR about stack: the stack is implicit in the stream of instructions being processed.
 ;; This is because v \subset e, so although we say (e ...) it ends up looking like (v ... e ...).
 ;; Thus, the next instruction to execute is the head of e ..., and the stack is v ...
-(define (-> i)
+(define (-> i (exports '()))
   (reduction-relation
    WASM-Admin
    #:domain (s (v ...) (e ...))
@@ -157,7 +156,7 @@
 
    (c-> (s (v_l ...) (in-hole L (v_0 ... (i32 const j) (call-indirect tf) e_0 ...)))
         (s (v_l ...) (in-hole L (v_0 ... (call (store-tab s ,i j)) e_0 ...)))
-        (where (func tf (local (t ...) (e ...))) (cl-code-opt (store-tab s ,i j))))
+        (where (func tf _) (cl-code-opt (store-tab s ,i j))))
 
    (c-> (s (v_l ...) (in-hole L (v_0 ... (i32 const j) (call-indirect tf) e_0 ...)))
         (s (v_l ...) (in-hole L (v_0 ... trap e_0 ...)))
@@ -177,6 +176,12 @@
         (where (func ((t_1 ...) -> (t_2 ...)) (local (t ...) (e ...))) (cl-code cl))
         (side-condition (= (length (term (v ...))) (length (term (t_1 ...)))))
         (where m ,(length (term (t_2 ...)))))
+
+   ;; Foreign function calls
+   (c-> (s (v_l ...) (in-hole L (v_0 ... (t_1 const c_1) ... (call cl) e_0 ...)))
+        (s_new (v_l ...) (in-hole L (v_0 ... (t_2 const c_2) ... e_0 ...)))
+        (where (host-func ((t_1 ...) -> (t_2 ...)) (name proc any)) cl)
+        (where (s_new (c_2 ...)) ,(racket-trampoline (term (t_2 ...)) exports (term proc) (term s) (term (c_1 ...)))))
 
    ;; Stuff inside functions calls!
    (c-> (s (v_l ...) (in-hole L (v_0 ... (local n (j (v_1 ...)) (v ...)) e_0 ...)))

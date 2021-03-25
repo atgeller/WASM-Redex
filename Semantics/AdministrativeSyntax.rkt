@@ -13,7 +13,9 @@
   (L ::= hole (v ... (label n (e ...) L) e ...))
 
   (s ::= ((inst ...) (tabinst ...) (meminst ...)))
-  (cl ::= (i (func tf (local (t ...) (e ...)))))
+  (cl ::= (i (func tf (local (t ...) (e ...))))
+      (host-func tf (side-condition any_1 (procedure? (term any_1))))
+      uninit)
   (inst ::= ((cl ...) (v ...) (i ...) (i ...)))
 
   (tabinst ::= (cl ...))

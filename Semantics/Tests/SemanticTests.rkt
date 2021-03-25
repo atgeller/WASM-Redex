@@ -3,8 +3,7 @@
 (module+ test
   (require racket/flonum
            redex/reduction-semantics
-           "../Semantics.rkt"
-           rackunit)
+           "../Semantics.rkt")
 
   ;; Tests of unops
   (test-->>E (-> 0) ;; clz 0
@@ -715,6 +714,28 @@
              (term ((((() () (1) ()))
                     (((0 (func ((i32) -> (i32)) (local () ((get-local 0) return))))
                       (1 (func ((i32 i32) -> (i32)) (local () ((get-local 1) return))))
+                      (2 (func ((i32 i32 i32) -> (i32)) (local () ((get-local 2) return)))))
+                     ((3 (func ((i32) -> (i32)) (local () ((get-local 0) return))))
+                      (4 (func ((i32 i32) -> (i32)) (local () ((get-local 1) return))))
+                      (5 (func ((i32 i32 i32) -> (i32)) (local () ((get-local 2) return))))))
+                    ())
+                    ()
+                    (trap))))
+
+  (test-->>E (-> 0) ;; call_indirect uninitialized cl
+             (term ((((() () (1) ()))
+                    (((0 (func ((i32) -> (i32)) (local () ((get-local 0) return))))
+                      uninit
+                      (2 (func ((i32 i32 i32) -> (i32)) (local () ((get-local 2) return)))))
+                     ((3 (func ((i32) -> (i32)) (local () ((get-local 0) return))))
+                      (4 (func ((i32 i32) -> (i32)) (local () ((get-local 1) return))))
+                      (5 (func ((i32 i32 i32) -> (i32)) (local () ((get-local 2) return))))))
+                    ())
+                    ()
+                    ((i32 const 2) (i32 const 1) (call-indirect ((i32) -> (i32))))))
+             (term ((((() () (1) ()))
+                    (((0 (func ((i32) -> (i32)) (local () ((get-local 0) return))))
+                      uninit
                       (2 (func ((i32 i32 i32) -> (i32)) (local () ((get-local 2) return)))))
                      ((3 (func ((i32) -> (i32)) (local () ((get-local 0) return))))
                       (4 (func ((i32 i32) -> (i32)) (local () ((get-local 1) return))))

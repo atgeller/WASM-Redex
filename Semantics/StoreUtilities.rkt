@@ -9,9 +9,11 @@
 ; closure accessors
 ;; implements cl_code
 (define-metafunction WASM-Admin
-  cl-code : cl -> (func tf (local (t ...) (e ...)))
+  cl-code : cl -> any
   [(cl-code (i (func tf (local (t ...) (e ...)))))
-   (func tf (local (t ...) (e ...)))])
+   (func tf (local (t ...) (e ...)))]
+  ;; all other cl cases are undefined
+  [(cl-code _) #f])
 
 ;; returns the cl_code field if the input is a well-defined cl
 ;; otherwise returns #f
